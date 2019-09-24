@@ -1,6 +1,12 @@
-# Express API Skeleton ![version](https://img.shields.io/badge/version-v1-blue.svg) [![openapi](https://img.shields.io/badge/openapi-2.0-green.svg)](./openapi.yaml) ![node](https://img.shields.io/badge/node-10.13-brightgreen.svg) ![npm](https://img.shields.io/badge/npm-6.11.1-orange.svg)
+# Pizza API ![version](https://img.shields.io/badge/version-v1-blue.svg) [![openapi](https://img.shields.io/badge/openapi-2.0-green.svg)](./openapi.yaml) ![node](https://img.shields.io/badge/node-10.13-brightgreen.svg) ![npm](https://img.shields.io/badge/npm-6.11.1-orange.svg)
 
-Skeleton for Express APIs. API definition is contained in the [OpenAPI specification](./openapi.yaml).
+## Purpose
+
+The purpose of this API is to learn about REST APIs by developing one using the Express API Skeleton.
+
+## Description
+
+A pizza recipe, very broadly, usually includes a recipe for the dough, the toppings used, and other instructions for baking and preparing the pizza. This API tracks pizza recipes along with the dough recipes and toppings used to create them, allowing users to query for information like a specific pizza recipe, the pizzas made using a specific dough recipe, or the pizzas made using a certain topping or combination of toppings.
 
 ## Getting Started
 
