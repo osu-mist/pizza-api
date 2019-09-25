@@ -1,10 +1,15 @@
 swagger: "2.0"
 info:
+  license:
+    name: GNU Affero General Public License Version 3
+    url: http://www.gnu.org/licenses/agpl-3.0.en.html
   description: "An API for pizza recipes."
-  version: "1.0.0"
   title: "Pizza API"
+  version: "1.0.0"
   contact:
-    email: "jemisonf@oregonstate.edu"
+    name: IS Data Architecture Team
+    url: https://is.oregonstate.edu/data-architecture
+    email: isdataarchitecture@oregonstate.edu
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -18,8 +23,19 @@ tags:
   - name: "ingredient"
     description: "An ingredient"
 schemes:
-  - "https"
-  - "http"
+  - https
+host: api.oregonstate.edu
+basePath: /v1
+externalDocs:
+  description: GitHub Repository
+  url: https://github.com/osu-mist/express-api-skeleton
+produces:
+  - application/json
+consumes:
+  - application/json
+security:
+  - OAuth2:
+      - full
 paths:
   /pizzas:
     get:
@@ -27,11 +43,20 @@ paths:
       tags:
         - pizza
       parameters:
-        - in: body
-          name: filters
-          description: "Attributes to restrict pizza results to"
-          schema:
-            $ref: "#/definitions/PizzaAttributes"
+        - in: query
+          name: name
+          description: Search pizzas by name
+          required: false
+          type: string
+        - in: query
+          name: ovenTemp
+          description: Search pizzas by bake temperature (in degrees Fahrenheit)
+          required: false
+          type: string
+        - in: query
+          name: bakeTime
+          description: Search pizzas by baking time (in minutes)
+          type: string
       responses:
         200:
           description: "A list of pizzas"
@@ -250,11 +275,61 @@ paths:
       tags:
         - dough
       parameters:
-        - in: body
-          name: filters
-          description: Attributes to filter dough results body
-          schema:
-            $ref: "#/definitions/DoughAttributes"
+        - in: query
+          name: name
+          required: false
+          type: string
+          description: Search doughs by name
+        - in: query
+          name: gramsFlour
+          required: false
+          type: integer
+          description: Search doughs by grams flour used
+        - in: query
+          name: gramsWater
+          required: false
+          type: integer
+          description: Search doughs by grams water used
+        - in: query
+          name: gramsSugar
+          required: false
+          description: Search doughs by grams sugar used
+          type: integer
+        - in: query
+          name: gramsOliveOil
+          required: false
+          description: Search doughs by grams olive oil used
+          type: integer
+        - in: query
+          name: gramsYeast
+          required: false
+          type: integer
+          description: Search doughs by grams yeast used
+        - in: query
+          name: gramsSalt
+          required: false
+          type: integer
+          description: Search doughs by grams salt used
+        - in: query
+          name: bulkFermentTime
+          required: false
+          type: integer
+          description: Search doughs by bulk ferment time
+        - in: query
+          name: proofTime
+          required: false
+          type: integer
+          description: Search doughs by proof time
+        - in: query
+          name: waterTemp
+          required: false
+          type: integer
+          description: Search doughs by water temperature at mix time
+        - in: query
+          name: flourType
+          required: false
+          description: Search doughs by flour type
+          type: string
       responses:
         200:
           description: "A list of dough recipes"
@@ -356,11 +431,16 @@ paths:
       tags:
         - ingredient
       parameters:
-        - in: body
-          name: filters
-          description: "Attributes to restrict ingredient results to"
-          schema:
-            $ref: "#/definitions/IngredientAttributes"
+        - in: query
+          name: name
+          description: Search ingredients by name
+          required: false
+          type: string
+        - in: query
+          name: type
+          description: Search ingredients by type
+          required: false
+          type: string
       responses:
         200:
           description: "A list of ingredients"
