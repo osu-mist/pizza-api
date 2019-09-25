@@ -1,278 +1,633 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
-  title: Express API Skeleton
-  description: Skeleton for Express APIs
-  version: v1
-  license:
-    name: GNU Affero General Public License Version 3
-    url: http://www.gnu.org/licenses/agpl-3.0.en.html
+  description: "An API for pizza recipes."
+  version: "1.0.0"
+  title: "Pizza API"
   contact:
-    name: IS Data Architecture Team
-    url: https://is.oregonstate.edu/data-architecture
-    email: isdataarchitecture@oregonstate.edu
+    email: "jemisonf@oregonstate.edu"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "api.oregonstate.edu"
+basePath: "/v2"
+tags:
+  - name: "pizza"
+    description: "A pizza recipe"
+  - name: "dough"
+    description: "A dough recipe"
+  - name: "ingredient"
+    description: "An ingredient"
 schemes:
-  - https
-host: api.oregonstate.edu
-basePath: /v1
-externalDocs:
-  description: GitHub Repository
-  url: https://github.com/osu-mist/express-api-skeleton
-produces:
-  - application/json
-consumes:
-  - application/json
-security:
-  - OAuth2:
-      - full
+  - "https"
+  - "http"
 paths:
-  /pets:
+  /pizzas:
     get:
-      summary: List all pets
+      description: "Get all pizzas"
       tags:
-        - pets
-      description: Get all pets
-      operationId: getPets
-      parameters:
-        - $ref: '#/parameters/pageNumber'
-        - $ref: '#/parameters/pageSize'
-        - in: query
-          name: species
-          description: Search by pet species
-          required: false
-          type: string
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            $ref: '#/definitions/PetsResult'
-        '400':
-          $ref: '#/responses/400'
-        '500':
-          $ref: '#/responses/500'
-    post:
-      summary: Add a new pet
-      operationId: postPet
-      tags:
-        - pets
+        - pizza
       parameters:
         - in: body
-          name: body
+          name: filters
+          description: "Attributes to restrict pizza results to"
+          schema:
+            $ref: "#/definitions/PizzaAttributes"
+      responses:
+        200:
+          description: "A list of pizzas"
+          schema:
+            $ref: "#/definitions/PizzasResults"
+        500:
+          $ref: "#/responses/500"
+    post:
+      description: "Create a new pizza recipe"
+      tags:
+        - pizza
+      parameters:
+        - in: body
+          name: attributes
+          description: attributes to assign to the new pizza
           required: true
           schema:
-            $ref: '#/definitions/PetPostBody'
+            $ref: "#/definitions/PizzaAttributes"
       responses:
-        '201':
-          description: Pet successfully created
+        200:
+          description: "The newly created pizza recipe"
           schema:
-            $ref: '#/definitions/PetResult'
-        '400':
-          $ref: '#/responses/400'
-        '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResult'
-        '500':
-          $ref: '#/responses/500'
-  /pets/{id}:
+            $ref: "#/definitions/PizzaResult"
+        500:
+          $ref: "#/responses/500"
+  /pizzas/{pizzaID}:
     get:
-      summary: Info for a specific pet
+      description: "Get a pizza with ID pizzaID"
       tags:
-        - pets
-      description: Get pet by unique ID
-      operationId: getPetById
+        - pizza
       parameters:
-        - name: id
-          in: path
-          description: Unique Pet ID, UUID format
+        - in: path
+          name: pizzaID
           required: true
           type: string
+          description: "ID of pizza to retrieve"
       responses:
-        '200':
-          description: Successful response
+        200:
+          description: "A single pizza"
           schema:
-            $ref: '#/definitions/PetResult'
-        '404':
-          description: PetResource not found
+            $ref: "#/definitions/PizzaResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+    patch:
+      description: "Update a pizza recipe"
+      tags:
+        - pizza
+      parameters:
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: "ID of a pizza to retrive"
+        - in: body
+          name: attributes
+          description: "attributes of the pizza to be updated"
           schema:
-            $ref: '#/definitions/ErrorResult'
-        '500':
-          $ref: '#/responses/500'
-parameters:
-  pageNumber:
-    name: page[number]
-    in: query
-    type: integer
-    required: false
-    description: Page number of results
-    default: 1
-    minimum: 1
-  pageSize:
-    name: page[size]
-    in: query
-    type: integer
-    required: false
-    description: Number of results to return
-    default: 25
-    maximum: 500
-    minimum: 1
-responses:
-  '400':
-     description: Bad request
-     schema:
-       $ref: '#/definitions/ErrorResult'
-  '500':
-     description: Internal server error
-     schema:
-       $ref: '#/definitions/ErrorResult'
-securityDefinitions:
-  OAuth2:
-    type: oauth2
-    flow: application
-    tokenUrl: https://api.oregonstate.edu/oauth2/token
-    scopes:
-      full: Full access to the API
+            $ref: "#/definitions/PizzaAttributes"
+      responses:
+        200:
+          description: "The updated pizza recipe"
+          schema:
+            $ref: "#/definitions/PizzaResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+    delete:
+      description: "Delete a pizza recipe"
+      tags:
+        - pizza
+      parameters:
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: "ID of a pizza to retrive"
+      responses:
+        200:
+          description: "Returns true is the resource was deleted"
+          schema:
+            type: boolean
+            example: true
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+
+  /pizzas/{pizzaID}/ingredients:
+    get:
+      description: "Get the ingredients from the pizza with ID pizzaID"
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: "ID of a pizza to retrive"
+      responses:
+        200:
+          description: "A list of ingredients"
+          schema:
+            $ref: "#/definitions/IngredientsResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+  /pizzas/{pizzaID}/ingredients/{ingredientID}:
+    patch:
+      description: add the ingredient with ID ingredientID to the pizza with ID pizzaID
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - in: path
+          name: ingredientID
+          required: true
+          type: string
+          description: "ID of the ingredient to add"
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: "ID of a pizza to update"
+      responses:
+        200:
+          description: "Returns true is the resource was updated"
+          schema:
+            type: boolean
+            example: true
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+    delete:
+      description: remove the ingredient with ID ingredientID from the pizza with ID pizzaID
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - in: path
+          name: ingredientID
+          required: true
+          type: string
+          description: "ID of the ingredient to add"
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: "ID of a pizza to update"
+      responses:
+        200:
+          description: "Returns true is the resource was deleted"
+          schema:
+            type: boolean
+            example: true
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+  /pizza/{pizzaID}/dough:
+    get:
+      description: "Get the dough used for a pizza"
+      tags:
+        - pizza
+        - dough
+      parameters:
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: ID of a pizza to retrieve
+      responses:
+        200:
+          description: "A single dough recipe"
+          schema:
+            $ref: "#/definitions/DoughResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+  /pizzas/{pizzaID}/dough/{doughID}:
+    patch:
+      description: set the dough for the pizza with ID pizzaID to the dough with ID doughID
+      tags:
+        - pizza
+        - dough
+      parameters:
+        - in: path
+          name: doughID
+          required: true
+          type: string
+          description: "ID of the dough to use"
+        - in: path
+          name: pizzaID
+          required: true
+          type: string
+          description: "ID of a pizza to update"
+      responses:
+        200:
+          description: "Returns true is the resource was updated"
+          schema:
+            type: boolean
+            example: true
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+  /doughs:
+    get:
+      description: "Get all dough recipes"
+      tags:
+        - dough
+      parameters:
+        - in: body
+          name: filters
+          description: Attributes to filter dough results body
+          schema:
+            $ref: "#/definitions/DoughAttributes"
+      responses:
+        200:
+          description: "A list of dough recipes"
+          schema:
+            $ref: "#/definitions/DoughsResult"
+        500:
+          $ref: "#/responses/500"
+    post:
+      description: "Create a dough recipe"
+      tags:
+        - dough
+      parameters:
+        - in: body
+          name: attributes
+          description: attributes of the new dough recipe
+          schema:
+            $ref: "#/definitions/DoughAttributes"
+      responses:
+        200:
+          description: "The created dough recipe"
+          schema:
+            $ref: "#/definitions/DoughResult"
+        500:
+          $ref: "#/responses/500"
+  /doughs/{doughID}:
+    get:
+      description: "Get the dough recipe with ID doughID"
+      tags:
+        - dough
+      parameters:
+        - in: path
+          name: doughID
+          required: true
+          type: string
+          description: ID of the dough recipe to retrieve
+      responses:
+        200:
+          description: "A single dough recipe"
+          schema:
+            $ref: "#/definitions/DoughResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+    patch:
+      description: "Update a dough recipe"
+      tags:
+        - dough
+      parameters:
+        - in: path
+          name: doughID
+          required: true
+          type: string
+          description: ID of the dough recipe to retrieve
+        - in: body
+          name: attributes
+          description: "attributes of the dough recipe to be updated"
+          schema:
+            $ref: "#/definitions/DoughAttributes"
+      responses:
+        200:
+          description: "The updated dough recipe"
+          schema:
+            $ref: "#/definitions/DoughResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+      deprecated: false
+  /doughs/{doughID}/pizzas:
+    get:
+      description: "Get the pizzas made with the dough with ID doughID"
+      tags:
+        - dough
+        - pizza
+      parameters:
+        - in: path
+          name: doughID
+          required: true
+          type: string
+          description: ID of the dough recipe to retrieve pizzas for
+        - in: body
+          name: filters
+          description: "Attributes to restrict pizza results to"
+          schema:
+            $ref: "#/definitions/PizzaAttributes"
+      responses:
+        200:
+          description: "A list of pizzas"
+          schema:
+            $ref: "#/definitions/PizzasResults"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+  /ingredients:
+    get:
+      description: "Get the a list of all ingredients"
+      tags:
+        - ingredient
+      parameters:
+        - in: body
+          name: filters
+          description: "Attributes to restrict ingredient results to"
+          schema:
+            $ref: "#/definitions/IngredientAttributes"
+      responses:
+        200:
+          description: "A list of ingredients"
+          schema:
+            $ref: "#/definitions/IngredientsResult"
+    post:
+      description: "Create a new ingredient"
+      tags:
+        - ingredient
+      parameters:
+        - in: body
+          name: attributes
+          description: "Attributes to assign to the new ingredient"
+          schema:
+            $ref: "#/definitions/IngredientAttributes"
+      responses:
+        200:
+          description: "The newly created ingredient"
+          schema:
+            $ref: "#/definitions/IngredientResult"
+        500:
+          $ref: "#/responses/500"
+  /ingredients/{ingredientID}:
+    get:
+      description: "Get the ingredient with ID ingredientID"
+      tags:
+        - ingredient
+      parameters:
+        - in: path
+          name: ingredientID
+          required: true
+          type: string
+          description: ID of the ingredient to retrieve
+      responses:
+        200:
+          description: "A single ingredient"
+          schema:
+            $ref: "#/definitions/IngredientResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+    patch:
+      description: "Update the ingredient with ID ingredientID"
+      tags:
+        - ingredient
+      parameters:
+        - in: path
+          name: ingredientID
+          required: true
+          type: string
+          description: ID of the ingredient to retrieve
+        - in: body
+          name: attributes
+          description: attributes to be updated
+          schema:
+            $ref: "#/definitions/IngredientAttributes"
+      responses:
+        200:
+          description: "The updated ingredient"
+          schema:
+            $ref: "#/definitions/IngredientResult"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
+  /ingredients/{ingredientID}/pizzas:
+    get:
+      description: "Get the pizzas made with the ingredient with ID ingredientID"
+      tags:
+        - ingredient
+        - pizza
+      parameters:
+        - in: path
+          name: ingredientID
+          required: true
+          type: string
+          description: ID of the ingredient to retrieve pizzas for
+        - in: body
+          name: filters
+          description: "Attributes to restrict pizza results to"
+          schema:
+            $ref: "#/definitions/PizzaAttributes"
+      responses:
+        200:
+          description: "A list of pizzas"
+          schema:
+            $ref: "#/definitions/PizzasResults"
+        404:
+          $ref: "#/responses/404"
+        500:
+          $ref: "#/responses/500"
 definitions:
-  Meta:
+  PizzasResults:
     properties:
-      totalResults:
-        type: integer
-        description: Total number of results
-        example: 10
-      totalPages:
-        type: integer
-        description: Total number of pages
-        example: 10
-      currentPageNumber:
-        type: integer
-        description: Page number of the returned results
-        example: 1
-      currentPageSize:
-        type: integer
-        description: Number of results per page
-        example: 25
-  SelfLink:
-    properties:
-      self:
-        type: string
-        format: url
-        description: Self-link of current resource
-  PaginationLinks:
-    properties:
-      first:
-        type: string
-        format: url
-        description: The first page of data
-      last:
-        type: string
-        format: url
-        description: The last page of data
-      prev:
-        type: string
-        format: url
-        description: The previous page of data
-      next:
-        type: string
-        format: url
-        description: The next page of data
-  PetResource:
-    properties:
-      id:
-        type: string
-        description: A unique ID of pet
-      type:
-        $ref: '#/definitions/PetType'
-      links:
-        $ref: '#/definitions/SelfLink'
-      attributes:
-        properties:
-          name:
-            type: string
-            description: Name of pet
-            example: Hedwig
-          owner:
-            type: string
-            description: Name of owner
-            example: Harry Potter
-          species:
-            type: string
-            description: Species of pet
-            example: Owl
-  PetResult:
-    properties:
-      links:
-        $ref: '#/definitions/SelfLink'
-      data:
-        $ref: '#/definitions/PetResource'
-  PetsResult:
-    properties:
-      links:
-        allOf:
-          - $ref: '#/definitions/SelfLink'
-          - $ref: '#/definitions/PaginationLinks'
-      meta:
-        $ref: '#/definitions/Meta'
       data:
         type: array
         items:
-          $ref: '#/definitions/PetResource'
-  PetPostBody:
+          $ref: "#/definitions/PizzaResource"
+  PizzaResult:
     properties:
       data:
-        type: object
-        properties:
-          type:
-            $ref: '#/definitions/PetType'
-          attributes:
-            type: object
-            properties:
-              name:
-                $ref: '#/definitions/PetResource/properties/attributes/properties/name'
-              owner:
-                $ref: '#/definitions/PetResource/properties/attributes/properties/owner'
-              species:
-                $ref: '#/definitions/PetResource/properties/attributes/properties/species'
-            required:
-              - name
-              - owner
-              - species
-            additionalProperties: false
-        required:
-          - type
-          - attributes
-        additionalProperties: false
-    required:
-     - data
-    additionalProperties: false
-  PetType:
-    type: string
-    enum: [pet]
-  ErrorObject:
+        $ref: "#/definitions/PizzaResource"
+  PizzaResource:
     properties:
-      status:
+      id:
         type: string
-        description: HTTP status code
-        example: '123'
-      title:
+        description: a unique ID of a pizza
+      attributes:
+        $ref: "#/definitions/PizzaAttributes"
+  PizzaAttributes:
+    type: object
+    properties:
+      name:
         type: string
-        description: A short, user readable summary of the error
-        example: Not Found
-      code:
+        description: the name of the pizza
+        example: My Favorite Margherita
+      ovenTemp:
+        type: integer
+        description: the temperature to bake the pizza at, in Fahrenheit
+        example: 500
+      bakeTime:
+        type: integer
+        description: the time in minutes to bake the pizza for
+        example: 10
+      specialInstructions:
         type: string
-        description: An application-specific error code
-        example: '1234'
-      detail:
+        description: any special instructions for baking the pizza
+        example: place the basil on after baking
+  IngredientsResult:
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/IngredientResource"
+  IngredientResult:
+    properties:
+      data:
+        $ref: "#/definitions/IngredientResource"
+  IngredientAttributes:
+    type: object
+    properties:
+      name:
         type: string
-        description: A long description of the error that may contain instance-specific details
-      links:
-        properties:
-          about:
-            type: string
-            format: url
-            description: A link to further information about the error
-            example: https://developer.oregonstate.edu/documentation/error-reference#1234
+        description: "the name of the ingredient"
+        example: Sausage
+      type:
+        type: string
+        description: "the type of the ingredient"
+        enum: [meat, vegetable, fruit, other]
+        example: meat
+  IngredientResource:
+    properties:
+      id:
+        type: string
+        description: a unique ID of an ingredient
+      attributes:
+        $ref: "#/definitions/IngredientAttributes"
+  DoughResult:
+    properties:
+      data:
+        $ref: "#/definitions/DoughRecipe"
+  DoughsResult:
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/DoughRecipe"
+  DoughRecipe:
+    properties:
+      id:
+        type: string
+        description: a unique ID of a dough recipe
+      attributes:
+        $ref: "#/definitions/DoughAttributes"
+  DoughAttributes:
+    type: object
+    properties:
+      name:
+        type: string
+        description: the name of the dough recipe
+        example: weeknight pizza dough
+      gramsFlour:
+        type: integer
+        description: the amount of flour used, in grams
+        example: 500
+      flourType:
+        type: string
+        description: the name of the kind of flour used
+        example: All Purpose
+      gramsWater:
+        type: integer
+        description: the amount of water used, in grams
+        example: 400
+      waterTemp:
+        type: integer
+        description: the temperature in Fahrenheit to heat the water to
+        example: 90
+      gramsYeast:
+        type: integer
+        description: the amount of yeast to use, in grams
+        example: 5
+      gramsSalt:
+        type: integer
+        description: the amount of salt to use, in grams
+        example: 15
+      gramsSugar:
+        type: integer
+        description: the amount of sugar to use, in grams
+        example: 20
+      gramsOliveOil:
+        type: integer
+        description: the amount of olive oil to use, in grams
+        example: 50
+      bulkFermentTime:
+        type: integer
+        description: the time in minutes to spend on the bulk ferment
+        example: 60
+      proofTime:
+        type: integer
+        description: the time in minutes to spend on the proof
+        example: 15
+      specialInstructions:
+        type: string
+        description: any additional instructions not captured in the main object
+        example: keep the dough in the fridge during the bulk ferment
   ErrorResult:
     properties:
       errors:
         type: array
         items:
-          $ref: '#/definitions/ErrorObject'
+          $ref: "#/definitions/ErrorObject"
+  ErrorObject:
+    properties:
+      status:
+        type: string
+        description: HTTP status code
+        example: "123"
+      title:
+        type: string
+        description: A short, user readable summary of the error
+        example: "Not Found"
+      code:
+        type: string
+        description: An application-specific error code
+        example: "1234"
+      detail:
+        type: string
+        description: A long description of the error that may contain instance-specific details
+        example: A long description of the error that may contain instance-specific details
+      links:
+        properties:
+          about:
+            type: string
+            format: uri
+            description: A link to further information about the error
+            example: "https://developer.oregonstate.edu/documentation/error-reference#1234"
+responses:
+  "400":
+    description: Incorrect syntax in request, or required fields missing
+    schema:
+      $ref: "#/definitions/ErrorResult"
+  "404":
+    description: Resource not found
+    schema:
+      $ref: "#/definitions/ErrorResult"
+  "500":
+    description: Internal server error
+    schema:
+      $ref: "#/definitions/ErrorResult"
