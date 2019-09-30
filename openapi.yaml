@@ -39,27 +39,27 @@ paths:
         - pizza
       parameters:
         - in: query
-          name: name
+          name: filter[name]
           description: Search pizzas by name
           required: false
           type: string
         - in: query
-          name: ovenTemp
+          name: filter[ovenTemp]
           description: Search pizzas by bake temperature (in degrees Fahrenheit)
           required: false
           type: integer
         - in: query
-          name: bakeTime
+          name: filter[bakeTime]
           description: Search pizzas by baking time (in minutes)
           type: integer
         - in: query
-          name: ingredientsList
+          name: filter[ingredientsList]
           description: Search for pizzas with all the ingredients specified by this list of ingredient IDs
           type: array
           items:
             type: string
         - in: query
-          name: doughId
+          name: filter[doughId]
           description: Search for pizzas with the dough matching this dough ID
           type: string
       responses:
@@ -67,6 +67,8 @@ paths:
           description: A list of pizzas
           schema:
             $ref: "#/definitions/PizzasResults"
+        "400":
+          $ref: "#/responses/400"
         "500":
           $ref: "#/responses/500"
     post:
@@ -79,7 +81,7 @@ paths:
           description: attributes to assign to the new pizza
           required: true
           schema:
-            $ref: "#/definitions/PizzaAttributes"
+            $ref: "#/definitions/PizzaResource"
       responses:
         "201":
           description: The newly created pizza recipe
@@ -87,6 +89,8 @@ paths:
             $ref: "#/definitions/PizzaResult"
         "400":
           $ref: "#/responses/400"
+        "409":
+          $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
   /pizzas/{pizzaId}:
@@ -125,6 +129,8 @@ paths:
           $ref: "#/responses/400"
         "404":
           $ref: "#/responses/404"
+        "409":
+          $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
     delete:
@@ -159,7 +165,7 @@ paths:
         "500":
           $ref: "#/responses/500"
   /pizzas/{pizzaId}/ingredients/{ingredientId}:
-    patch:
+    post:
       description: add the ingredient with ID ingredientId to the pizza with ID pizzaId
       tags:
         - pizza
@@ -173,10 +179,10 @@ paths:
         - $ref: "#/parameters/pizzaId"
       responses:
         "200":
-          description: Returns true is the resource was updated
+          description: Returns pizzaId concatenated with ingredientId
           schema:
-            type: boolean
-            example: true
+            type: string
+            example: "abc123abc124"
         "404":
           $ref: "#/responses/404"
         "500":
@@ -218,7 +224,7 @@ paths:
         "500":
           $ref: "#/responses/500"
   /pizzas/{pizzaId}/dough/{doughId}:
-    patch:
+    put:
       description: set the dough for the pizza with ID pizzaId to the dough with ID doughId
       tags:
         - pizza
@@ -232,10 +238,10 @@ paths:
         - $ref: "#/parameters/pizzaId"
       responses:
         "200":
-          description: Returns true is the resource was updated
+          description: Returns pizzaID concatenated to doughID
           schema:
-            type: boolean
-            example: true
+            type: string
+            example: abc123abc124
         "404":
           $ref: "#/responses/404"
         "500":
@@ -247,57 +253,57 @@ paths:
         - dough
       parameters:
         - in: query
-          name: name
+          name: filter[name]
           required: false
           type: string
           description: Search doughs by name
         - in: query
-          name: gramsFlour
+          name: filter[gramsFlour]
           required: false
           type: integer
           description: Search doughs by grams flour used
         - in: query
-          name: gramsWater
+          name: filter[gramsWater]
           required: false
           type: integer
           description: Search doughs by grams water used
         - in: query
-          name: gramsSugar
+          name: filter[gramsSugar]
           required: false
           description: Search doughs by grams sugar used
           type: integer
         - in: query
-          name: gramsOliveOil
+          name: filter[gramsOliveOil]
           required: false
           description: Search doughs by grams olive oil used
           type: integer
         - in: query
-          name: gramsYeast
+          name: filter[gramsYeast]
           required: false
           type: integer
           description: Search doughs by grams yeast used
         - in: query
-          name: gramsSalt
+          name: filter[gramsSalt]
           required: false
           type: integer
           description: Search doughs by grams salt used
         - in: query
-          name: bulkFermentTime
+          name: filter[bulkFermentTime]
           required: false
           type: integer
           description: Search doughs by bulk ferment time
         - in: query
-          name: proofTime
+          name: filter[proofTime]
           required: false
           type: integer
           description: Search doughs by proof time
         - in: query
-          name: waterTemp
+          name: filter[waterTemp]
           required: false
           type: integer
           description: Search doughs by water temperature at mix time
         - in: query
-          name: flourType
+          name: filter[flourType]
           required: false
           description: Search doughs by flour type
           type: string
@@ -306,6 +312,8 @@ paths:
           description: A list of dough recipes
           schema:
             $ref: "#/definitions/DoughsResult"
+        "400":
+          $ref: "#/responses/400"
         "500":
           $ref: "#/responses/500"
     post:
@@ -325,6 +333,8 @@ paths:
             $ref: "#/definitions/DoughResult"
         "400":
           $ref: "#/responses/400"
+        "409":
+          $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
   /doughs/{doughId}:
@@ -371,6 +381,8 @@ paths:
           $ref: "#/responses/400"
         "404":
           $ref: "#/responses/404"
+        "409":
+          $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
   /ingredients:
@@ -380,12 +392,12 @@ paths:
         - ingredient
       parameters:
         - in: query
-          name: name
+          name: filter[name]
           description: Search ingredients by name
           required: false
           type: string
         - in: query
-          name: type
+          name: filter[ingredientType]
           description: Search ingredients by type
           required: false
           type: string
@@ -411,6 +423,8 @@ paths:
             $ref: "#/definitions/IngredientResult"
         "400":
           $ref: "#/responses/400"
+        "409":
+          $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
   /ingredients/{ingredientId}:
@@ -457,6 +471,8 @@ paths:
           $ref: "#/responses/400"
         "404":
           $ref: "#/responses/404"
+        "409":
+          $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
 securityDefinitions:
@@ -487,6 +503,8 @@ definitions:
         type: string
         description: a unique ID of a pizza
         example: abc123
+      links:
+        $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/PizzaAttributes"
   PizzaAttributes:
@@ -532,7 +550,7 @@ definitions:
         example: meat
   IngredientResource:
     properties:
-      type:
+      ingredientType:
         type: string
         description: the type of the resource (ingredient)
         example: ingredient
@@ -540,6 +558,8 @@ definitions:
         type: string
         description: a unique ID of an ingredient
         example: abc123
+      links:
+        $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/IngredientAttributes"
   DoughResult:
@@ -562,6 +582,8 @@ definitions:
         type: string
         description: a unique ID of a dough recipe
         example: abc123
+      links:
+        $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/DoughAttributes"
   DoughAttributes:
@@ -646,6 +668,12 @@ definitions:
             format: uri
             description: A link to further information about the error
             example: https://developer.oregonstate.edu/documentation/error-reference#1234
+  SelfLink:
+    properties:
+      self:
+        type: string
+        format: url
+        description: Self link of resource
 parameters:
   pizzaId:
     in: path
@@ -660,6 +688,10 @@ responses:
       $ref: "#/definitions/ErrorResult"
   "404":
     description: Resource not found
+    schema:
+      $ref: "#/definitions/ErrorResult"
+  "409":
+    description: Type is invalid
     schema:
       $ref: "#/definitions/ErrorResult"
   "500":
