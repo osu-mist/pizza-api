@@ -507,6 +507,20 @@ definitions:
         $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/PizzaAttributes"
+      relationships:
+        properties:
+          dough:
+            properties:
+              data:
+                $ref: "#/definitions/DoughRecipe"
+          ingredients:
+            properties:
+              links:
+                $ref: "#/definitions/SelfLink"
+              data:
+                type: array
+                items:
+                  $ref: "#/definitions/IngredientResource"
   PizzaAttributes:
     type: object
     properties:
