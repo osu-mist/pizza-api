@@ -299,7 +299,7 @@ paths:
           name: attributes
           description: attributes of the new dough recipe
           schema:
-            $ref: "#/definitions/DoughPostBody"
+            $ref: "#/definitions/DoughRecipe"
       responses:
         "201":
           description: The created dough recipe
@@ -345,7 +345,7 @@ paths:
           name: attributes
           description: attributes of the dough recipe to be updated
           schema:
-            $ref: "#/definitions/DoughPostBody"
+            $ref: "#/definitions/DoughRecipe"
       responses:
         "200":
           description: The updated dough recipe
@@ -359,29 +359,6 @@ paths:
           $ref: "#/responses/409"
         "500":
           $ref: "#/responses/500"
-  /doughs/{doughId}/relationships/pizza:
-    get:
-      description: get the pizzas made with a specific dough
-      tags:
-        - dough
-        - pizza
-      parameters:
-        - in: path
-          name: doughId
-          required: true
-          type: string
-      responses:
-        "200":
-          description: a list of relationship resources with the pizza type
-          schema:
-            $ref: "#/definitions/RelationshipResourceList"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
-
   /ingredients:
     get:
       description: Get the a list of all ingredients
@@ -470,28 +447,6 @@ paths:
           $ref: "#/responses/404"
         "409":
           $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
-  /ingredients/{ingredientId}/relationships/pizza:
-    get:
-      description: get the pizzas made with a specific ingredient
-      tags:
-        - ingredient
-        - pizza
-      parameters:
-        - in: path
-          name: ingredientId
-          required: true
-          type: string
-      responses:
-        "200":
-          description: a list of relationship resources with the pizza type
-          schema:
-            $ref: "#/definitions/RelationshipResourceList"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
         "500":
           $ref: "#/responses/500"
 securityDefinitions:
@@ -612,31 +567,6 @@ definitions:
         $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/IngredientAttributes"
-      relationships: &ingredientRelationships
-        properties:
-          pizzas:
-            description: the pizzas associated with this ingredient
-            properties:
-              links:
-                $ref: "#/definitions/SelfLink"
-              data:
-                type: array
-                description: a list of relationship resources with the pizza type
-                items:
-                  $ref: "#/definitions/RelationshipResource"
-      included: &ingredientIncluded
-        type: array
-        items:
-          $ref: "#/definitions/PizzaResource"
-  IngredientPostBody:
-    properties:
-      type: *ingredientType
-      id: *ingredientId
-      links:
-        $ref: "#/definitions/SelfLink"
-      attributes:
-        $ref: "#/definitions/IngredientAttributes"
-      relationships: *ingredientRelationships
   DoughResult:
     properties:
       data:
@@ -661,31 +591,6 @@ definitions:
         $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/DoughAttributes"
-      relationships: &doughRelationships
-        properties:
-          pizzas:
-            description: the pizzas associated with this dough
-            properties:
-              links:
-                $ref: "#/definitions/SelfLink"
-              data:
-                type: array
-                description: a list of relationship resources with the pizza type
-                items:
-                  $ref: "#/definitions/RelationshipResource"
-      included: &doughIncluded
-        type: array
-        items:
-          $ref: "#/definitions/PizzaResource"
-  DoughPostBody:
-    properties:
-      type: *doughType
-      id: *doughId
-      links:
-        $ref: "#/definitions/SelfLink"
-      attributes:
-        $ref: "#/definitions/DoughAttributes"
-      relationships: *doughRelationships
   DoughAttributes:
     type: object
     properties:
