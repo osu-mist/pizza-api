@@ -259,7 +259,7 @@ paths:
         - pizza
         - ingredient
       parameters:
-        - $ref: "#/definitions/pizzaId"
+        - $ref: "#/parameters/pizzaId"
       responses:
         "200":
           description: the list of ingredients for the pizza
@@ -350,7 +350,7 @@ paths:
           name: attributes
           description: attributes of the new dough recipe
           schema:
-            $ref: "#/definitions/DoughRecipe"
+            $ref: "#/definitions/DoughPostBody"
       responses:
         "201":
           description: The created dough recipe
@@ -392,7 +392,7 @@ paths:
           name: attributes
           description: attributes of the dough recipe to be updated
           schema:
-            $ref: "#/definitions/DoughRecipe"
+            $ref: "#/definitions/DoughPatchBody"
       responses:
         "200":
           description: The updated dough recipe
@@ -436,7 +436,7 @@ paths:
           name: attributes
           description: Attributes to assign to the new ingredient
           schema:
-            $ref: "#/definitions/IngredientAttributes"
+            $ref: "#/definitions/IngredientPostBody"
       responses:
         "201":
           description: The newly created ingredient
@@ -478,7 +478,7 @@ paths:
           name: attributes
           description: attributes to be updated
           schema:
-            $ref: "#/definitions/IngredientResource"
+            $ref: "#/definitions/IngredientPatchBody"
       responses:
         "200":
           description: The updated ingredient
@@ -556,8 +556,8 @@ definitions:
                     example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
                   related:
                     type: string
-                    description: a link to the ingredient referenced
-                    example: https://api.oregonstate.edu/v1/ingredients/1
+                    description: a link to the ingredients for the dough referenced
+                    example: https://api.oregonstate.edu/v1/dough/1/ingredients
               data:
                 type: array
                 description: a list of relationship resources with the ingredient type
@@ -645,7 +645,7 @@ definitions:
         $ref: "#/definitions/SelfLink"
   IngredientAttributes:
     type: object
-    properties:
+    properties: &ingredientProperties
       name:
         type: string
         description: the name of the ingredient
@@ -655,6 +655,9 @@ definitions:
         description: the type of the ingredient
         enum: [meat, vegetable, fruit, other]
         example: meat
+  IngredientPostAttributes:
+    required: [name, ingredientType]
+    properties: *ingredientProperties
   IngredientResource:
     properties:
       type: &ingredientType
@@ -669,6 +672,21 @@ definitions:
         $ref: "#/definitions/SelfLink"
       attributes:
         $ref: "#/definitions/IngredientAttributes"
+  IngredientPostBody:
+    properties:
+      data:
+        properties:
+          type: *ingredientType
+          attributes:
+            $ref: "#/definitions/IngredientPostAttributes"
+  IngredientPatchBody:
+    properties:
+      data:
+        properties:
+          type: *ingredientType
+          id: *ingredientId
+          attributes:
+            $ref: "#/definitions/IngredientAttributes"
   DoughResult:
     properties:
       data:
@@ -732,10 +750,12 @@ definitions:
         type: integer
         description: the amount of sugar to use, in grams
         example: 20
+        default: 0
       gramsOliveOil:
         type: integer
         description: the amount of olive oil to use, in grams
         example: 50
+        default: 0
       bulkFermentTime:
         type: integer
         description: the time in minutes to spend on the bulk ferment
@@ -748,6 +768,35 @@ definitions:
         type: string
         description: any additional instructions not captured in the main object
         example: keep the dough in the fridge during the bulk ferment
+        default: ""
+  DoughPostAttributes:
+    required:
+      - name
+      - gramsFlour
+      - flourType
+      - gramsWater
+      - gramsYeast
+      - gramsSalt
+      - bulkFermentTime
+      - proofTime
+    properties: *doughproperties
+  DoughPatchBody:
+    required: [data]
+    properties:
+      data:
+        properties:
+          type: *doughType
+          id: *doughId
+          attributes:
+            $ref: "#/definitions/DoughAttributes"
+  DoughPostBody:
+    required: [data]
+    properties:
+      data:
+        properties:
+          type: *doughType
+          attributes:
+            $ref: "#/definitions/DoughPostAttributes"
   ErrorResult:
     properties:
       errors:
