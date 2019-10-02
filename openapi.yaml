@@ -538,11 +538,11 @@ definitions:
                   self:
                     type: string
                     description: a link to the relationship
-                    example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
+                    example: https://api.oregonstate.edu/v1/pizzas/1/relationships/dough
                   related:
                     type: string
                     description: a link to the dough referenced
-                    example: https://api.oregonstate.edu/v1/doughs/1
+                    example: https://api.oregonstate.edu/v1/pizzas/1/dough
               data:
                 $ref: "#/definitions/DoughRelationshipResource"
           ingredients:
@@ -553,11 +553,11 @@ definitions:
                   self:
                     type: string
                     description: a link to the relationship
-                    example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
+                    example: https://api.oregonstate.edu/v1/pizzas/1/relationships/dough
                   related:
                     type: string
                     description: a link to the ingredients for the dough referenced
-                    example: https://api.oregonstate.edu/v1/dough/1/ingredients
+                    example: https://api.oregonstate.edu/v1/pizzas/1/ingredients
               data:
                 type: array
                 description: a list of relationship resources with the ingredient type
@@ -859,10 +859,10 @@ definitions:
         properties:
           self:
             type: string
-            example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
+            example: https://api.oregonstate.edu/v1/pizzas/1/relationships/dough
           related:
             type: string
-            example: https://api.oregonstate.edu/v1/doughs/1
+            example: https://api.oregonstate.edu/v1/pizzas/1/dough
   IngredientRelationshipResourceList:
     description: a list of ingredient relationship resources
     properties:
@@ -874,10 +874,10 @@ definitions:
         properties:
           self:
             type: string
-            example: https://api.oregonstate.edu/v1/pizzas/relationships/ingredients
+            example: https://api.oregonstate.edu/v1/pizzas/1/relationships/ingredients
           related:
             type: string
-            example: https://api.oregonstate.edu/v1/ingredients
+            example: https://api.oregonstate.edu/v1/pizzas/1/ingredients
 parameters:
   pizzaId:
     in: path
