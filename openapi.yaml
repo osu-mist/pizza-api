@@ -23,7 +23,7 @@ host: api.oregonstate.edu
 basePath: /v1
 externalDocs:
   description: GitHub Repository
-  url: https://github.com/osu-mist/express-api-skeleton
+  url: https://github.com/osu-mist/pizza-api
 produces:
   - application/json
 consumes:
@@ -56,6 +56,7 @@ paths:
           name: filter[ingredientsList]
           description: Search for pizzas with all the ingredients specified by this list of ingredient IDs
           type: array
+          collectionFormat: csv
           items:
             type: string
         - in: query
@@ -66,7 +67,7 @@ paths:
         "200":
           description: A list of pizzas
           schema:
-            $ref: "#/definitions/PizzasResults"
+            $ref: "#/definitions/PizzaSetResults"
         "400":
           $ref: "#/responses/400"
         "500":
@@ -87,6 +88,10 @@ paths:
           description: The newly created pizza recipe
           schema:
             $ref: "#/definitions/PizzaResult"
+          headers:
+            location:
+              type: string
+              description: a link to the created resource
         "400":
           $ref: "#/responses/400"
         "409":
@@ -119,7 +124,7 @@ paths:
           name: attributes
           description: attributes of the pizza to be updated
           schema:
-            $ref: "#/definitions/PizzaPostBody"
+            $ref: "#/definitions/PizzaPatchBody"
       responses:
         "200":
           description: The updated pizza recipe
@@ -158,7 +163,7 @@ paths:
         "200":
           description: A dough recipe resource reference
           schema:
-            $ref: "#/definitions/RelationshipResourceResponse"
+            $ref: "#/definitions/DoughRelationshipResourceSingleton"
         "400":
           $ref: "#/responses/400"
         "404":
@@ -172,11 +177,15 @@ paths:
         - dough
       parameters:
         - $ref: "#/parameters/pizzaId"
+        - in: body
+          name: dough
+          schema:
+            $ref: "#/definitions/DoughRelationshipResourceSingleton"
       responses:
         "200":
           description: Successfully updated the dough resource reference
           schema:
-            $ref: "#/definitions/RelationshipResourceResponse"
+            $ref: "#/definitions/DoughRelationshipResourceSingleton"
         "400":
           $ref: "#/responses/400"
         "404":
@@ -195,7 +204,7 @@ paths:
         "200":
           description: A list of ingredient resource references
           schema:
-            $ref: "#/definitions/RelationshipResourceList"
+            $ref: "#/definitions/IngredientRelationshipResourceList"
         "400":
           $ref: "#/responses/400"
         "404":
@@ -209,11 +218,15 @@ paths:
         - ingredient
       parameters:
         - $ref: "#/parameters/pizzaId"
+        - in: body
+          name: ingredients
+          schema:
+            $ref: "#/definitions/IngredientRelationshipResourceList"
       responses:
         "200":
           description: Successfully updated list of ingredients
           schema:
-            $ref: "#/definitions/RelationshipResourceList"
+            $ref: "#/definitions/IngredientRelationshipResourceList"
         "400":
           $ref: "#/responses/400"
         "404":
@@ -305,6 +318,10 @@ paths:
           description: The created dough recipe
           schema:
             $ref: "#/definitions/DoughResult"
+          headers:
+            location:
+              type: string
+              description: a link to the created resource
         "400":
           $ref: "#/responses/400"
         "409":
@@ -317,11 +334,7 @@ paths:
       tags:
         - dough
       parameters:
-        - in: path
-          name: doughId
-          required: true
-          type: string
-          description: ID of the dough recipe to retrieve
+        - $ref: "#/parameters/doughId"
       responses:
         "200":
           description: A single dough recipe
@@ -336,11 +349,7 @@ paths:
       tags:
         - dough
       parameters:
-        - in: path
-          name: doughId
-          required: true
-          type: string
-          description: ID of the dough recipe to retrieve
+        - $ref: "#/parameters/doughId"
         - in: body
           name: attributes
           description: attributes of the dough recipe to be updated
@@ -395,6 +404,10 @@ paths:
           description: The newly created ingredient
           schema:
             $ref: "#/definitions/IngredientResult"
+          headers:
+            location:
+              type: string
+              description: a link to the created resource
         "400":
           $ref: "#/responses/400"
         "409":
@@ -407,11 +420,7 @@ paths:
       tags:
         - ingredient
       parameters:
-        - in: path
-          name: ingredientId
-          required: true
-          type: string
-          description: ID of the ingredient to retrieve
+        - $ref: "#/parameters/ingredientId"
       responses:
         "200":
           description: A single ingredient
@@ -426,11 +435,7 @@ paths:
       tags:
         - ingredient
       parameters:
-        - in: path
-          name: ingredientId
-          required: true
-          type: string
-          description: ID of the ingredient to retrieve
+        - $ref: "#/parameters/ingredientId"
         - in: body
           name: attributes
           description: attributes to be updated
@@ -457,23 +462,26 @@ securityDefinitions:
     scopes:
       full: Full access to the API
 definitions:
-  PizzasResults:
+  PizzaSetResults:
     properties:
       data:
         type: array
         items:
           $ref: "#/definitions/PizzaResource"
+      links:
+        $ref: "#/definitions/SelfLink"
   PizzaResult:
     properties:
       data:
         $ref: "#/definitions/PizzaResource"
-
+      links:
+        $ref: "#/definitions/SelfLink"
   PizzaResource:
     properties:
       type: &pizzaType
         type: string
         description: the type of the resource (pizza)
-        example: pizza
+        enum: [pizza]
       id: &pizzaId
         type: string
         description: a unique ID of a pizza
@@ -486,61 +494,115 @@ definitions:
         properties:
           dough:
             properties:
+              links:
+                properties:
+                  self:
+                    type: string
+                    description: a link to the relationship
+                    example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
+                  related:
+                    type: string
+                    description: a link to the dough referenced
+                    example: https://api.oregonstate.edu/v1/doughs/1
               data:
-                $ref: "#/definitions/RelationshipResource"
+                $ref: "#/definitions/DoughRelationshipResource"
           ingredients:
             properties:
               links:
-                $ref: "#/definitions/SelfLink"
+                properties:
+                  self:
+                    type: string
+                    description: a link to the relationship
+                    example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
+                  related:
+                    type: string
+                    description: a link to the ingredient referenced
+                    example: https://api.oregonstate.edu/v1/ingredients/1
               data:
                 type: array
                 description: a list of relationship resources with the ingredient type
                 items:
-                  $ref: "#/definitions/RelationshipResource"
+                  $ref: "#/definitions/IngredientRelationshipResource"
       included: &pizzaIncluded
         type: array
         items:
-          oneOf:
-            - $ref: "#/definitions/DoughRecipe"
-            - $ref: "#/definitions/IngredientResource"
+          type: object
+          description: An ingredient resource or a dough resource
   PizzaPostBody:
+    required: [data]
     properties:
-      type: *pizzaType
-      id: *pizzaId
-      links:
-        $ref: "#/definitions/SelfLink"
-      attributes:
-        $ref: "#/definitions/PizzaAttributes"
-      relationships: *pizzaRelationships
+      data:
+        required: [type, attributes]
+        properties:
+          type: *pizzaType
+          attributes:
+            $ref: "#/definitions/PizzaAttributes"
+          relationships: &pizzaUpdateRelationships
+            properties:
+              dough:
+                properties:
+                  data:
+                    $ref: "#/definitions/DoughRelationshipResource"
+              ingredients:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/definitions/IngredientRelationshipResource"
+  PizzaPatchBody:
+    required: [data]
+    properties:
+      data:
+        required: [id, type]
+        properties:
+          type: *pizzaType
+          id: *pizzaId
+          attributes:
+            $ref: "#/definitions/PizzaPatchAttributes"
+          relationships: *pizzaUpdateRelationships
   PizzaAttributes:
     type: object
+    required: [name, ovenTemp, bakeTime]
     properties:
-      name:
+      name: &pizzaName
         type: string
         description: the name of the pizza
         example: My Favorite Margherita
-      ovenTemp:
+      ovenTemp: &ovenTemp
         type: integer
         description: the temperature to bake the pizza at, in Fahrenheit
         example: 500
-      bakeTime:
+      bakeTime: &bakeTime
         type: integer
         description: the time in minutes to bake the pizza for
         example: 10
-      specialInstructions:
+      specialInstructions: &pizzaInstructions
         type: string
         description: any special instructions for baking the pizza
         example: place the basil on after baking
+        default: ""
+  # distinction from main other attributes: fields are not required
+  PizzaPatchAttributes:
+    type: object
+    properties:
+      name: *pizzaName
+      ovenTemp: *ovenTemp
+      bakeTime: *bakeTime
+      specialInstructions: *pizzaInstructions
   IngredientsResult:
     properties:
       data:
         type: array
         items:
           $ref: "#/definitions/IngredientResource"
+      links:
+        $ref: "#/definitions/SelfLink"
   IngredientResult:
     properties:
       data:
         $ref: "#/definitions/IngredientResource"
+      links:
+        $ref: "#/definitions/SelfLink"
   IngredientAttributes:
     type: object
     properties:
@@ -558,7 +620,7 @@ definitions:
       type: &ingredientType
         type: string
         description: the type of the resource (ingredient)
-        example: ingredient
+        enum: [ingredient]
       id: &ingredientId
         type: string
         description: a unique ID of an ingredient
@@ -571,18 +633,22 @@ definitions:
     properties:
       data:
         $ref: "#/definitions/DoughRecipe"
+      links:
+        $ref: "#/definitions/SelfLink"
   DoughsResult:
     properties:
       data:
         type: array
         items:
           $ref: "#/definitions/DoughRecipe"
+      links:
+        $ref: "#/definitions/SelfLink"
   DoughRecipe:
     properties:
       type: &doughType
         type: string
         description: the type of the resource (dough)
-        example: dough
+        enum: [dough]
       id: &doughId
         type: string
         description: a unique ID of a dough recipe
@@ -593,7 +659,7 @@ definitions:
         $ref: "#/definitions/DoughAttributes"
   DoughAttributes:
     type: object
-    properties:
+    properties: &doughproperties
       name:
         type: string
         description: the name of the dough recipe
@@ -679,6 +745,10 @@ definitions:
         type: string
         format: url
         description: Self link of resource
+  LocationHeader:
+    type: string
+    description: A link to the created resource
+    example: "https://api.oregonstate.edu/v1/pizzas/abc123"
   RelationshipResource:
     description: an resource passed to a /relationships endpoint with only a type and ID
     properties:
@@ -686,23 +756,48 @@ definitions:
         type: string
         description: the type of the request (pizza, dough, ingredient)
         example: (dough|ingredient|pizza)
-      id:
+      id: &relationshipId
         type: string
         description: the unique ID of the resource
         example: abc123
-  RelationshipResourceResponse:
-    description: a response for a relationships endpoint for a -to-one relationship
+  DoughRelationshipResource:
+    description: a relationship between a dough and a pizza
+    properties:
+      type: *doughType
+      id: *relationshipId
+  IngredientRelationshipResource:
+    description: a relationship between a dough and a pizza
+    properties:
+      type: *ingredientType
+      id: *relationshipId
+  DoughRelationshipResourceSingleton:
+    description: a single relationship resource
     properties:
       data:
-        type: object
-        $ref: "#/definitions/RelationshipResource"
-  RelationshipResourceList:
-    description: a list of relationship resources
+        $ref: "#/definitions/DoughRelationshipResource"
+      links:
+        properties:
+          self:
+            type: string
+            example: https://api.oregonstate.edu/v1/pizzas/relationships/dough
+          related:
+            type: string
+            example: https://api.oregonstate.edu/v1/doughs/1
+  IngredientRelationshipResourceList:
+    description: a list of ingredient relationship resources
     properties:
       data:
         type: array
         items:
-          $ref: "#/definitions/RelationshipResource"
+          $ref: "#/definitions/IngredientRelationshipResource"
+      links:
+        properties:
+          self:
+            type: string
+            example: https://api.oregonstate.edu/v1/pizzas/relationships/ingredients
+          related:
+            type: string
+            example: https://api.oregonstate.edu/v1/ingredients
 parameters:
   pizzaId:
     in: path
@@ -710,6 +805,18 @@ parameters:
     required: true
     type: string
     description: ID of pizza to retrieve
+  doughId:
+    in: path
+    name: doughId
+    required: true
+    type: string
+    description: ID of a dough to retrieve
+  ingredientId:
+    in: path
+    name: ingredientId
+    required: true
+    type: string
+    description: ID of an ingredient to retrieve
 responses:
   "400":
     description: Incorrect syntax in request, or required fields missing
@@ -720,7 +827,7 @@ responses:
     schema:
       $ref: "#/definitions/ErrorResult"
   "409":
-    description: Type is invalid
+    description: Type or ID is invalid
     schema:
       $ref: "#/definitions/ErrorResult"
   "500":
