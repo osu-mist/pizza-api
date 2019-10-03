@@ -1,8 +1,8 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
-  description: "An API for pizza recipes."
-  title: "Pizza API"
-  version: "1.0.0"
+  description: An API for pizza recipes.
+  title: Pizza API
+  version: v1
   contact:
     name: IS Data Architecture Team
     url: https://is.oregonstate.edu/data-architecture
@@ -53,7 +53,7 @@ paths:
           description: Search pizzas by baking time (in minutes)
           type: integer
         - in: query
-          name: filter[ingredientsList]
+          name: filter[ingredientIds]
           description: Search for pizzas with all the ingredients specified by this list of ingredient IDs
           type: array
           collectionFormat: csv
@@ -63,15 +63,23 @@ paths:
           name: filter[doughId]
           description: Search for pizzas with the dough matching this dough ID
           type: string
+        - in: query
+          name: include
+          description: a comma separated list of relationship names to include in the response
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          allowEmptyValue: false
       responses:
-        "200":
+        '200':
           description: A list of pizzas
           schema:
-            $ref: "#/definitions/PizzaSetResults"
-        "400":
-          $ref: "#/responses/400"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/PizzaSetResults'
+        '400':
+          $ref: '#/responses/400'
+        '500':
+          $ref: '#/responses/500'
     post:
       description: Create a new pizza recipe
       tags:
@@ -82,75 +90,75 @@ paths:
           description: attributes to assign to the new pizza
           required: true
           schema:
-            $ref: "#/definitions/PizzaPostBody"
+            $ref: '#/definitions/PizzaPostBody'
       responses:
-        "201":
+        '201':
           description: The newly created pizza recipe
           schema:
-            $ref: "#/definitions/PizzaResult"
+            $ref: '#/definitions/PizzaResult'
           headers:
             location:
               type: string
               description: a link to the created resource
-        "400":
-          $ref: "#/responses/400"
-        "409":
-          $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
+        '400':
+          $ref: '#/responses/400'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
   /pizzas/{pizzaId}:
     get:
       description: Get a pizza with Id pizzaId
       tags:
         - pizza
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
       responses:
-        "200":
+        '200':
           description: A single pizza
           schema:
-            $ref: "#/definitions/PizzaResult"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/PizzaResult'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
     patch:
       description: Update a pizza recipe
       tags:
         - pizza
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
         - in: body
           name: attributes
           description: attributes of the pizza to be updated
           schema:
-            $ref: "#/definitions/PizzaPatchBody"
+            $ref: '#/definitions/PizzaPatchBody'
       responses:
-        "200":
+        '200':
           description: The updated pizza recipe
           schema:
-            $ref: "#/definitions/PizzaResult"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "409":
-          $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/PizzaResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
     delete:
       description: Delete a pizza recipe
       tags:
         - pizza
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
       responses:
-        "204":
+        '204':
           description: successfully deleted the pizza
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
   /pizzas/{pizzaId}/relationships/dough:
     get:
       description: Get the dough recipe for a pizza
@@ -158,40 +166,42 @@ paths:
         - pizza
         - dough
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
       responses:
-        "200":
+        '200':
           description: A dough recipe resource reference
           schema:
-            $ref: "#/definitions/DoughRelationshipResourceSingleton"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/DoughRelationshipResourceSingleton'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
     patch:
       description: update the dough relationship for the pizza. Pass `null` as the data to remove.
       tags:
         - pizza
         - dough
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
         - in: body
           name: dough
           schema:
-            $ref: "#/definitions/DoughRelationshipResourceSingleton"
+            $ref: '#/definitions/DoughRelationshipResourceSingleton'
       responses:
-        "200":
+        '200':
           description: Successfully updated the dough resource reference
           schema:
-            $ref: "#/definitions/DoughRelationshipResourceSingleton"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/DoughRelationshipResourceSingleton'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '403':
+          $ref: '#/responses/403'
+        '500':
+          $ref: '#/responses/500'
   /pizzas/{pizzaId}/dough:
     get:
       description: get the dough used for a pizza
@@ -199,18 +209,18 @@ paths:
         - pizza
         - dough
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
       responses:
-        "200":
+        '200':
           description: A dough resource
           schema:
-            $ref: "#/definitions/DoughResult"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/DoughResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
   /pizzas/{pizzaId}/relationships/ingredients:
     get:
       description: Get ingredients for a pizza
@@ -218,40 +228,61 @@ paths:
         - pizza
         - ingredient
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
       responses:
-        "200":
+        '200':
           description: A list of ingredient resource references
           schema:
-            $ref: "#/definitions/IngredientRelationshipResourceList"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
     patch:
       description: update *all* ingredients for a pizza.
       tags:
         - pizza
         - ingredient
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
         - in: body
           name: ingredients
           schema:
-            $ref: "#/definitions/IngredientRelationshipResourceList"
+            $ref: '#/definitions/IngredientRelationshipResourceList'
       responses:
-        "200":
+        '200':
           description: Successfully updated list of ingredients
           schema:
-            $ref: "#/definitions/IngredientRelationshipResourceList"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+        '400':
+          $ref: '#/responses/400'
+        '403':
+          $ref: '#/responses/403'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    delete:
+      description: delete the ingredients in the included list from the pizza ingredients
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: ingredients
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+      responses:
+        '204':
+          description: Successfully removed the ingredients
+        '400':
+          $ref: '#/responses/400'
+        '403':
+          $ref: '#/responses/403'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
   /pizzas/{pizzaId}/ingredients:
     get:
       description: get the ingredients for a pizza
@@ -259,18 +290,18 @@ paths:
         - pizza
         - ingredient
       parameters:
-        - $ref: "#/parameters/pizzaId"
+        - $ref: '#/parameters/pizzaId'
       responses:
-        "200":
+        '200':
           description: the list of ingredients for the pizza
           schema:
-            $ref: "#/definitions/IngredientsResult"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/IngredientsResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
   /doughs:
     get:
       description: Get all dough recipes
@@ -333,14 +364,14 @@ paths:
           description: Search doughs by flour type
           type: string
       responses:
-        "200":
+        '200':
           description: A list of dough recipes
           schema:
-            $ref: "#/definitions/DoughsResult"
-        "400":
-          $ref: "#/responses/400"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/DoughsResult'
+        '400':
+          $ref: '#/responses/400'
+        '500':
+          $ref: '#/responses/500'
     post:
       description: Create a dough recipe
       tags:
@@ -350,62 +381,62 @@ paths:
           name: attributes
           description: attributes of the new dough recipe
           schema:
-            $ref: "#/definitions/DoughPostBody"
+            $ref: '#/definitions/DoughPostBody'
       responses:
-        "201":
+        '201':
           description: The created dough recipe
           schema:
-            $ref: "#/definitions/DoughResult"
+            $ref: '#/definitions/DoughResult'
           headers:
             location:
               type: string
               description: a link to the created resource
-        "400":
-          $ref: "#/responses/400"
-        "409":
-          $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
+        '400':
+          $ref: '#/responses/400'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
   /doughs/{doughId}:
     get:
       description: Get the dough recipe with ID doughId
       tags:
         - dough
       parameters:
-        - $ref: "#/parameters/doughId"
+        - $ref: '#/parameters/doughId'
       responses:
-        "200":
+        '200':
           description: A single dough recipe
           schema:
-            $ref: "#/definitions/DoughResult"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/DoughResult'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
     patch:
       description: Update a dough recipe
       tags:
         - dough
       parameters:
-        - $ref: "#/parameters/doughId"
+        - $ref: '#/parameters/doughId'
         - in: body
           name: attributes
           description: attributes of the dough recipe to be updated
           schema:
-            $ref: "#/definitions/DoughPatchBody"
+            $ref: '#/definitions/DoughPatchBody'
       responses:
-        "200":
+        '200':
           description: The updated dough recipe
           schema:
-            $ref: "#/definitions/DoughResult"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "409":
-          $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/DoughResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
   /ingredients:
     get:
       description: Get the a list of all ingredients
@@ -422,11 +453,12 @@ paths:
           description: Search ingredients by type
           required: false
           type: string
+          enum: [meat, vegetable, fruit, other]
       responses:
-        "200":
+        '200':
           description: A list of ingredients
           schema:
-            $ref: "#/definitions/IngredientsResult"
+            $ref: '#/definitions/IngredientsResult'
     post:
       description: Create a new ingredient
       tags:
@@ -436,62 +468,62 @@ paths:
           name: attributes
           description: Attributes to assign to the new ingredient
           schema:
-            $ref: "#/definitions/IngredientPostBody"
+            $ref: '#/definitions/IngredientPostBody'
       responses:
-        "201":
+        '201':
           description: The newly created ingredient
           schema:
-            $ref: "#/definitions/IngredientResult"
+            $ref: '#/definitions/IngredientResult'
           headers:
             location:
               type: string
               description: a link to the created resource
-        "400":
-          $ref: "#/responses/400"
-        "409":
-          $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
+        '400':
+          $ref: '#/responses/400'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
   /ingredients/{ingredientId}:
     get:
       description: Get the ingredient with ID ingredientId
       tags:
         - ingredient
       parameters:
-        - $ref: "#/parameters/ingredientId"
+        - $ref: '#/parameters/ingredientId'
       responses:
-        "200":
+        '200':
           description: A single ingredient
           schema:
-            $ref: "#/definitions/IngredientResult"
-        "404":
-          $ref: "#/responses/404"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/IngredientResult'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
     patch:
       description: Update the ingredient with ID ingredientId
       tags:
         - ingredient
       parameters:
-        - $ref: "#/parameters/ingredientId"
+        - $ref: '#/parameters/ingredientId'
         - in: body
           name: attributes
           description: attributes to be updated
           schema:
-            $ref: "#/definitions/IngredientPatchBody"
+            $ref: '#/definitions/IngredientPatchBody'
       responses:
-        "200":
+        '200':
           description: The updated ingredient
           schema:
-            $ref: "#/definitions/IngredientResult"
-        "400":
-          $ref: "#/responses/400"
-        "404":
-          $ref: "#/responses/404"
-        "409":
-          $ref: "#/responses/409"
-        "500":
-          $ref: "#/responses/500"
+            $ref: '#/definitions/IngredientResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
 securityDefinitions:
   OAuth2:
     type: oauth2
@@ -505,15 +537,15 @@ definitions:
       data:
         type: array
         items:
-          $ref: "#/definitions/PizzaResource"
+          $ref: '#/definitions/PizzaResource'
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
   PizzaResult:
     properties:
       data:
-        $ref: "#/definitions/PizzaResource"
+        $ref: '#/definitions/PizzaResource'
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
   PizzaResource:
     properties:
       type: &pizzaType
@@ -525,9 +557,9 @@ definitions:
         description: a unique ID of a pizza
         example: abc123
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
       attributes:
-        $ref: "#/definitions/PizzaAttributes"
+        $ref: '#/definitions/PizzaAttributes'
       relationships: &pizzaRelationships
         properties:
           dough:
@@ -544,7 +576,7 @@ definitions:
                     description: a link to the dough referenced
                     example: https://api.oregonstate.edu/v1/pizzas/1/dough
               data:
-                $ref: "#/definitions/DoughRelationshipResource"
+                $ref: '#/definitions/DoughRelationshipResource'
           ingredients:
             required: [data]
             properties:
@@ -562,7 +594,7 @@ definitions:
                 type: array
                 description: a list of relationship resources with the ingredient type
                 items:
-                  $ref: "#/definitions/IngredientRelationshipResource"
+                  $ref: '#/definitions/IngredientRelationshipResource'
       included: &pizzaIncluded
         type: array
         items:
@@ -576,19 +608,19 @@ definitions:
         properties:
           type: *pizzaType
           attributes:
-            $ref: "#/definitions/PizzaAttributes"
+            $ref: '#/definitions/PizzaAttributes'
           relationships: &pizzaUpdateRelationships
             properties:
               dough:
                 properties:
                   data:
-                    $ref: "#/definitions/DoughRelationshipResource"
+                    $ref: '#/definitions/DoughRelationshipResource'
               ingredients:
                 properties:
                   data:
                     type: array
                     items:
-                      $ref: "#/definitions/IngredientRelationshipResource"
+                      $ref: '#/definitions/IngredientRelationshipResource'
   PizzaPatchBody:
     required: [data]
     properties:
@@ -598,7 +630,7 @@ definitions:
           type: *pizzaType
           id: *pizzaId
           attributes:
-            $ref: "#/definitions/PizzaAttributes"
+            $ref: '#/definitions/PizzaAttributes'
           relationships: *pizzaUpdateRelationships
   PizzaPostAttributes:
     type: object
@@ -620,7 +652,7 @@ definitions:
         type: string
         description: any special instructions for baking the pizza
         example: place the basil on after baking
-        default: ""
+        default: ''
   # distinction from main other attributes: fields are not required
   PizzaAttributes:
     type: object
@@ -634,15 +666,15 @@ definitions:
       data:
         type: array
         items:
-          $ref: "#/definitions/IngredientResource"
+          $ref: '#/definitions/IngredientResource'
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
   IngredientResult:
     properties:
       data:
-        $ref: "#/definitions/IngredientResource"
+        $ref: '#/definitions/IngredientResource'
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
   IngredientAttributes:
     type: object
     properties: &ingredientProperties
@@ -655,6 +687,10 @@ definitions:
         description: the type of the ingredient
         enum: [meat, vegetable, fruit, other]
         example: meat
+      notes:
+        type: string
+        description: additional information about using or preparing the ingredient
+        example: brown the sausage in a pan before baking
   IngredientPostAttributes:
     required: [name, ingredientType]
     properties: *ingredientProperties
@@ -669,16 +705,16 @@ definitions:
         description: a unique ID of an ingredient
         example: abc123
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
       attributes:
-        $ref: "#/definitions/IngredientAttributes"
+        $ref: '#/definitions/IngredientAttributes'
   IngredientPostBody:
     properties:
       data:
         properties:
           type: *ingredientType
           attributes:
-            $ref: "#/definitions/IngredientPostAttributes"
+            $ref: '#/definitions/IngredientPostAttributes'
   IngredientPatchBody:
     properties:
       data:
@@ -686,21 +722,21 @@ definitions:
           type: *ingredientType
           id: *ingredientId
           attributes:
-            $ref: "#/definitions/IngredientAttributes"
+            $ref: '#/definitions/IngredientAttributes'
   DoughResult:
     properties:
       data:
-        $ref: "#/definitions/DoughRecipe"
+        $ref: '#/definitions/DoughRecipe'
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
   DoughsResult:
     properties:
       data:
         type: array
         items:
-          $ref: "#/definitions/DoughRecipe"
+          $ref: '#/definitions/DoughRecipe'
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
   DoughRecipe:
     properties:
       type: &doughType
@@ -712,9 +748,9 @@ definitions:
         description: a unique ID of a dough recipe
         example: abc123
       links:
-        $ref: "#/definitions/SelfLink"
+        $ref: '#/definitions/SelfLink'
       attributes:
-        $ref: "#/definitions/DoughAttributes"
+        $ref: '#/definitions/DoughAttributes'
   DoughAttributes:
     type: object
     properties: &doughproperties
@@ -768,7 +804,7 @@ definitions:
         type: string
         description: any additional instructions not captured in the main object
         example: keep the dough in the fridge during the bulk ferment
-        default: ""
+        default: ''
   DoughPostAttributes:
     required:
       - name
@@ -788,7 +824,7 @@ definitions:
           type: *doughType
           id: *doughId
           attributes:
-            $ref: "#/definitions/DoughAttributes"
+            $ref: '#/definitions/DoughAttributes'
   DoughPostBody:
     required: [data]
     properties:
@@ -796,19 +832,19 @@ definitions:
         properties:
           type: *doughType
           attributes:
-            $ref: "#/definitions/DoughPostAttributes"
+            $ref: '#/definitions/DoughPostAttributes'
   ErrorResult:
     properties:
       errors:
         type: array
         items:
-          $ref: "#/definitions/ErrorObject"
+          $ref: '#/definitions/ErrorObject'
   ErrorObject:
     properties:
       status:
         type: string
         description: HTTP status code
-        example: "123"
+        example: '123'
       title:
         type: string
         description: A short, user readable summary of the error
@@ -816,7 +852,7 @@ definitions:
       code:
         type: string
         description: An application-specific error code
-        example: "1234"
+        example: '1234'
       detail:
         type: string
         description: A long description of the error that may contain instance-specific details
@@ -850,11 +886,18 @@ definitions:
         type: string
         description: the unique ID of the resource
         example: abc123
+      meta:
+        properties:
+          description:
+            type: string
+            description: information about the way the ingredient is used in the pizza
+            example: only put pepperoni on half of the pizza
+
   DoughRelationshipResourceSingleton:
     description: a single relationship resource
     properties:
       data:
-        $ref: "#/definitions/DoughRelationshipResource"
+        $ref: '#/definitions/DoughRelationshipResource'
       links:
         properties:
           self:
@@ -869,7 +912,7 @@ definitions:
       data:
         type: array
         items:
-          $ref: "#/definitions/IngredientRelationshipResource"
+          $ref: '#/definitions/IngredientRelationshipResource'
       links:
         properties:
           self:
@@ -898,19 +941,23 @@ parameters:
     type: string
     description: ID of an ingredient to retrieve
 responses:
-  "400":
+  '400':
     description: Incorrect syntax in request, or required fields missing
     schema:
-      $ref: "#/definitions/ErrorResult"
-  "404":
+      $ref: '#/definitions/ErrorResult'
+  '403':
+    description: Unsupported request
+    schema:
+      $ref: '#/definitions/ErrorResult'
+  '404':
     description: Resource not found
     schema:
-      $ref: "#/definitions/ErrorResult"
-  "409":
+      $ref: '#/definitions/ErrorResult'
+  '409':
     description: Type or ID is invalid
     schema:
-      $ref: "#/definitions/ErrorResult"
-  "500":
+      $ref: '#/definitions/ErrorResult'
+  '500':
     description: Internal server error
     schema:
-      $ref: "#/definitions/ErrorResult"
+      $ref: '#/definitions/ErrorResult'
