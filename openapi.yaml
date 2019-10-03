@@ -240,6 +240,30 @@ paths:
           $ref: '#/responses/404'
         '500':
           $ref: '#/responses/500'
+    post:
+      description: add the list of ingredients in the body to the pizza's ingredients
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: ingredients
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+      responses:
+        '200':
+          description: Successfully updated list of ingredients
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+        '400':
+          $ref: '#/responses/400'
+        '403':
+          $ref: '#/responses/403'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
     patch:
       description: update *all* ingredients for a pizza.
       tags:
