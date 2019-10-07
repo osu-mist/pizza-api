@@ -501,7 +501,13 @@ paths:
           description: Search ingredients by type
           required: false
           type: string
-          enum: [cheese, sauce, meat, vegetable, fruit, other]
+          enum: &ingredientTypeEnum
+            - cheese
+            - sauce
+            - meat
+            - vegetable
+            - fruit
+            - other
       responses:
         '200':
           description: A list of ingredients
@@ -656,7 +662,7 @@ definitions:
         properties:
           type: *pizzaType
           attributes:
-            $ref: '#/definitions/PizzaAttributes'
+            $ref: '#/definitions/PizzaPostAttributes'
           relationships: &pizzaUpdateRelationships
             properties:
               dough:
@@ -733,7 +739,7 @@ definitions:
       ingredientType:
         type: string
         description: the type of the ingredient
-        enum: [cheese, sauce, meat, vegetable, fruit, other]
+        enum: *ingredientTypeEnum
         example: meat
       notes:
         type: string
