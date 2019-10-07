@@ -501,7 +501,7 @@ paths:
           description: Search ingredients by type
           required: false
           type: string
-          enum: [meat, vegetable, fruit, other]
+          enum: [cheese, sauce, meat, vegetable, fruit, other]
       responses:
         '200':
           description: A list of ingredients
@@ -733,7 +733,7 @@ definitions:
       ingredientType:
         type: string
         description: the type of the ingredient
-        enum: [meat, vegetable, fruit, other]
+        enum: [cheese, sauce, meat, vegetable, fruit, other]
         example: meat
       notes:
         type: string
