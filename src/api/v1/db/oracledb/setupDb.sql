@@ -52,6 +52,8 @@ CREATE TABLE "PIZZA_INGREDIENTS"
 	  REFERENCES "INGREDIENTS" ("ID") ON DELETE CASCADE ENABLE
    );
 
+COMMENT ON TABLE PIZZA_INGREDIENTS IS "A join table for the many-to-many relationship of pizzas to ingredients. Rows are uniquely identified by the combination of pizza id and ingredient id."
+
 /* adding some sample data */
 
 INSERT INTO DOUGHS (NAME, GRAMS_FLOUR, GRAMS_WATER, FLOUR_TYPE, WATER_TEMP, GRAMS_YEAST, GRAMS_SALT, GRAMS_SUGAR, GRAMS_OLIVE_OIL, BULK_FERMENT_TIME, PROOF_TIME, SPECIAL_INSTRUCTIONS)
