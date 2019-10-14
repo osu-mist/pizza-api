@@ -118,7 +118,7 @@ paths:
           schema:
             $ref: '#/definitions/PizzaResult'
           headers:
-            location:
+            Location:
               type: string
               description: a link to the created resource
         '400':
@@ -152,6 +152,7 @@ paths:
         - in: body
           name: attributes
           description: attributes of the pizza to be updated
+          required: true
           schema:
             $ref: '#/definitions/PizzaPatchBody'
       responses:
@@ -208,6 +209,7 @@ paths:
         - $ref: '#/parameters/pizzaId'
         - in: body
           name: dough
+          required: true
           schema:
             $ref: '#/definitions/DoughRelationshipResourceSingleton'
       responses:
@@ -270,6 +272,7 @@ paths:
         - $ref: '#/parameters/pizzaId'
         - in: body
           name: ingredients
+          required: true
           schema:
             $ref: '#/definitions/IngredientRelationshipResourceList'
       responses:
@@ -294,6 +297,7 @@ paths:
         - $ref: '#/parameters/pizzaId'
         - in: body
           name: ingredients
+          required: true
           schema:
             $ref: '#/definitions/IngredientRelationshipResourceList'
       responses:
@@ -318,6 +322,7 @@ paths:
         - $ref: '#/parameters/pizzaId'
         - in: body
           name: ingredients
+          required: true
           schema:
             $ref: '#/definitions/IngredientRelationshipResourceList'
       responses:
@@ -436,7 +441,7 @@ paths:
           schema:
             $ref: '#/definitions/DoughResult'
           headers:
-            location:
+            Location:
               type: string
               description: a link to the created resource
         '400':
@@ -529,7 +534,7 @@ paths:
           schema:
             $ref: '#/definitions/IngredientResult'
           headers:
-            location:
+            Location:
               type: string
               description: a link to the created resource
         '400':
@@ -926,6 +931,7 @@ definitions:
         description: Self link of resource
   DoughRelationshipResource:
     description: a relationship between a dough and a pizza
+    required: [type, id]
     properties:
       type: *doughType
       id:
@@ -934,6 +940,7 @@ definitions:
         example: abc123
   IngredientRelationshipResource:
     description: a relationship between a dough and a pizza
+    required: [type, id]
     properties:
       type: *ingredientType
       id:
