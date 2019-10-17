@@ -53,28 +53,28 @@ paths:
           description: Search pizzas by baking time (in minutes)
           type: integer
         - in: query
-          name: filter[ingredientIds][allOf]
+          name: filter[ingredientIds][hasAll]
           description: Search for pizzas with all the ingredients specified by this list of ingredient IDs
           type: array
           collectionFormat: csv
           items:
             type: string
         - in: query
-          name: filter[ingredientIds][noneOf]
+          name: filter[ingredientIds][hasNone]
           description: Search for pizzas with none the ingredients specified by this list of ingredient IDs
           type: array
           collectionFormat: csv
           items:
             type: string
         - in: query
-          name: filter[ingredientNames][allOf]
+          name: filter[ingredientNames][hasAll]
           description: Search for pizzas which have all of the following ingredients
           type: array
           collectionFormat: csv
           items:
             type: string
         - in: query
-          name: filter[ingredientName][noneOf]
+          name: filter[ingredientName][hasNone]
           description: Search for pizzas which have none of the following ingredients
           type: array
           collectionFormat: csv
