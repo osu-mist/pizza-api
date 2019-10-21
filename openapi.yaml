@@ -1,22 +1,29 @@
 swagger: '2.0'
 info:
-  title: Express API Skeleton
-  description: Skeleton for Express APIs
+  description: An API for pizza recipes.
+  title: Pizza API
   version: v1
-  license:
-    name: GNU Affero General Public License Version 3
-    url: http://www.gnu.org/licenses/agpl-3.0.en.html
   contact:
     name: IS Data Architecture Team
     url: https://is.oregonstate.edu/data-architecture
     email: isdataarchitecture@oregonstate.edu
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+  - name: pizza
+    description: A pizza recipe
+  - name: dough
+    description: A dough recipe
+  - name: ingredient
+    description: An ingredient
 schemes:
   - https
 host: api.oregonstate.edu
 basePath: /v1
 externalDocs:
   description: GitHub Repository
-  url: https://github.com/osu-mist/express-api-skeleton
+  url: https://github.com/osu-mist/pizza-api
 produces:
   - application/json
 consumes:
@@ -25,105 +32,557 @@ security:
   - OAuth2:
       - full
 paths:
-  /pets:
+  /pizzas:
     get:
-      summary: List all pets
+      description: Get all pizzas
       tags:
-        - pets
-      description: Get all pets
-      operationId: getPets
+        - pizza
       parameters:
-        - $ref: '#/parameters/pageNumber'
-        - $ref: '#/parameters/pageSize'
         - in: query
-          name: species
-          description: Search by pet species
+          name: filter[name]
+          description: Search pizzas by name
           required: false
           type: string
+        - in: query
+          name: filter[ovenTemp]
+          description: Search pizzas by bake temperature (in degrees Fahrenheit)
+          required: false
+          type: integer
+        - in: query
+          name: filter[bakeTime]
+          description: Search pizzas by baking time (in minutes)
+          type: integer
+        - in: query
+          name: filter[ingredientIds][hasAll]
+          description: Search for pizzas with all the ingredients specified by this list of ingredient IDs
+          type: array
+          collectionFormat: csv
+          items:
+            type: string
+        - in: query
+          name: filter[ingredientIds][hasNone]
+          description: Search for pizzas with none the ingredients specified by this list of ingredient IDs
+          type: array
+          collectionFormat: csv
+          items:
+            type: string
+        - in: query
+          name: filter[ingredientNames][hasAll]
+          description: Search for pizzas which have all of the following ingredients
+          type: array
+          collectionFormat: csv
+          items:
+            type: string
+        - in: query
+          name: filter[ingredientName][hasNone]
+          description: Search for pizzas which have none of the following ingredients
+          type: array
+          collectionFormat: csv
+          items:
+            type: string
+        - in: query
+          name: filter[doughId]
+          description: Search for pizzas with the dough matching this dough ID
+          type: string
+        - in: query
+          name: include
+          description: a comma separated list of relationship names to include in the response
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          allowEmptyValue: false
       responses:
         '200':
-          description: Successful response
+          description: A list of pizzas
           schema:
-            $ref: '#/definitions/PetsResult'
+            $ref: '#/definitions/PizzaSetResult'
         '400':
           $ref: '#/responses/400'
         '500':
           $ref: '#/responses/500'
     post:
-      summary: Add a new pet
-      operationId: postPet
+      description: Create a new pizza recipe
       tags:
-        - pets
+        - pizza
       parameters:
         - in: body
-          name: body
+          name: attributes
+          description: attributes to assign to the new pizza
           required: true
           schema:
-            $ref: '#/definitions/PetPostBody'
+            $ref: '#/definitions/PizzaPostBody'
       responses:
         '201':
-          description: Pet successfully created
+          description: The newly created pizza recipe
           schema:
-            $ref: '#/definitions/PetResult'
+            $ref: '#/definitions/PizzaResult'
+          headers:
+            Location:
+              type: string
+              description: a link to the created resource
         '400':
           $ref: '#/responses/400'
         '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResult'
+          $ref: '#/responses/409'
         '500':
           $ref: '#/responses/500'
-  /pets/{id}:
+  /pizzas/{pizzaId}:
     get:
-      summary: Info for a specific pet
+      description: Get a pizza with Id pizzaId
       tags:
-        - pets
-      description: Get pet by unique ID
-      operationId: getPetById
+        - pizza
       parameters:
-        - name: id
-          in: path
-          description: Unique Pet ID, UUID format
+        - $ref: '#/parameters/pizzaId'
+      responses:
+        '200':
+          description: A single pizza
+          schema:
+            $ref: '#/definitions/PizzaResult'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    patch:
+      description: Update a pizza recipe
+      tags:
+        - pizza
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: attributes
+          description: attributes of the pizza to be updated
           required: true
+          schema:
+            $ref: '#/definitions/PizzaPatchBody'
+      responses:
+        '200':
+          description: The updated pizza recipe
+          schema:
+            $ref: '#/definitions/PizzaResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
+    delete:
+      description: Delete a pizza recipe
+      tags:
+        - pizza
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+      responses:
+        '204':
+          description: successfully deleted the pizza
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+  /pizzas/{pizzaId}/relationships/dough:
+    get:
+      description: Get the dough recipe for a pizza
+      tags:
+        - pizza
+        - dough
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+      responses:
+        '200':
+          description: A dough recipe resource reference
+          schema:
+            $ref: '#/definitions/DoughRelationshipResourceSingleton'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    patch:
+      description: update the dough relationship for the pizza. Pass `null` as the data to remove.
+      tags:
+        - pizza
+        - dough
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: dough
+          required: true
+          schema:
+            $ref: '#/definitions/DoughRelationshipResourceSingleton'
+      responses:
+        '200':
+          description: Successfully updated the dough resource reference
+          schema:
+            $ref: '#/definitions/DoughRelationshipResourceSingleton'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '403':
+          $ref: '#/responses/403'
+        '500':
+          $ref: '#/responses/500'
+  /pizzas/{pizzaId}/dough:
+    get:
+      description: get the dough used for a pizza
+      tags:
+        - pizza
+        - dough
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+      responses:
+        '200':
+          description: A dough resource
+          schema:
+            $ref: '#/definitions/DoughResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+  /pizzas/{pizzaId}/relationships/ingredients:
+    get:
+      description: Get ingredients for a pizza
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+      responses:
+        '200':
+          description: A list of ingredient resource references
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    post:
+      description: add the list of ingredients in the body to the pizza's ingredients
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: ingredients
+          required: true
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+      responses:
+        '200':
+          description: Successfully updated list of ingredients
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+        '400':
+          $ref: '#/responses/400'
+        '403':
+          $ref: '#/responses/403'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    patch:
+      description: update *all* ingredients for a pizza.
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: ingredients
+          required: true
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+      responses:
+        '200':
+          description: Successfully updated list of ingredients
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+        '400':
+          $ref: '#/responses/400'
+        '403':
+          $ref: '#/responses/403'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    delete:
+      description: delete the ingredients in the included list from the pizza ingredients
+      tags:
+        - ingredient
+        - pizza
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+        - in: body
+          name: ingredients
+          required: true
+          schema:
+            $ref: '#/definitions/IngredientRelationshipResourceList'
+      responses:
+        '204':
+          description: Successfully removed the ingredients
+        '400':
+          $ref: '#/responses/400'
+        '403':
+          $ref: '#/responses/403'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+  /pizzas/{pizzaId}/ingredients:
+    get:
+      description: get the ingredients for a pizza
+      tags:
+        - pizza
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/pizzaId'
+      responses:
+        '200':
+          description: the list of ingredients for the pizza
+          schema:
+            $ref: '#/definitions/IngredientsResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+  /doughs:
+    get:
+      description: Get all dough recipes
+      tags:
+        - dough
+      parameters:
+        - in: query
+          name: filter[name]
+          required: false
+          type: string
+          description: Search doughs by name
+        - in: query
+          name: filter[gramsFlour]
+          required: false
+          type: integer
+          description: Search doughs by grams flour used
+        - in: query
+          name: filter[gramsWater]
+          required: false
+          type: integer
+          description: Search doughs by grams water used
+        - in: query
+          name: filter[gramsSugar]
+          required: false
+          description: Search doughs by grams sugar used
+          type: integer
+        - in: query
+          name: filter[gramsOliveOil]
+          required: false
+          description: Search doughs by grams olive oil used
+          type: integer
+        - in: query
+          name: filter[gramsYeast]
+          required: false
+          type: integer
+          description: Search doughs by grams yeast used
+        - in: query
+          name: filter[gramsSalt]
+          required: false
+          type: integer
+          description: Search doughs by grams salt used
+        - in: query
+          name: filter[bulkFermentTime]
+          required: false
+          type: integer
+          description: Search doughs by bulk ferment time
+        - in: query
+          name: filter[proofTime]
+          required: false
+          type: integer
+          description: Search doughs by proof time
+        - in: query
+          name: filter[waterTemp]
+          required: false
+          type: integer
+          description: Search doughs by water temperature at mix time
+        - in: query
+          name: filter[flourType]
+          required: false
+          description: Search doughs by flour type
           type: string
       responses:
         '200':
-          description: Successful response
+          description: A list of dough recipes
           schema:
-            $ref: '#/definitions/PetResult'
-        '404':
-          description: PetResource not found
-          schema:
-            $ref: '#/definitions/ErrorResult'
+            $ref: '#/definitions/DoughsResult'
+        '400':
+          $ref: '#/responses/400'
         '500':
           $ref: '#/responses/500'
-parameters:
-  pageNumber:
-    name: page[number]
-    in: query
-    type: integer
-    required: false
-    description: Page number of results
-    default: 1
-    minimum: 1
-  pageSize:
-    name: page[size]
-    in: query
-    type: integer
-    required: false
-    description: Number of results to return
-    default: 25
-    maximum: 500
-    minimum: 1
-responses:
-  '400':
-     description: Bad request
-     schema:
-       $ref: '#/definitions/ErrorResult'
-  '500':
-     description: Internal server error
-     schema:
-       $ref: '#/definitions/ErrorResult'
+    post:
+      description: Create a dough recipe
+      tags:
+        - dough
+      parameters:
+        - in: body
+          name: attributes
+          description: attributes of the new dough recipe
+          schema:
+            $ref: '#/definitions/DoughPostBody'
+      responses:
+        '201':
+          description: The created dough recipe
+          schema:
+            $ref: '#/definitions/DoughResult'
+          headers:
+            Location:
+              type: string
+              description: a link to the created resource
+        '400':
+          $ref: '#/responses/400'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
+  /doughs/{doughId}:
+    get:
+      description: Get the dough recipe with ID doughId
+      tags:
+        - dough
+      parameters:
+        - $ref: '#/parameters/doughId'
+      responses:
+        '200':
+          description: A single dough recipe
+          schema:
+            $ref: '#/definitions/DoughResult'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    patch:
+      description: Update a dough recipe
+      tags:
+        - dough
+      parameters:
+        - $ref: '#/parameters/doughId'
+        - in: body
+          name: attributes
+          description: attributes of the dough recipe to be updated
+          schema:
+            $ref: '#/definitions/DoughPatchBody'
+      responses:
+        '200':
+          description: The updated dough recipe
+          schema:
+            $ref: '#/definitions/DoughResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
+  /ingredients:
+    get:
+      description: Get a list of all ingredients
+      tags:
+        - ingredient
+      parameters:
+        - in: query
+          name: filter[name]
+          description: Search ingredients by name
+          required: false
+          type: string
+        - in: query
+          name: filter[ingredientType]
+          description: Search ingredients by type
+          required: false
+          type: string
+          enum: &ingredientTypeEnum
+            - cheese
+            - sauce
+            - meat
+            - vegetable
+            - fruit
+            - other
+      responses:
+        '200':
+          description: A list of ingredients
+          schema:
+            $ref: '#/definitions/IngredientsResult'
+    post:
+      description: Create a new ingredient
+      tags:
+        - ingredient
+      parameters:
+        - in: body
+          name: attributes
+          description: Attributes to assign to the new ingredient
+          schema:
+            $ref: '#/definitions/IngredientPostBody'
+      responses:
+        '201':
+          description: The newly created ingredient
+          schema:
+            $ref: '#/definitions/IngredientResult'
+          headers:
+            Location:
+              type: string
+              description: a link to the created resource
+        '400':
+          $ref: '#/responses/400'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
+  /ingredients/{ingredientId}:
+    get:
+      description: Get the ingredient with ID ingredientId
+      tags:
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/ingredientId'
+      responses:
+        '200':
+          description: A single ingredient
+          schema:
+            $ref: '#/definitions/IngredientResult'
+        '404':
+          $ref: '#/responses/404'
+        '500':
+          $ref: '#/responses/500'
+    patch:
+      description: Update the ingredient with ID ingredientId
+      tags:
+        - ingredient
+      parameters:
+        - $ref: '#/parameters/ingredientId'
+        - in: body
+          name: attributes
+          description: attributes to be updated
+          schema:
+            $ref: '#/definitions/IngredientPatchBody'
+      responses:
+        '200':
+          description: The updated ingredient
+          schema:
+            $ref: '#/definitions/IngredientResult'
+        '400':
+          $ref: '#/responses/400'
+        '404':
+          $ref: '#/responses/404'
+        '409':
+          $ref: '#/responses/409'
+        '500':
+          $ref: '#/responses/500'
 securityDefinitions:
   OAuth2:
     type: oauth2
@@ -132,120 +591,313 @@ securityDefinitions:
     scopes:
       full: Full access to the API
 definitions:
-  Meta:
+  PizzaSetResult:
     properties:
-      totalResults:
-        type: integer
-        description: Total number of results
-        example: 10
-      totalPages:
-        type: integer
-        description: Total number of pages
-        example: 10
-      currentPageNumber:
-        type: integer
-        description: Page number of the returned results
-        example: 1
-      currentPageSize:
-        type: integer
-        description: Number of results per page
-        example: 25
-  SelfLink:
-    properties:
-      self:
-        type: string
-        format: url
-        description: Self-link of current resource
-  PaginationLinks:
-    properties:
-      first:
-        type: string
-        format: url
-        description: The first page of data
-      last:
-        type: string
-        format: url
-        description: The last page of data
-      prev:
-        type: string
-        format: url
-        description: The previous page of data
-      next:
-        type: string
-        format: url
-        description: The next page of data
-  PetResource:
-    properties:
-      id:
-        type: string
-        description: A unique ID of pet
-      type:
-        $ref: '#/definitions/PetType'
-      links:
-        $ref: '#/definitions/SelfLink'
-      attributes:
-        properties:
-          name:
-            type: string
-            description: Name of pet
-            example: Hedwig
-          owner:
-            type: string
-            description: Name of owner
-            example: Harry Potter
-          species:
-            type: string
-            description: Species of pet
-            example: Owl
-  PetResult:
-    properties:
-      links:
-        $ref: '#/definitions/SelfLink'
-      data:
-        $ref: '#/definitions/PetResource'
-  PetsResult:
-    properties:
-      links:
-        allOf:
-          - $ref: '#/definitions/SelfLink'
-          - $ref: '#/definitions/PaginationLinks'
-      meta:
-        $ref: '#/definitions/Meta'
       data:
         type: array
         items:
-          $ref: '#/definitions/PetResource'
-  PetPostBody:
+          $ref: '#/definitions/PizzaResource'
+      links:
+        $ref: '#/definitions/SelfLink'
+  PizzaResult:
     properties:
       data:
-        type: object
+        $ref: '#/definitions/PizzaResource'
+      links:
+        $ref: '#/definitions/SelfLink'
+  PizzaResource:
+    properties:
+      type: &pizzaType
+        type: string
+        description: the type of the resource (pizza)
+        enum: [pizza]
+      id: &pizzaId
+        type: string
+        description: a unique ID of a pizza
+        example: abc123
+      links:
+        $ref: '#/definitions/SelfLink'
+      attributes:
+        $ref: '#/definitions/PizzaAttributes'
+      relationships: &pizzaRelationships
         properties:
-          type:
-            $ref: '#/definitions/PetType'
-          attributes:
-            type: object
+          dough:
+            required: [data]
             properties:
-              name:
-                $ref: '#/definitions/PetResource/properties/attributes/properties/name'
-              owner:
-                $ref: '#/definitions/PetResource/properties/attributes/properties/owner'
-              species:
-                $ref: '#/definitions/PetResource/properties/attributes/properties/species'
-            required:
-              - name
-              - owner
-              - species
-            additionalProperties: false
-        required:
-          - type
-          - attributes
-        additionalProperties: false
+              links:
+                properties:
+                  self:
+                    type: string
+                    description: a link to the relationship
+                    example: https://api.oregonstate.edu/v1/pizzas/1/relationships/dough
+                  related:
+                    type: string
+                    description: a link to the dough referenced
+                    example: https://api.oregonstate.edu/v1/pizzas/1/dough
+              data:
+                $ref: '#/definitions/DoughRelationshipResource'
+          ingredients:
+            required: [data]
+            properties:
+              links:
+                properties:
+                  self:
+                    type: string
+                    description: a link to the relationship
+                    example: https://api.oregonstate.edu/v1/pizzas/1/relationships/dough
+                  related:
+                    type: string
+                    description: a link to the ingredients for the dough referenced
+                    example: https://api.oregonstate.edu/v1/pizzas/1/ingredients
+              data:
+                type: array
+                description: a list of relationship resources with the ingredient type
+                items:
+                  $ref: '#/definitions/IngredientRelationshipResource'
+      included: &pizzaIncluded
+        type: array
+        items:
+          type: object
+          description: An ingredient resource or a dough resource
+  PizzaPostBody:
+    required: [data]
+    properties:
+      data:
+        required: [type, attributes]
+        properties:
+          type: *pizzaType
+          attributes:
+            $ref: '#/definitions/PizzaPostAttributes'
+          relationships: &pizzaUpdateRelationships
+            properties:
+              dough:
+                properties:
+                  data:
+                    $ref: '#/definitions/DoughRelationshipResource'
+              ingredients:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/definitions/IngredientRelationshipResource'
+  PizzaPatchBody:
+    required: [data]
+    properties:
+      data:
+        required: [id, type]
+        properties:
+          type: *pizzaType
+          id: *pizzaId
+          attributes:
+            $ref: '#/definitions/PizzaAttributes'
+          relationships: *pizzaUpdateRelationships
+  PizzaPostAttributes:
+    type: object
+    required: [name, ovenTemp, bakeTime]
+    properties:
+      name: &pizzaName
+        type: string
+        description: the name of the pizza
+        example: My Favorite Margherita
+      ovenTemp: &ovenTemp
+        type: integer
+        description: the temperature to bake the pizza at, in Fahrenheit
+        example: 500
+      bakeTime: &bakeTime
+        type: integer
+        description: the time in minutes to bake the pizza for
+        example: 10
+      specialInstructions: &pizzaInstructions
+        type: string
+        description: any special instructions for baking the pizza
+        example: place the basil on after baking
+        default: ''
+  # distinction from main other attributes: fields are not required
+  PizzaAttributes:
+    type: object
+    properties:
+      name: *pizzaName
+      ovenTemp: *ovenTemp
+      bakeTime: *bakeTime
+      specialInstructions: *pizzaInstructions
+  IngredientsResult:
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/IngredientResource'
+      links:
+        $ref: '#/definitions/SelfLink'
+  IngredientResult:
+    properties:
+      data:
+        $ref: '#/definitions/IngredientResource'
+      links:
+        $ref: '#/definitions/SelfLink'
+  IngredientAttributes:
+    type: object
+    properties: &ingredientProperties
+      name:
+        type: string
+        description: the name of the ingredient
+        example: Sausage
+      ingredientType:
+        type: string
+        description: the type of the ingredient
+        enum: *ingredientTypeEnum
+        example: meat
+      notes:
+        type: string
+        description: additional information about using or preparing the ingredient
+        example: brown the sausage in a pan before baking
+  IngredientPostAttributes:
+    required: [name, ingredientType]
+    properties: *ingredientProperties
+  IngredientResource:
+    properties:
+      type: &ingredientType
+        type: string
+        description: the type of the resource (ingredient)
+        enum: [ingredient]
+      id: &ingredientId
+        type: string
+        description: a unique ID of an ingredient
+        example: abc123
+      links:
+        $ref: '#/definitions/SelfLink'
+      attributes:
+        $ref: '#/definitions/IngredientAttributes'
+  IngredientPostBody:
+    properties:
+      data:
+        properties:
+          type: *ingredientType
+          attributes:
+            $ref: '#/definitions/IngredientPostAttributes'
+  IngredientPatchBody:
+    properties:
+      data:
+        properties:
+          type: *ingredientType
+          id: *ingredientId
+          attributes:
+            $ref: '#/definitions/IngredientAttributes'
+  DoughResult:
+    properties:
+      data:
+        $ref: '#/definitions/DoughRecipe'
+      links:
+        $ref: '#/definitions/SelfLink'
+  DoughsResult:
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/DoughRecipe'
+      links:
+        $ref: '#/definitions/SelfLink'
+  DoughRecipe:
+    properties:
+      type: &doughType
+        type: string
+        description: the type of the resource (dough)
+        enum: [dough]
+      id: &doughId
+        type: string
+        description: a unique ID of a dough recipe
+        example: abc123
+      links:
+        $ref: '#/definitions/SelfLink'
+      attributes:
+        $ref: '#/definitions/DoughAttributes'
+  DoughAttributes:
+    type: object
+    properties: &doughproperties
+      name:
+        type: string
+        description: the name of the dough recipe
+        example: weeknight pizza dough
+      gramsFlour:
+        type: integer
+        description: the amount of flour used, in grams
+        example: 500
+      flourType:
+        type: string
+        description: the name of the kind of flour used
+        example: All Purpose
+      gramsWater:
+        type: integer
+        description: the amount of water used, in grams
+        example: 400
+      waterTemp:
+        type: integer
+        description: the temperature in Fahrenheit to heat the water to
+        example: 90
+      gramsYeast:
+        type: integer
+        description: the amount of yeast to use, in grams
+        example: 5
+      gramsSalt:
+        type: integer
+        description: the amount of salt to use, in grams
+        example: 15
+      gramsSugar:
+        type: integer
+        description: the amount of sugar to use, in grams
+        example: 20
+        default: 0
+      gramsOliveOil:
+        type: integer
+        description: the amount of olive oil to use, in grams
+        example: 50
+        default: 0
+      bulkFermentTime:
+        type: integer
+        description: the time in minutes to spend on the bulk ferment
+        example: 60
+      proofTime:
+        type: integer
+        description: the time in minutes to spend on the proof
+        example: 15
+      specialInstructions:
+        type: string
+        description: any additional instructions not captured in the main object
+        example: keep the dough in the fridge during the bulk ferment
+        default: ''
+  DoughPostAttributes:
     required:
-     - data
-    additionalProperties: false
-  PetType:
-    type: string
-    enum: [pet]
+      - name
+      - gramsFlour
+      - flourType
+      - gramsWater
+      - gramsYeast
+      - gramsSalt
+      - bulkFermentTime
+      - proofTime
+    properties: *doughproperties
+  DoughPatchBody:
+    required: [data]
+    properties:
+      data:
+        properties:
+          type: *doughType
+          id: *doughId
+          attributes:
+            $ref: '#/definitions/DoughAttributes'
+  DoughPostBody:
+    required: [data]
+    properties:
+      data:
+        properties:
+          type: *doughType
+          attributes:
+            $ref: '#/definitions/DoughPostAttributes'
+  ErrorResult:
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorObject'
   ErrorObject:
     properties:
       status:
@@ -263,16 +915,110 @@ definitions:
       detail:
         type: string
         description: A long description of the error that may contain instance-specific details
+        example: A long description of the error that may contain instance-specific details
       links:
         properties:
           about:
             type: string
-            format: url
+            format: uri
             description: A link to further information about the error
             example: https://developer.oregonstate.edu/documentation/error-reference#1234
-  ErrorResult:
+  SelfLink:
     properties:
-      errors:
+      self:
+        type: string
+        format: url
+        description: Self link of resource
+  DoughRelationshipResource:
+    description: a relationship between a dough and a pizza
+    required: [type, id]
+    properties:
+      type: *doughType
+      id:
+        type: string
+        description: the unique ID of the resource
+        example: abc123
+  IngredientRelationshipResource:
+    description: a relationship between a dough and a pizza
+    required: [type, id]
+    properties:
+      type: *ingredientType
+      id:
+        type: string
+        description: the unique ID of the resource
+        example: abc123
+      meta:
+        properties:
+          description:
+            type: string
+            description: information about the way the ingredient is used in the pizza
+            example: only put pepperoni on half of the pizza
+
+  DoughRelationshipResourceSingleton:
+    description: a single relationship resource
+    properties:
+      data:
+        $ref: '#/definitions/DoughRelationshipResource'
+      links:
+        properties:
+          self:
+            type: string
+            example: https://api.oregonstate.edu/v1/pizzas/1/relationships/dough
+          related:
+            type: string
+            example: https://api.oregonstate.edu/v1/pizzas/1/dough
+  IngredientRelationshipResourceList:
+    description: a list of ingredient relationship resources
+    properties:
+      data:
         type: array
         items:
-          $ref: '#/definitions/ErrorObject'
+          $ref: '#/definitions/IngredientRelationshipResource'
+      links:
+        properties:
+          self:
+            type: string
+            example: https://api.oregonstate.edu/v1/pizzas/1/relationships/ingredients
+          related:
+            type: string
+            example: https://api.oregonstate.edu/v1/pizzas/1/ingredients
+parameters:
+  pizzaId:
+    in: path
+    name: pizzaId
+    required: true
+    type: string
+    description: ID of pizza to retrieve
+  doughId:
+    in: path
+    name: doughId
+    required: true
+    type: string
+    description: ID of a dough to retrieve
+  ingredientId:
+    in: path
+    name: ingredientId
+    required: true
+    type: string
+    description: ID of an ingredient to retrieve
+responses:
+  '400':
+    description: Incorrect syntax in request, or required fields missing
+    schema:
+      $ref: '#/definitions/ErrorResult'
+  '403':
+    description: Unsupported request
+    schema:
+      $ref: '#/definitions/ErrorResult'
+  '404':
+    description: Resource not found
+    schema:
+      $ref: '#/definitions/ErrorResult'
+  '409':
+    description: Type or ID is invalid
+    schema:
+      $ref: '#/definitions/ErrorResult'
+  '500':
+    description: Internal server error
+    schema:
+      $ref: '#/definitions/ErrorResult'
