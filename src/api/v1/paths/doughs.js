@@ -1,5 +1,5 @@
 import { errorHandler } from 'errors/errors';
-import { getDoughs, createDough } from '../db/oracledb/doughs-dao';
+import { getDoughs, postDough } from '../db/oracledb/doughs-dao';
 
 /**
  * Get doughs
@@ -22,7 +22,7 @@ const get = async (req, res) => {
  */
 const post = async (req, res) => {
   try {
-    const result = await createDough(req.query);
+    const result = await postDough(req.query);
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);

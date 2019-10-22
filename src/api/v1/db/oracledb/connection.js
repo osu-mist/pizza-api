@@ -11,7 +11,7 @@ oracledb.outFormat = oracledb.OBJECT;
 oracledb.fetchAsString = [oracledb.DATE, oracledb.NUMBER];
 
 /** Increase 1 extra thread for every 5 pools but no more than 128 */
-const threadPoolSize = dbConfig.poolMax + dbConfig.poolMax / 5;
+const threadPoolSize = dbConfig.poolMax + (dbConfig.poolMax / 5);
 process.env.UV_THREADPOOL_SIZE = threadPoolSize > 128 ? 128 : threadPoolSize;
 
 /** Connection pool */

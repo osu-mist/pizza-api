@@ -9,9 +9,9 @@ const { endpointUri } = config.get('server');
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
 
 /**
+ * an object mapping DoughRecipe property names to DOUGH table column names
  * @constant
  * @type {object}
- * @description an object mapping DoughRecipe property names to DOUGH table column names
  */
 const doughColumnNames = {
   id: 'ID',
@@ -30,44 +30,63 @@ const doughColumnNames = {
 };
 
 /**
+ * a list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
+ *  generated from the DoughColumnNames object
  * @constant
  * @type {string}
- * @description a list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
- *              generated from the DoughColumnNames object
  */
 const doughColumnAliases = _.toPairs(doughColumnNames)
   .map(([propertyName, columnName]) => `${columnName} AS "${propertyName}"`)
   .join(', ');
 
 /**
- *
- * @param {string} filters
+ * Turns a string containing conditional statements like `NAME = :name AND WATER_TEMP = :waterTemp`
+ *  into a fully fledged sql statement
+ * @param {string} conditionals
  * @returns {string} The assembled query
  */
-const doughsGetQuery = (filters) => `SELECT ${doughColumnAliases} FROM DOUGHS ${filters.length > 0 ? 'WHERE' : ''} ${filters}`;
+const doughsGetQuery = (conditionals) => `SELECT ${doughColumnAliases} FROM DOUGHS ${conditionals ? `WHERE ${conditionals}` : ''}`;
+
 
 /**
- *
+ * Removes the "filter[]" wrapper from a filter parameter
  * @param {string} filterName
  * @returns {string} the filter name with 'filter' and brackets removed
  */
-const filterToPropertyName = (filterName) => filterName.replace(/filter|\[|\]/g, '');
+const normalizeFilterName = (filterName) => {
+  const filterTextRegex = /filter\[(.*)\]/g;
+  const regexResults = filterTextRegex.exec(filterName);
+  return regexResults ? regexResults[1] : filterName;
+};
 
 /**
- * @param {Array<string>} filters
+ * Returns filters with keys changed to remove the "filter[]" wrapper
+ * @param {object} filters
+ * @returns {object}
+ */
+const normalizeFilterNames = (filters) => _.mapKeys(filters,
+  (filterValue, filterName) => normalizeFilterName(filterName));
+
+const normalizedDoughsGetFilters = doughsGetParameters
+  .map(({ name }) => normalizeFilterName(name));
+
+/**
+ * Transforms a filters object with arbitrary params into a string of conditionals
+ *  like NAME = :name and an object with the values of the corresponding bind
+ *  parameters, like { name: "Test dough" }
+ * @param {string[]} filters
  * @returns {object} bindParams and Conditionals
  */
 const processGetFilters = (filters) => {
-  const validFilters = doughsGetParameters.filter((filter) => filter.name in filters);
+  const normalizedFilters = normalizeFilterNames(filters);
+  const validFilters = normalizedDoughsGetFilters
+    .filter((name) => name in normalizedFilters);
   const conditionals = validFilters
-    .map((filter) => {
-      const propertyName = filterToPropertyName(filter.name);
-      return `${doughColumnNames[propertyName]} = :${propertyName}`;
-    })
+    .map((name) => `${doughColumnNames[name]} = :${name}`)
     .join(' AND ');
 
-  const bindParams = validFilters.reduce((params, filter) => {
-    params[filterToPropertyName(filter.name)] = filters[filter.name];
+  const bindParams = validFilters.reduce((params, name) => {
+    params[name] = normalizedFilters[name];
     return params;
   }, {});
 
@@ -75,9 +94,9 @@ const processGetFilters = (filters) => {
 };
 
 /**
- * Return a list of doughs
+ * Return a list of doughs filtered according to `filters`. See API docs.
  *
- * @param {Array} filters
+ * @param {object} filters
  * @returns {Promise<object[]>} Promise object represents a list of doughs
  */
 const getDoughs = async (filters) => {
@@ -98,7 +117,7 @@ const getDoughs = async (filters) => {
  * @param {Array} queries
  * @returns {Promise<object>} a stub dough object
  */
-const createDough = async () => (
+const postDough = async () => (
   {
     data: {
       type: 'dough',
@@ -127,4 +146,4 @@ const createDough = async () => (
   }
 );
 
-export { getDoughs, createDough };
+export { getDoughs, postDough };
