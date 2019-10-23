@@ -60,4 +60,6 @@ const validateOracleDb = async () => {
   }
 };
 
-export { getConnection, validateOracleDb };
+export {
+  getConnection, validateOracleDb,
+};

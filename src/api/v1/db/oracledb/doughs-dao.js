@@ -9,7 +9,8 @@ const { endpointUri } = config.get('server');
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
 
 /**
- * an object mapping DoughRecipe property names to DOUGH table column names
+ * An object mapping DoughRecipe property names to DOUGH table column names
+ *
  * @constant
  * @type {object}
  */
@@ -31,7 +32,8 @@ const doughColumnNames = {
 
 /**
  * a list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
- *  generated from the DoughColumnNames object
+ * generated from the DoughColumnNames object
+ *
  * @constant
  * @type {string}
  */
@@ -41,7 +43,8 @@ const doughColumnAliases = _.toPairs(doughColumnNames)
 
 /**
  * Turns a string containing conditional statements like `NAME = :name AND WATER_TEMP = :waterTemp`
- *  into a fully fledged sql statement
+ * into a fully fledged sql statement
+ *
  * @param {string} conditionals
  * @returns {string} The assembled query
  */
@@ -50,6 +53,7 @@ const doughsGetQuery = (conditionals) => `SELECT ${doughColumnAliases} FROM DOUG
 
 /**
  * Removes the "filter[]" wrapper from a filter parameter
+ *
  * @param {string} filterName
  * @returns {string} the filter name with 'filter' and brackets removed
  */
@@ -61,6 +65,7 @@ const normalizeFilterName = (filterName) => {
 
 /**
  * Returns filters with keys changed to remove the "filter[]" wrapper
+ *
  * @param {object} filters
  * @returns {object}
  */
@@ -72,8 +77,9 @@ const normalizedDoughsGetFilters = doughsGetParameters
 
 /**
  * Transforms a filters object with arbitrary params into a string of conditionals
- *  like NAME = :name and an object with the values of the corresponding bind
- *  parameters, like { name: "Test dough" }
+ * like NAME = :name and an object with the values of the corresponding bind
+ * parameters, like { name: "Test dough" }
+ *
  * @param {string[]} filters
  * @returns {object} bindParams and Conditionals
  */
