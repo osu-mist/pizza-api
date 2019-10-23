@@ -31,7 +31,7 @@ const doughColumnNames = {
 };
 
 /**
- * a list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
+ * A list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
  * generated from the DoughColumnNames object
  *
  * @constant
@@ -90,6 +90,10 @@ const processGetFilters = (filters) => {
   const conditionals = validFilters
     .map((name) => `${doughColumnNames[name]} = :${name}`)
     .join(' AND ');
+
+  if (_.keys(validFilters).length !== _.keys(filters).length) {
+    throw new Error('Request includes invalid filters');
+  }
 
   const bindParams = validFilters.reduce((params, name) => {
     params[name] = normalizedFilters[name];
