@@ -91,10 +91,6 @@ const processGetFilters = (filters) => {
     .map((name) => `${doughColumnNames[name]} = :${name}`)
     .join(' AND ');
 
-  if (_.keys(validFilters).length !== _.keys(filters).length) {
-    throw new Error('Request includes invalid filters');
-  }
-
   const bindParams = validFilters.reduce((params, name) => {
     params[name] = normalizedFilters[name];
     return params;
