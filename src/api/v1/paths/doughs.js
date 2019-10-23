@@ -1,38 +1,32 @@
 import { errorHandler } from 'errors/errors';
-import { getPets, postPet } from '../db/json/pets-dao-example';
+import { getDoughs, postDough } from '../db/oracledb/doughs-dao';
 
 /**
- * Get pets
+ * Get doughs
  *
  * @type {RequestHandler}
  */
 const get = async (req, res) => {
   try {
-    const result = await getPets(req.query);
+    const result = await getDoughs(req.query);
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);
   }
 };
 
-
 /**
- * Post pets
+ * Post doughs
  *
  * @type {RequestHandler}
  */
 const post = async (req, res) => {
   try {
-    const result = await postPet(req.body);
-    res.set('Location', result.data.links.self);
-    res.status(201).send(result);
+    const result = await postDough(req.query);
+    return res.send(result);
   } catch (err) {
-    errorHandler(res, err);
+    return errorHandler(res, err);
   }
 };
 
-
-export {
-  get,
-  post,
-};
+export { get, post };
