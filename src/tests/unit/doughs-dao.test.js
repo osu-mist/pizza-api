@@ -1,6 +1,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 
 import * as connectionApi from 'api/v1/db/oracledb/connection';
 import * as doughsSerializer from 'api/v1/serializers/doughs-serializer';
@@ -9,6 +10,7 @@ import { getDoughsData } from './test-data';
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(sinonChai);
 
 describe('test doughs dao', () => {
   let serializeDoughsStub;
@@ -42,10 +44,11 @@ describe('test doughs dao', () => {
         await getDoughs(getDoughsData.invalidFilters);
         connectionSpy
           .getCall(0)
+          .should.have.been
           .calledWith(
             getDoughsData.getDoughsQuery,
             getDoughsData.emptyBindParams,
-          ).should.be.true;
+          );
       });
     });
     describe('when it has valid filters', () => {
@@ -53,10 +56,11 @@ describe('test doughs dao', () => {
         await getDoughs(getDoughsData.waterTempFilter);
         connectionSpy
           .getCall(0)
+          .should.have.been
           .calledWith(
             getDoughsData.getDoughsQueryWithWaterTemp,
             getDoughsData.waterTempBindParams,
-          ).should.be.true;
+          );
       });
     });
     describe('when it gets valid and invalid filters', () => {
@@ -64,10 +68,11 @@ describe('test doughs dao', () => {
         await getDoughs(getDoughsData.mixedValidFilters);
         connectionSpy
           .getCall(0)
+          .should.have.been
           .calledWith(
             getDoughsData.getDoughsQueryWithWaterTemp,
             getDoughsData.waterTempBindParams,
-          ).should.be.true;
+          );
       });
     });
     describe('when it gets multiple valid filters', () => {
