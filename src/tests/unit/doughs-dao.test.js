@@ -4,8 +4,6 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-// import * as connectionApi from 'api/v1/db/oracledb/connection';
-// import * as doughsSerializer from 'api/v1/serializers/doughs-serializer';
 import { getDoughsData } from './test-data';
 
 chai.should();
