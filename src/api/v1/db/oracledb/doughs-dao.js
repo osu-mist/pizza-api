@@ -1,11 +1,9 @@
-import config from 'config';
 import _ from 'lodash';
 
 import { serializeDoughs } from 'api/v1/serializers/doughs-serializer';
 import { openapi } from 'utils/load-openapi';
 import { getConnection } from './connection';
 
-const { endpointUri } = config.get('server');
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
 
 /**
@@ -111,7 +109,7 @@ const getDoughs = async (filters) => {
   const connection = await getConnection();
   try {
     const { rows } = await connection.execute(query, bindParams);
-    const serializedDoughs = serializeDoughs(rows, endpointUri);
+    const serializedDoughs = serializeDoughs(rows, filters);
     return serializedDoughs;
   } finally {
     connection.close();

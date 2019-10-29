@@ -20,8 +20,7 @@ describe('test doughs dao', () => {
     serializeDoughsStub = sinon.stub().returns(getDoughsData.baseGetDoughsReturn);
     getConnectionStub = sinon.stub().resolves({
       execute: connectionSpy,
-      close: () => { },
-      commit: () => { },
+      close: () => {},
     });
 
     doughsDao = proxyquire('../../api/v1/db/oracledb/doughs-dao', {
@@ -37,10 +36,6 @@ describe('test doughs dao', () => {
     sinon.restore();
   });
   describe('getDoughs', () => {
-    it('returns the output from serializeDoughs', () => {
-      const result = doughsDao.getDoughs({});
-      return result.should.eventually.deep.equal(getDoughsData.baseGetDoughsReturn);
-    });
     it('extracts only the rows from the database return', async () => {
       await doughsDao.getDoughs({});
       serializeDoughsStub.getCall(0).calledWith(getDoughsData.executeReturnRows).should.be.true;
@@ -57,11 +52,19 @@ describe('test doughs dao', () => {
           );
       });
     });
+    describe('when it gets different kinds of filters', () => {
+      [{},
+        getDoughsData.waterTempFilter,
+        getDoughsData.mixedValidFilters,
+        getDoughsData.multipleFilters]
+        .forEach((filters) => {
+          it('still returns the value of serializeDoughs', () => {
+            const result = doughsDao.getDoughs(filters);
+            return result.should.eventually.deep.equal(getDoughsData.baseGetDoughsReturn);
+          });
+        });
+    });
     describe('when it has valid filters', () => {
-      it('still returns the output from serializeDoughs', () => {
-        const result = doughsDao.getDoughs(getDoughsData.waterTempFilter);
-        return result.should.eventually.deep.equal(getDoughsData.baseGetDoughsReturn);
-      });
       it('properly parses those filters into bind paramters', async () => {
         await doughsDao.getDoughs(getDoughsData.waterTempFilter);
         connectionSpy
