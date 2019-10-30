@@ -65,7 +65,7 @@ describe('test doughs dao', () => {
         });
     });
     describe('when it has valid filters', () => {
-      it('properly parses those filters into bind paramters', async () => {
+      it('properly parses those filters into bind parameters', async () => {
         await doughsDao.getDoughs(getDoughsData.waterTempFilter);
         connectionSpy
           .getCall(0)
