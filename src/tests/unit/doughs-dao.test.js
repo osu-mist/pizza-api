@@ -10,14 +10,30 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
+const {
+  executeReturn,
+  baseGetDoughsReturn,
+  executeReturnRows,
+  invalidFilters,
+  waterTempFilter,
+  mixedValidFilters,
+  multipleFilters,
+  getDoughsQuery,
+  getDoughsQueryWithMultipleConditions,
+  getDoughsQueryWithWaterTemp,
+  waterTempBindParams,
+  multipleFiltersBindParams,
+  emptyBindParams,
+} = getDoughsData;
+
 describe('test doughs dao', () => {
   let serializeDoughsStub;
   let getConnectionStub;
   let connectionSpy;
   let doughsDao;
   beforeEach(() => {
-    connectionSpy = sinon.stub().returns(getDoughsData.executeReturn);
-    serializeDoughsStub = sinon.stub().returns(getDoughsData.baseGetDoughsReturn);
+    connectionSpy = sinon.stub().returns(executeReturn);
+    serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
     getConnectionStub = sinon.stub().resolves({
       execute: connectionSpy,
       close: () => {},
@@ -38,64 +54,64 @@ describe('test doughs dao', () => {
   describe('getDoughs', () => {
     it('extracts only the rows from the database return', async () => {
       await doughsDao.getDoughs({});
-      serializeDoughsStub.getCall(0).calledWith(getDoughsData.executeReturnRows).should.be.true;
+      serializeDoughsStub.getCall(0).calledWith(executeReturnRows).should.be.true;
     });
     describe('when it has an invalid filter', () => {
       it('does not parse the invalid filter', async () => {
-        await doughsDao.getDoughs(getDoughsData.invalidFilters);
+        await doughsDao.getDoughs(invalidFilters);
         connectionSpy
           .getCall(0)
           .should.have.been
           .calledWith(
-            getDoughsData.getDoughsQuery,
-            getDoughsData.emptyBindParams,
+            getDoughsQuery,
+            emptyBindParams,
           );
       });
     });
     describe('when it gets different kinds of filters', () => {
       [{},
-        getDoughsData.waterTempFilter,
-        getDoughsData.mixedValidFilters,
-        getDoughsData.multipleFilters]
+        waterTempFilter,
+        mixedValidFilters,
+        multipleFilters]
         .forEach((filters) => {
           it('still returns the value of serializeDoughs', () => {
             const result = doughsDao.getDoughs(filters);
-            return result.should.eventually.deep.equal(getDoughsData.baseGetDoughsReturn);
+            return result.should.eventually.deep.equal(baseGetDoughsReturn);
           });
         });
     });
     describe('when it has valid filters', () => {
       it('properly parses those filters into bind parameters', async () => {
-        await doughsDao.getDoughs(getDoughsData.waterTempFilter);
+        await doughsDao.getDoughs(waterTempFilter);
         connectionSpy
           .getCall(0)
           .should.have.been
           .calledWith(
-            getDoughsData.getDoughsQueryWithWaterTemp,
-            getDoughsData.waterTempBindParams,
+            getDoughsQueryWithWaterTemp,
+            waterTempBindParams,
           );
       });
     });
     describe('when it gets valid and invalid filters', () => {
       it('only parses the valid filters into bind parameters', async () => {
-        await doughsDao.getDoughs(getDoughsData.mixedValidFilters);
+        await doughsDao.getDoughs(mixedValidFilters);
         connectionSpy
           .getCall(0)
           .should.have.been
           .calledWith(
-            getDoughsData.getDoughsQueryWithWaterTemp,
-            getDoughsData.waterTempBindParams,
+            getDoughsQueryWithWaterTemp,
+            waterTempBindParams,
           );
       });
     });
     describe('when it gets multiple valid filters', () => {
       it('properly parses all of those filters', async () => {
-        await doughsDao.getDoughs(getDoughsData.multipleFilters);
+        await doughsDao.getDoughs(multipleFilters);
         connectionSpy
           .getCall(0)
           .calledWith(
-            getDoughsData.getDoughsQueryWithMultipleConditions,
-            getDoughsData.multipleFiltersBindParams,
+            getDoughsQueryWithMultipleConditions,
+            multipleFiltersBindParams,
           ).should.be.true;
       });
     });
