@@ -1,10 +1,13 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import config from 'config';
 import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { getDoughsData } from './test-data';
+
+sinon.replace(config, 'get', () => ({ oracledb: {} }));
 
 chai.should();
 chai.use(chaiAsPromised);
