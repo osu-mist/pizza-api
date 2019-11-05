@@ -187,7 +187,7 @@ const getDoughs = async (filters) => {
  * @param {object} body
  * @returns {object} bindparams
  */
-const processPostBody = (body) => {
+const getPostBindParams = (body) => {
   const { attributes } = body.data;
   const bindParams = doughsOutBindParams;
   _.toPairs(doughsProperties)
@@ -219,7 +219,7 @@ const convertOutBindsToRawDough = (outBinds) => _.toPairs(outBinds)
  * @returns {Promise<object>} a stub dough object
  */
 const postDough = async (body) => {
-  const bindParams = processPostBody(body);
+  const bindParams = getPostBindParams(body);
   const connection = await getConnection();
   try {
     const result = await connection.execute(
