@@ -34,4 +34,26 @@ const serializeDoughs = (rawDoughs, query) => {
   ).serialize(rawDoughs);
 };
 
-export { serializeDoughs };
+/**
+ * Serializes a single dough
+ * @param {object} rawDough
+ * @param {string} query
+ * @returns {object} the serialized dough
+ */
+const serializeDough = (rawDough, query) => {
+  const topLevelSelfLink = resourcePathLink(apiBaseUrl, query);
+  const serializerArgs = {
+    identifierField: 'id',
+    resourceKeys: doughResourceKeys,
+    resourcePath: doughResourcePath,
+    topLevelSelfLink,
+    enableDataLinks: true,
+  };
+
+  return new JsonApiSerializer(
+    doughResourceType,
+    serializerOptions(serializerArgs),
+  ).serialize(rawDough);
+};
+
+export { serializeDoughs, serializeDough };

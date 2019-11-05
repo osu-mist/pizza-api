@@ -22,7 +22,7 @@ const get = async (req, res) => {
  */
 const post = async (req, res) => {
   try {
-    const result = await postDough(req.query);
+    const result = await postDough(req.body);
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);

@@ -1,10 +1,12 @@
 import _ from 'lodash';
+import oracledb from 'oracledb';
 
-import { serializeDoughs } from 'api/v1/serializers/doughs-serializer';
+import { serializeDough, serializeDoughs } from 'api/v1/serializers/doughs-serializer';
 import { openapi } from 'utils/load-openapi';
 import { getConnection } from './connection';
 
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
+const doughsProperties = openapi.definitions.DoughAttributes.properties;
 
 /**
  * An object mapping DoughRecipe property names to DOUGH table column names
@@ -40,6 +42,61 @@ const doughColumnAliases = _.toPairs(doughColumnNames)
   .join(', ');
 
 /**
+ * A list of the columns in the DOUGH table joined by commas
+ * @constant
+ * @type {string}
+ */
+const doughColumns = _.keys(doughsProperties)
+  .map((postParam) => doughColumnNames[postParam])
+  .join(', ');
+
+/**
+ * The full list of valid dough attributes for a POST request,
+ * prepended with `:` and joined with commas
+ * @constant
+ * @type {string}
+ */
+const doughValues = _.keys(doughsProperties)
+  .map((postParam) => `:${postParam}`)
+  .join(', ');
+
+/**
+ * The "out" bind params for a POST/PATCH request to DOUGHS.
+ *
+ * These will be "filled" with the results of creating one or more rows
+ * @constant
+ * @type {object}
+ */
+const doughsOutBindParams = _.toPairs(doughsProperties)
+  .reduce((outBindParams, [name, properties]) => {
+    const bindParam = {};
+    bindParam.type = properties.type === 'string' ? oracledb.STRING : oracledb.NUMBER;
+    bindParam.dir = oracledb.BIND_OUT;
+    outBindParams[`${name}Out`] = bindParam;
+    return outBindParams;
+  }, { idOut: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT } });
+
+/**
+ * The column names referenced by the output bind params
+ * used when inserting a new dough, joined with commas
+ * @constant
+ * @type {string}
+ */
+const doughsOutBindParamColumnNames = _.keys(doughsOutBindParams)
+  .map((bindParamName) => doughColumnNames[bindParamName.slice(0, -3)])
+  .join(', ');
+
+/**
+ * The names of the out bind params used when inserting
+ * a new dough, joined with commas
+ * @constant
+ * @type {string}
+ */
+const doughsOutBindParamValues = _.keys(doughsOutBindParams)
+  .map((paramName) => `:${paramName}`)
+  .join(', ');
+
+/**
  * Turns a string containing conditional statements like `NAME = :name AND WATER_TEMP = :waterTemp`
  * into a fully fledged sql statement
  *
@@ -48,6 +105,14 @@ const doughColumnAliases = _.toPairs(doughColumnNames)
  */
 const doughsGetQuery = (conditionals) => `SELECT ${doughColumnAliases} FROM DOUGHS ${conditionals ? `WHERE ${conditionals}` : ''}`;
 
+
+/**
+ * A query to create a new dough
+ * @constant
+ * @type {string}
+ */
+const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues}) `
+  + `RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
 
 /**
  * Removes the "filter[]" wrapper from a filter parameter
@@ -117,37 +182,56 @@ const getDoughs = async (filters) => {
 };
 
 /**
+ * Generate bind params from a POST body, discarding invalid
+ * data attributes and adding default values for non-included attributes
+ * @param {object} body
+ * @returns {object} bindparams
+ */
+const processPostBody = (body) => {
+  const { attributes } = body.data;
+  const bindParams = doughsOutBindParams;
+  _.toPairs(doughsProperties)
+    .forEach(([paramName, paramProps]) => {
+      if (paramName in attributes) {
+        bindParams[paramName] = attributes[paramName];
+      } else {
+        bindParams[paramName] = paramProps.default;
+      }
+    });
+  return bindParams;
+};
+
+/**
  *
- * @param {Array} queries
+ * @param {object} outBinds
+ * @returns {object}
+ */
+const convertOutBindsToRawDough = (outBinds) => _.toPairs(outBinds)
+  .reduce((rawDough, [bindName, bindValueArray]) => {
+    [rawDough[bindName.slice(0, -3)]] = bindValueArray;
+    return rawDough;
+  }, {});
+
+/**
+ * Use the data in `body` to create a new dough object.
+ * @param {object} query
+ * @param {object} body
  * @returns {Promise<object>} a stub dough object
  */
-const postDough = async () => (
-  {
-    data: {
-      type: 'dough',
-      id: 'abc123',
-      links: {
-        self: 'string',
-      },
-      attributes: {
-        name: 'weeknight pizza dough',
-        gramsFlour: 500,
-        flourType: 'All Purpose',
-        gramsWater: 400,
-        waterTemp: 90,
-        gramsYeast: 5,
-        gramsSalt: 15,
-        gramsSugar: 20,
-        gramsOliveOil: 50,
-        bulkFermentTime: 60,
-        proofTime: 15,
-        specialInstructions: 'keep the dough in the fridge during the bulk ferment',
-      },
-    },
-    links: {
-      self: 'string',
-    },
+const postDough = async (body) => {
+  const bindParams = processPostBody(body);
+  const connection = await getConnection();
+  try {
+    const result = await connection.execute(
+      doughsPostQuery,
+      bindParams,
+      { autoCommit: true },
+    );
+    const rawDough = convertOutBindsToRawDough(result.outBinds);
+    return serializeDough(rawDough, `doughs/${rawDough.id}`);
+  } finally {
+    connection.close();
   }
-);
+};
 
 export { getDoughs, postDough };
