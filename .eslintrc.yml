@@ -47,7 +47,6 @@ rules:
     - publicOnly: true
       require:
         ArrowFunctionExpression: true
-  max-classes-per-file: 'off'
 settings:
   import/resolver:
     babel-module: {}
