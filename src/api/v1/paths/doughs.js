@@ -1,9 +1,10 @@
-import { errorHandler, errorBuilder } from 'errors/errors';
-import { openapi } from 'utils/load-openapi';
-import { validateBody } from 'utils/validate-parameters';
+import { apiBaseUrl, resourcePathLink } from 'utils/uri-builder';
+import { errorHandler } from 'errors/errors';
+
 import { getDoughs, postDough } from '../db/oracledb/doughs-dao';
 
-const doughsProperties = openapi.definitions.DoughAttributes.properties;
+const doughResourceUrl = resourcePathLink(apiBaseUrl, 'doughs');
+
 
 /**
  * Get doughs
@@ -26,12 +27,8 @@ const get = async (req, res) => {
  */
 const post = async (req, res) => {
   try {
-    validateBody(req.body, doughsProperties);
-  } catch (err) {
-    return errorBuilder(res, '400', [err.message]);
-  }
-  try {
     const result = await postDough(req.body);
+    res.setHeader('Location', `${doughResourceUrl}/${result.data.id}`);
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);

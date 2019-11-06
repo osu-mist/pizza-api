@@ -433,6 +433,7 @@ paths:
         - in: body
           name: attributes
           description: attributes of the new dough recipe
+          required: true
           schema:
             $ref: '#/definitions/DoughPostBody'
       responses:
@@ -812,11 +813,13 @@ definitions:
         $ref: '#/definitions/DoughAttributes'
   DoughAttributes:
     type: object
+    additionalProperties: false
     properties: &doughproperties
       name:
         type: string
         description: the name of the dough recipe
         example: weeknight pizza dough
+        minLength: 1
       gramsFlour:
         type: integer
         description: the amount of flour used, in grams
@@ -825,6 +828,7 @@ definitions:
         type: string
         description: the name of the kind of flour used
         example: All Purpose
+        minLength: 1
       gramsWater:
         type: integer
         description: the amount of water used, in grams
@@ -865,6 +869,7 @@ definitions:
         example: keep the dough in the fridge during the bulk ferment
         default: ''
   DoughPostAttributes:
+    additionalProperties: false
     required:
       - name
       - gramsFlour
@@ -874,6 +879,7 @@ definitions:
       - gramsSalt
       - bulkFermentTime
       - proofTime
+      - waterTemp
     properties: *doughproperties
   DoughPatchBody:
     required: [data]
@@ -888,6 +894,7 @@ definitions:
     required: [data]
     properties:
       data:
+        required: [attributes, type]
         properties:
           type: *doughType
           attributes:

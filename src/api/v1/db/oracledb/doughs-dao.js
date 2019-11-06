@@ -31,14 +31,21 @@ const doughColumnNames = {
 };
 
 /**
+ * convert an output bind param name like `nameOut` to a
+ * property name like `name`
+ * @param {string} outBindParamName
+ * @returns {string} the property name
+ */
+const outBindParamToPropertyName = (outBindParamName) => outBindParamName.slice(0, -3);
+
+/**
  * A list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
  * generated from the DoughColumnNames object
  *
  * @constant
  * @type {string}
  */
-const doughColumnAliases = _.toPairs(doughColumnNames)
-  .map(([propertyName, columnName]) => `${columnName} AS "${propertyName}"`)
+const doughColumnAliases = _.map(doughColumnNames, (columnName, propertyName) => `${columnName} AS "${propertyName}"`)
   .join(', ');
 
 /**
@@ -46,8 +53,8 @@ const doughColumnAliases = _.toPairs(doughColumnNames)
  * @constant
  * @type {string}
  */
-const doughColumns = _.keys(doughsProperties)
-  .map((postParam) => doughColumnNames[postParam])
+const doughColumns = _.map(doughsProperties,
+  (propertyValues, property) => doughColumnNames[property])
   .join(', ');
 
 /**
@@ -56,8 +63,7 @@ const doughColumns = _.keys(doughsProperties)
  * @constant
  * @type {string}
  */
-const doughValues = _.keys(doughsProperties)
-  .map((postParam) => `:${postParam}`)
+const doughValues = _.map(doughsProperties, (propertyValues, property) => `:${property}`)
   .join(', ');
 
 /**
@@ -67,8 +73,8 @@ const doughValues = _.keys(doughsProperties)
  * @constant
  * @type {object}
  */
-const doughsOutBindParams = _.toPairs(doughsProperties)
-  .reduce((outBindParams, [name, properties]) => {
+const doughsOutBindParams = _.reduce(doughsProperties,
+  (outBindParams, properties, name) => {
     const bindParam = {};
     bindParam.type = properties.type === 'string' ? oracledb.STRING : oracledb.NUMBER;
     bindParam.dir = oracledb.BIND_OUT;
@@ -82,8 +88,8 @@ const doughsOutBindParams = _.toPairs(doughsProperties)
  * @constant
  * @type {string}
  */
-const doughsOutBindParamColumnNames = _.keys(doughsOutBindParams)
-  .map((bindParamName) => doughColumnNames[bindParamName.slice(0, -3)])
+const doughsOutBindParamColumnNames = _.map(doughsOutBindParams,
+  (bindParamValue, bindParamName) => doughColumnNames[outBindParamToPropertyName(bindParamName)])
   .join(', ');
 
 /**
@@ -92,8 +98,8 @@ const doughsOutBindParamColumnNames = _.keys(doughsOutBindParams)
  * @constant
  * @type {string}
  */
-const doughsOutBindParamValues = _.keys(doughsOutBindParams)
-  .map((paramName) => `:${paramName}`)
+const doughsOutBindParamValues = _.map(doughsOutBindParams,
+  (paramValue, paramName) => `:${paramName}`)
   .join(', ');
 
 /**
@@ -105,14 +111,13 @@ const doughsOutBindParamValues = _.keys(doughsOutBindParams)
  */
 const doughsGetQuery = (conditionals) => `SELECT ${doughColumnAliases} FROM DOUGHS ${conditionals ? `WHERE ${conditionals}` : ''}`;
 
-
 /**
  * A query to create a new dough
  * @constant
  * @type {string}
  */
-const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues}) `
-  + `RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
+const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues}) 
+   RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
 
 /**
  * Removes the "filter[]" wrapper from a filter parameter
@@ -204,9 +209,10 @@ const getPostBindParams = (body) => {
  * @param {object} outBinds
  * @returns {object}
  */
-const convertOutBindsToRawDough = (outBinds) => _.toPairs(outBinds)
-  .reduce((rawDough, [bindName, bindValueArray]) => {
-    [rawDough[bindName.slice(0, -3)]] = bindValueArray;
+const convertOutBindsToRawDough = (outBinds) => _.reduce(outBinds,
+  (rawDough, bindValueArray, bindName) => {
+    // `slice(0, -3)` removes the string 'Out' from the end of the key
+    [rawDough[outBindParamToPropertyName(bindName)]] = bindValueArray;
     return rawDough;
   }, {});
 
@@ -225,7 +231,7 @@ const postDough = async (body) => {
       { autoCommit: true },
     );
     const rawDough = convertOutBindsToRawDough(result.outBinds);
-    return serializeDough(rawDough, `doughs/${rawDough.id}`);
+    return serializeDough(rawDough, 'doughs/');
   } finally {
     connection.close();
   }
