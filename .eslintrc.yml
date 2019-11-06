@@ -10,7 +10,7 @@ env:
   node: true
   mocha: true
 rules:
-  no-param-reassign: "off"
+  no-param-reassign: 'off'
   import/no-unresolved:
     - error
     - commonjs: true
@@ -47,6 +47,7 @@ rules:
     - publicOnly: true
       require:
         ArrowFunctionExpression: true
+  max-classes-per-file: 'off'
 settings:
   import/resolver:
     babel-module: {}

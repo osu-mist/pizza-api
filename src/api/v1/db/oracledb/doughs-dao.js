@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import oracledb from 'oracledb';
 
-import { serializeDough, serializeDoughs } from 'api/v1/serializers/doughs-serializer';
 import { openapi } from 'utils/load-openapi';
+import { serializeDough, serializeDoughs } from 'api/v1/serializers/doughs-serializer';
 import { getConnection } from './connection';
 
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
@@ -190,19 +190,17 @@ const getDoughs = async (filters) => {
 const getPostBindParams = (body) => {
   const { attributes } = body.data;
   const bindParams = doughsOutBindParams;
-  _.toPairs(doughsProperties)
-    .forEach(([paramName, paramProps]) => {
-      if (paramName in attributes) {
-        bindParams[paramName] = attributes[paramName];
-      } else {
-        bindParams[paramName] = paramProps.default;
-      }
-    });
+  _.forEach(attributes, (attributeValue, attributeName) => {
+    bindParams[attributeName] = attributeValue;
+  });
   return bindParams;
 };
 
 /**
- *
+ * Converts the return value of a SQL query that uses
+ * `RETURNS ... INTO ...` into the format of the return
+ * from a `SELECT` query to it can be passed directly to
+ * `serializeDough`.
  * @param {object} outBinds
  * @returns {object}
  */
@@ -214,7 +212,6 @@ const convertOutBindsToRawDough = (outBinds) => _.toPairs(outBinds)
 
 /**
  * Use the data in `body` to create a new dough object.
- * @param {object} query
  * @param {object} body
  * @returns {Promise<object>} a stub dough object
  */
