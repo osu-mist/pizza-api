@@ -28,7 +28,7 @@ const post = async (req, res) => {
   try {
     validateBody(req.body, doughsProperties);
   } catch (err) {
-    return errorBuilder(res, '400', err.message);
+    return errorBuilder(res, '400', [err.message]);
   }
   try {
     const result = await postDough(req.body);

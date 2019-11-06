@@ -1,16 +1,8 @@
 import _ from 'lodash';
 
-class MalformedBodyError extends Error {
-  constructor(params) {
-    super(...params);
-  }
-}
+class MalformedBodyError extends Error {}
 
-class InvalidAttributeError extends Error {
-  constructor(params) {
-    super(...params);
-  }
-}
+class InvalidAttributeError extends Error {}
 
 /**
  * Validate the body of a `POST` or `PATCH` request against an object
