@@ -14,14 +14,23 @@ const ingredientsColumnNames = {
   notes: 'NOTES',
 };
 
+/**
+ * SQL aliases for mapping INGREDIENTS column names to
+ * IngredientResource property names
+ * @const {string}
+ */
 const ingredientColumnAliases = _.map(ingredientsColumnNames,
   (columnName, propertyName) => `${columnName} AS "${propertyName}"`)
   .join(', ');
 
+/**
+ * A filter processor object initialized for processing ingredient filters
+ * @const {GetFilterProcessor}
+ */
 const filterProcessor = new GetFilterProcessor(ingredientsGetParameters, ingredientsColumnNames);
 
 /**
- * generate a SELECT query using `conditionals`
+ * Generate a SELECT query using `conditionals`
  * @param {string} conditionals
  * @returns {string} a select query
  */
