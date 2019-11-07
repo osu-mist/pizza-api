@@ -32,7 +32,7 @@ const doughColumnNames = {
 
 /**
  * convert an output bind param name like `nameOut` to a
- * property name like `name`
+ * property name like `name` by removing 'Out' at the end of the string
  * @param {string} outBindParamName
  * @returns {string} the property name
  */
@@ -45,7 +45,8 @@ const outBindParamToPropertyName = (outBindParamName) => outBindParamName.slice(
  * @constant
  * @type {string}
  */
-const doughColumnAliases = _.map(doughColumnNames, (columnName, propertyName) => `${columnName} AS "${propertyName}"`)
+const doughColumnAliases = _.map(doughColumnNames,
+  (columnName, propertyName) => `${columnName} AS "${propertyName}"`)
   .join(', ');
 
 /**
@@ -191,11 +192,17 @@ const getDoughs = async (filters) => {
  * data attributes and adding default values for non-included attributes
  * @param {object} body
  * @returns {object} bindparams
+ * @throws {Error} when an attribute not in doughsProperties is found in body.
+ * It's assumed that body has already been checked for invalid properties meaning that when
+ * one is found here it's a server error rather than a user error.
  */
 const getPostBindParams = (body) => {
   const { attributes } = body.data;
   const bindParams = doughsOutBindParams;
   _.forEach(attributes, (attributeValue, attributeName) => {
+    if (!(attributeName in doughsProperties)) {
+      throw new Error('Invalid attribute found');
+    }
     bindParams[attributeName] = attributeValue;
   });
   return bindParams;
@@ -211,7 +218,6 @@ const getPostBindParams = (body) => {
  */
 const convertOutBindsToRawDough = (outBinds) => _.reduce(outBinds,
   (rawDough, bindValueArray, bindName) => {
-    // `slice(0, -3)` removes the string 'Out' from the end of the key
     [rawDough[outBindParamToPropertyName(bindName)]] = bindValueArray;
     return rawDough;
   }, {});
