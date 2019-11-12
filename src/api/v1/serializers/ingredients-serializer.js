@@ -1,9 +1,9 @@
-import { Serializer as JsonApiSerializer } from 'jsonapi-serializer';
 import _ from 'lodash';
+import { Serializer as JsonApiSerializer } from 'jsonapi-serializer';
 
 import { serializerOptions } from 'utils/jsonapi';
 import { openapi } from 'utils/load-openapi';
-import { apiBaseUrl, resourcePathLink, paramsLink } from 'utils/uri-builder';
+import { apiBaseUrl, paramsLink, resourcePathLink } from 'utils/uri-builder';
 
 const ingredientResourceProp = openapi.definitions.IngredientResource.properties;
 const ingredientResourceType = ingredientResourceProp.type.enum[0];

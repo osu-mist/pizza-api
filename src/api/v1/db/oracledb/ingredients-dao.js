@@ -1,8 +1,9 @@
 import _ from 'lodash';
-import { openapi } from 'utils/load-openapi';
+
+import { getConnection } from 'api/v1/database/oracledb/connection';
 import { serializeIngredients } from 'api/v1/serializers/ingredients-serializer';
+import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
-import { getConnection } from './connection';
 
 
 const ingredientsGetParameters = openapi.paths['/ingredients'].get.parameters;
@@ -17,6 +18,7 @@ const ingredientsColumnNames = {
 /**
  * SQL aliases for mapping INGREDIENTS column names to
  * IngredientResource property names
+ *
  * @const {string}
  */
 const ingredientColumnAliases = _.map(ingredientsColumnNames,
@@ -25,12 +27,14 @@ const ingredientColumnAliases = _.map(ingredientsColumnNames,
 
 /**
  * A filter processor object initialized for processing ingredient filters
+ *
  * @const {GetFilterProcessor}
  */
 const filterProcessor = new GetFilterProcessor(ingredientsGetParameters, ingredientsColumnNames);
 
 /**
  * Generate a SELECT query using `conditionals`
+ *
  * @param {string} conditionals
  * @returns {string} a select query
  */
@@ -38,6 +42,7 @@ const getIngredientsQuery = (conditionals) => `SELECT ${ingredientColumnAliases}
 
 /**
  * Get ingredients from the database
+ *
  * @param {object} filters
  * @returns {Promise<object[]>} Promise object representing a list of ingredients
  */

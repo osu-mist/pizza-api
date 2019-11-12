@@ -1,36 +1,42 @@
 import _ from 'lodash';
-/**
- * Removes the "filter[]" wrapper from a filter parameter
- *
- * @param {string} filterName
- * @returns {string} the filter name with 'filter' and brackets removed
- */
-const normalizeFilterName = (filterName) => {
-  const filterTextRegex = /filter\[(.*)\]/g;
-  const regexResults = filterTextRegex.exec(filterName);
-  return regexResults ? regexResults[1] : filterName;
-};
-
-/**
- * Returns filters with keys changed to remove the "filter[]" wrapper
- *
- * @param {object} filters
- * @returns {object}
- */
-const normalizeFilterNames = (filters) => _.mapKeys(filters,
-  (filterValue, filterName) => normalizeFilterName(filterName));
 
 class GetFilterProcessor {
   /**
+   * Returns filters with keys changed to remove the "filter[]" wrapper
+   *
+   * @param {object} filters
+   * @returns {object}
+   */
+  static normalizeFilterNames(filters) {
+    return _.mapKeys(filters,
+      (filterValue, filterName) => GetFilterProcessor.normalizeFilterName(filterName));
+  }
+
+  /**
+   * Removes the "filter[]" wrapper from a filter parameter
+   *
+   * @param {string} filterName
+   * @returns {string} the filter name with 'filter' and brackets removed
+   */
+  static normalizeFilterName(filterName) {
+    const filterTextRegex = /filter\[(.*)\]/g;
+    const regexResults = filterTextRegex.exec(filterName);
+    return regexResults[1] || filterName;
+  }
+
+  /**
    * Initializes a new filter process using the parameters from the
    * get request for the resource and a map of column names to resource attribute names
-   * @param {array} getParameters
+   *
+   * @param {Array} getParameters
    * @param {object} columnNames
    */
   constructor(getParameters, columnNames) {
     this.getParameters = getParameters;
     this.columnNames = columnNames;
-    this.normalizedGetFilters = getParameters.map(({ name }) => normalizeFilterName(name));
+    this.normalizedGetFilters = getParameters.map(
+      ({ name }) => GetFilterProcessor.normalizeFilterName(name),
+    );
   }
 
   /**
@@ -41,7 +47,7 @@ class GetFilterProcessor {
    * @returns {object}
    */
   processGetFilters(filters) {
-    const normalizedFilters = normalizeFilterNames(filters);
+    const normalizedFilters = GetFilterProcessor.normalizeFilterNames(filters);
     const validFilters = this.normalizedGetFilters
       .filter((name) => name in normalizedFilters);
     const conditionals = validFilters
