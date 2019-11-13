@@ -48,7 +48,7 @@ const serializerOptions = (serializerArgs) => {
       },
     },
     topLevelLinks: { self: topLevelSelfLink },
-    transform: transformFunction,
+    transform: transformFunction || null,
   };
 
   if (pagination) {
