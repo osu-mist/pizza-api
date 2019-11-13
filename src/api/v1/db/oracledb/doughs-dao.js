@@ -190,6 +190,7 @@ const getDoughs = async (filters) => {
 /**
  * Generate bind params from a POST body, discarding invalid
  * data attributes and adding default values for non-included attributes
+ *
  * @param {object} body
  * @returns {object} bindparams
  * @throws {Error} when an attribute not in doughsProperties is found in body.
