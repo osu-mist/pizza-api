@@ -48,8 +48,9 @@ const serializerOptions = (serializerArgs) => {
       },
     },
     topLevelLinks: { self: topLevelSelfLink },
-    transform: transformFunction || null,
   };
+
+  if (transformFunction) options.transform = transformFunction;
 
   if (pagination) {
     const {
