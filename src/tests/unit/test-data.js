@@ -134,10 +134,54 @@ const postDoughsData = {
       },
     },
   },
+};
+const processGetFiltersData = {
+  fooParamName: { name: 'filter[foo]' },
+  nameParamName: { name: 'name' },
+  fooColumnName: { foo: 'FOO' },
+  nameColumnName: { name: 'NAME' },
+  fooAndNameColumnNames: {
+    foo: 'FOO',
+    name: 'NAME',
+  },
+  fooFilter: {
+    'filter[foo]': 'baz',
+  },
+  normalizedFooFilter: {
+    foo: 'baz',
+  },
+  normalizedNameFilter: {
+    name: 'shrek',
+  },
+  fooBindParams: {
+    foo: 'baz',
+  },
+  fooConditional: 'FOO = :foo',
+  bahFilter: {
+    bah: 'humbug',
+  },
+  emptyBindParams: {},
+  emptyConditional: '',
+  nameFilter: {
+    name: 'shrek',
+  },
+  nameBindParams: {
+    name: 'shrek',
+  },
+  nameConditional: 'NAME = :name',
+  fooBahFilters: {
+    bah: 'humbug',
+    'filter[foo]': 'baz',
+  },
+  fooNameFilters: {
+    name: 'shrek',
+    'filter[foo]': 'baz',
+  },
 
 };
 
 export {
   getDoughsData,
   postDoughsData,
+  processGetFiltersData,
 };
