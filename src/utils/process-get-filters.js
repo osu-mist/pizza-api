@@ -28,7 +28,7 @@ class GetFilterProcessor {
    * Initializes a new filter process using the parameters from the
    * get request for the resource and a map of column names to resource attribute names
    *
-   * @param {Array<object>} getParameters
+   * @param {object[]} getParameters
    * @param {object} columnNames
    */
   constructor(getParameters, columnNames) {
