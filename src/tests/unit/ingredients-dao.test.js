@@ -17,7 +17,7 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
-describe('getIngredients', () => {
+describe('test ingredients dao', () => {
   let serializeIngredientsStub;
   let getConnectionStub;
   let connectionSpy;
@@ -25,17 +25,19 @@ describe('getIngredients', () => {
   let getFilterProcessorStub;
   let getFilterProcessorContructorStub;
   beforeEach(() => {
-    connectionSpy = sinon.stub().returns({});
-    serializeIngredientsStub = sinon.stub().returns({});
+    connectionSpy = sinon.stub().returns({ rows: ['a', 'b', 'c'] });
+    serializeIngredientsStub = sinon.stub().returns({ test: true });
     getConnectionStub = sinon.stub().resolves({
       execute: connectionSpy,
       close: () => {},
     });
     getFilterProcessorContructorStub = sinon.stub();
-    getFilterProcessorStub = sinon.stub().returns({
+    getFilterProcessorStub = sinon.stub(GetFilterProcessor.prototype, 'processGetFilters').returns({
       bindParams: { test: true },
       conditionals: 'TEST = :test',
     });
+
+    Object.setPrototypeOf(GetFilterProcessor, getFilterProcessorContructorStub);
 
     ingredientsDao = proxyquire('../../api/v1/db/oracledb/ingredients-dao', {
       './connection': {
@@ -44,25 +46,86 @@ describe('getIngredients', () => {
       '../../serializers/ingredients-serializer': {
         serializeIngredients: serializeIngredientsStub,
       },
-      '../../../../utils/process-get-filters.js': {
-        GetFilterProcessor: {
-          prototype: {
-            constructor: getFilterProcessorContructorStub,
-            processGetFilters: getFilterProcessorStub,
-          },
-        },
-      },
     });
   });
-  it('passes the right values to the GetFilterProcessor constructor', () => {
-    getFilterProcessorContructorStub.getCall(0).calledWith(
-      ingredientsGetParameters,
-      {
-        id: 'ID',
-        ingredientType: 'TYPE',
-        name: 'NAME',
-        notes: 'NOTES',
-      },
-    );
+  afterEach(() => {
+    sinon.restore();
+  });
+  describe('when the constructor for GetFilterProcessor is called', () => {
+    beforeEach(() => {
+      ingredientsDao = proxyquire('../../api/v1/db/oracledb/ingredients-dao', {
+        './connection': {
+          getConnection: getConnectionStub,
+        },
+        '../../serializers/ingredients-serializer': {
+          serializeIngredients: serializeIngredientsStub,
+        },
+        '../../../../utils/process-get-filters': {
+          GetFilterProcessor: getFilterProcessorContructorStub,
+        },
+      });
+    });
+    it('passes the right values to the GetFilterProcessor constructor', async () => {
+      getFilterProcessorContructorStub.callCount.should.equal(1);
+      getFilterProcessorContructorStub.should.have.been.calledWith(
+        ingredientsGetParameters,
+        {
+          id: 'ID',
+          ingredientType: 'TYPE',
+          name: 'NAME',
+          notes: 'NOTES',
+        },
+      );
+    });
+  });
+  describe('getIngredients', () => {
+    describe('when called with filters', () => {
+      let result;
+      beforeEach(async () => {
+        result = await ingredientsDao.getIngredients({
+          'filter[name]': 'cheddar',
+          invalidFilter: 'foo',
+        });
+      });
+      it('passes those filters to processGetFilters', () => {
+        getFilterProcessorStub.should.have.been.calledWith({
+          'filter[name]': 'cheddar',
+          invalidFilter: 'foo',
+        });
+      });
+      it('passes the right conditionals and bind params to connection.execute', () => {
+        connectionSpy.should.have.been.calledWith(
+          'SELECT ID AS "id", TYPE AS "ingredientType", NAME AS "name", NOTES AS "notes" FROM INGREDIENTS WHERE TEST = :test',
+          { test: true },
+        );
+      });
+      it('extracts rows from the return of execute and passes them to serializeIngredients', () => {
+        serializeIngredientsStub.should.have.been.calledWith(['a', 'b', 'c']);
+      });
+      it('returns the results of serializeIngredients', () => {
+        result.should.deep.equal({ test: true });
+      });
+    });
+    describe('when called without filters', () => {
+      let result;
+      beforeEach(async () => {
+        result = await ingredientsDao.getIngredients({});
+      });
+      it('passes no filters to processGetFilters', () => {
+        getFilterProcessorStub.should.have.been.calledWith({});
+      });
+      it('passes the right conditionals and bind params to connection.execute', () => {
+        connectionSpy.should.have.been.calledWith(
+          'SELECT ID AS "id", TYPE AS "ingredientType", NAME AS "name", NOTES AS "notes" FROM INGREDIENTS WHERE TEST = :test',
+          { test: true },
+        );
+      });
+      it('extracts rows from the return of execute and passes them to serializeIngredients', () => {
+        serializeIngredientsStub.should.have.been.calledWith(['a', 'b', 'c']);
+      });
+      it('returns the results of serializeIngredients', () => {
+        result.should.deep.equal({ test: true });
+      });
+    });
   });
 });
