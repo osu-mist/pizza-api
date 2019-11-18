@@ -180,8 +180,36 @@ const processGetFiltersData = {
 
 };
 
+const getIngredientsTestConditionals = 'TEST = :test';
+const getIngredientsQueryAliases = 'ID AS "id", TYPE AS "ingredientType", NAME AS "name", NOTES AS "notes"';
+const getIngredientsQuery = `SELECT ${getIngredientsQueryAliases} FROM INGREDIENTS WHERE ${getIngredientsTestConditionals}`;
+const emptyGetIngredientsQuery = `SELECT ${getIngredientsQueryAliases} FROM INGREDIENTS `;
+const getIngredientsData = {
+  getIngredientsQuery,
+  emptyGetIngredientsQuery,
+  testFilters: {
+    'filter[name]': 'cheddar',
+    invalidFilter: 'foo',
+  },
+  ingredientAliases: {
+    id: 'ID',
+    ingredientType: 'TYPE',
+    name: 'NAME',
+    notes: 'NOTES',
+  },
+  testBindParams: { test: true },
+  testConditionals: 'TEST = :test',
+  testSerializerReturn: { test: true },
+  testConnectionReturn: { rows: ['a', 'b', 'c'] },
+  testConnectionReturnRows: ['a', 'b', 'c'],
+};
+
 export {
   getDoughsData,
+<<<<<<< HEAD
   postDoughsData,
+=======
+  getIngredientsData,
+>>>>>>> un-hardcodes data
   processGetFiltersData,
 };
