@@ -7,6 +7,8 @@ import sinonChai from 'sinon-chai';
 
 import { getDoughsData, postDoughsData } from './test-data';
 
+sinon.restore();
+
 sinon.replace(config, 'get', () => ({ oracledb: {} }));
 
 chai.should();
