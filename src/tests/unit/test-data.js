@@ -177,7 +177,6 @@ const processGetFiltersData = {
     name: 'shrek',
     'filter[foo]': 'baz',
   },
-
 };
 
 const getIngredientsTestConditionals = 'TEST = :test';
@@ -206,10 +205,7 @@ const getIngredientsData = {
 
 export {
   getDoughsData,
-<<<<<<< HEAD
   postDoughsData,
-=======
   getIngredientsData,
->>>>>>> un-hardcodes data
   processGetFiltersData,
 };

@@ -33,15 +33,15 @@ describe('test ingredients dao', () => {
   } = getIngredientsData;
   let serializeIngredientsStub;
   let getConnectionStub;
-  let connectionSpy;
+  let connectionStub;
   let ingredientsDao;
   let getFilterProcessorStub;
   let getFilterProcessorContructorStub;
   beforeEach(() => {
-    connectionSpy = sinon.stub().returns(testConnectionReturn);
+    connectionStub = sinon.stub().returns(testConnectionReturn);
     serializeIngredientsStub = sinon.stub().returns(testSerializerReturn);
     getConnectionStub = sinon.stub().resolves({
-      execute: connectionSpy,
+      execute: connectionStub,
       close: () => {},
     });
     getFilterProcessorContructorStub = sinon.stub();
@@ -52,7 +52,7 @@ describe('test ingredients dao', () => {
 
     Object.setPrototypeOf(GetFilterProcessor, getFilterProcessorContructorStub);
 
-    ingredientsDao = proxyquire('../../api/v1/db/oracledb/ingredients-dao', {
+    ingredientsDao = proxyquire('api/v1/db/oracledb/ingredients-dao', {
       './connection': {
         getConnection: getConnectionStub,
       },
@@ -66,7 +66,7 @@ describe('test ingredients dao', () => {
   });
   describe('when the constructor for GetFilterProcessor is called', () => {
     beforeEach(() => {
-      ingredientsDao = proxyquire('../../api/v1/db/oracledb/ingredients-dao', {
+      ingredientsDao = proxyquire('api/v1/db/oracledb/ingredients-dao', {
         './connection': {
           getConnection: getConnectionStub,
         },
@@ -78,7 +78,7 @@ describe('test ingredients dao', () => {
         },
       });
     });
-    it('passes the right values to the GetFilterProcessor constructor', async () => {
+    it('passes the right values to the GetFilterProcessor constructor', () => {
       getFilterProcessorContructorStub.callCount.should.equal(1);
       getFilterProcessorContructorStub.should.have.been.calledWith(
         ingredientsGetParameters,
@@ -96,7 +96,7 @@ describe('test ingredients dao', () => {
         getFilterProcessorStub.should.have.been.calledWith(testFilters);
       });
       it('passes the right conditionals and bind params to connection.execute', () => {
-        connectionSpy.should.have.been.calledWith(
+        connectionStub.should.have.been.calledWith(
           getIngredientsQuery,
           testBindParams,
         );
@@ -117,7 +117,7 @@ describe('test ingredients dao', () => {
         getFilterProcessorStub.should.have.been.calledWith({});
       });
       it('passes the right conditionals and bind params to connection.execute', () => {
-        connectionSpy.should.have.been.calledWith(
+        connectionStub.should.have.been.calledWith(
           getIngredientsQuery,
           testBindParams,
         );
@@ -135,7 +135,7 @@ describe('test ingredients dao', () => {
         await ingredientsDao.getIngredients({});
       });
       it('correctly generates the SQL query and bind params', () => {
-        connectionSpy.should.have.been.calledWith(
+        connectionStub.should.have.been.calledWith(
           emptyGetIngredientsQuery,
           {},
         );
