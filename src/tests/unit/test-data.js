@@ -37,6 +37,107 @@ const getDoughsData = {
   baseDoughsGetReturn: { data: [] },
 };
 
+const doughsColumns = '(NAME, GRAMS_FLOUR, FLOUR_TYPE, GRAMS_WATER, WATER_TEMP, GRAMS_YEAST, GRAMS_SALT, GRAMS_SUGAR, GRAMS_OLIVE_OIL, BULK_FERMENT_TIME, PROOF_TIME, SPECIAL_INSTRUCTIONS)';
+const doughsValues = '(:name, :gramsFlour, :flourType, :gramsWater, :waterTemp, :gramsYeast, :gramsSalt, :gramsSugar, :gramsOliveOil, :bulkFermentTime, :proofTime, :specialInstructions)';
+const doughsOutColumns = 'ID, NAME, GRAMS_FLOUR, FLOUR_TYPE, GRAMS_WATER, WATER_TEMP, GRAMS_YEAST, GRAMS_SALT, GRAMS_SUGAR, GRAMS_OLIVE_OIL, BULK_FERMENT_TIME, PROOF_TIME, SPECIAL_INSTRUCTIONS';
+const doughsOutBindParams = ':idOut, :nameOut, :gramsFlourOut, :flourTypeOut, :gramsWaterOut, :waterTempOut, :gramsYeastOut, :gramsSaltOut, :gramsSugarOut, :gramsOliveOilOut, :bulkFermentTimeOut, :proofTimeOut, :specialInstructionsOut';
+const doughsQuery = `INSERT INTO DOUGHS ${doughsColumns} VALUES ${doughsValues} 
+   RETURNING ${doughsOutColumns} INTO ${doughsOutBindParams}`;
+
+const postDoughsData = {
+  doughsPostQuery: doughsQuery,
+  testDbReturn: {
+    outBinds: {
+      idOut: [201],
+      nameOut: ['weeknight pizza dough'],
+      gramsFlourOut: [500],
+      flourTypeOut: ['All Purpose'],
+      gramsWaterOut: [400],
+      waterTempOut: [90],
+      gramsYeastOut: [5],
+      gramsSaltOut: [15],
+      gramsSugarOut: [0],
+      gramsOliveOilOut: [0],
+      bulkFermentTimeOut: [60],
+      proofTimeOut: [15],
+      specialInstructionsOut: [null],
+    },
+  },
+  sampleValidDoughData: {
+    data: {
+      type: 'dough',
+      attributes: {
+        name: 'weeknight pizza dough',
+        gramsFlour: 500,
+        flourType: 'All Purpose',
+        gramsWater: 400,
+        waterTemp: 90,
+        gramsYeast: 5,
+        gramsSalt: 15,
+        bulkFermentTime: 60,
+        proofTime: 15,
+        gramsSugar: 0,
+        gramsOliveOil: 0,
+        specialInstructions: '',
+      },
+    },
+  },
+
+  doughsBindParams: {
+    idOut: { type: 2002, dir: 3003 },
+    nameOut: { type: 2001, dir: 3003 },
+    gramsFlourOut: { type: 2002, dir: 3003 },
+    flourTypeOut: { type: 2001, dir: 3003 },
+    gramsWaterOut: { type: 2002, dir: 3003 },
+    waterTempOut: { type: 2002, dir: 3003 },
+    gramsYeastOut: { type: 2002, dir: 3003 },
+    gramsSaltOut: { type: 2002, dir: 3003 },
+    gramsSugarOut: { type: 2002, dir: 3003 },
+    gramsOliveOilOut: { type: 2002, dir: 3003 },
+    bulkFermentTimeOut: { type: 2002, dir: 3003 },
+    proofTimeOut: { type: 2002, dir: 3003 },
+    specialInstructionsOut: { type: 2001, dir: 3003 },
+    name: 'weeknight pizza dough',
+    gramsFlour: 500,
+    flourType: 'All Purpose',
+    gramsWater: 400,
+    waterTemp: 90,
+    gramsYeast: 5,
+    gramsSalt: 15,
+    bulkFermentTime: 60,
+    proofTime: 15,
+    gramsSugar: 0,
+    gramsOliveOil: 0,
+    specialInstructions: '',
+  },
+  normalizedDough: {
+    name: 'weeknight pizza dough',
+    id: 201,
+    gramsFlour: 500,
+    flourType: 'All Purpose',
+    gramsWater: 400,
+    waterTemp: 90,
+    gramsYeast: 5,
+    gramsSalt: 15,
+    bulkFermentTime: 60,
+    proofTime: 15,
+    gramsSugar: 0,
+    gramsOliveOil: 0,
+    specialInstructions: null,
+  },
+
+  invalidDoughsData: {
+    data: {
+      type: 'dough',
+      attributes: {
+        foo: 'bar',
+      },
+    },
+  },
+
+};
+
 export {
   getDoughsData,
+  postDoughsData,
 };

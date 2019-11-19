@@ -230,10 +230,7 @@ const convertOutBindsToRawDough = (outBinds) => _.reduce(outBinds,
  * @returns {Promise<object>} a stub dough object
  */
 const postDough = async (body) => {
-  // console.log(body);
-  // console.log(doughsPostQuery);
   const bindParams = getPostBindParams(body);
-  // console.log(bindParams);
   const connection = await getConnection();
   try {
     const result = await connection.execute(
@@ -241,7 +238,6 @@ const postDough = async (body) => {
       bindParams,
       { autoCommit: true },
     );
-    // console.log(result.outBinds);
     const rawDough = convertOutBindsToRawDough(result.outBinds);
     return serializeDough(rawDough, 'doughs/');
   } finally {
