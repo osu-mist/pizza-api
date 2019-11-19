@@ -12,12 +12,14 @@ describe('Test process get filters', () => {
       fooFilter, normalizedFooFilter,
       nameFilter, normalizedNameFilter,
     } = processGetFiltersData;
+
     describe('when it gets an empty object', () => {
       it('returns an empty object', () => {
         const normalizedFilters = GetFilterProcessor.normalizeFilterNames({});
         normalizedFilters.should.deep.equal({});
       });
     });
+
     describe('when it gets a non empty object', () => {
       it('changes filter keys but leaves non-filter keys unchanged', () => {
         const normalizedFilters = GetFilterProcessor.normalizeFilterNames({
@@ -38,6 +40,7 @@ describe('Test process get filters', () => {
         const normalizedFilter = GetFilterProcessor.normalizeFilterName('filter[foo]');
         normalizedFilter.should.equal('foo');
       });
+
       describe('when the normalized name is `filter`', () => {
         it('still returns only the name inside the brackets', () => {
           const normalizedFilter = GetFilterProcessor.normalizeFilterName('filter[filter]');
@@ -50,6 +53,7 @@ describe('Test process get filters', () => {
         const normalizedFilter = GetFilterProcessor.normalizeFilterName('foo');
         normalizedFilter.should.equal('foo');
       });
+
       describe('when the string is `filter`', () => {
         it('still returns the name verbatim', () => {
           const normalizedFilter = GetFilterProcessor.normalizeFilterName('filter');
@@ -85,6 +89,7 @@ describe('Test process get filters', () => {
         },
       );
     });
+
     describe('when it gets a valid filter', () => {
       it('returns valid bind params and conditionals', () => {
         const { bindParams, conditionals } = processor.processGetFilters(fooFilter);
@@ -99,6 +104,7 @@ describe('Test process get filters', () => {
         conditionals.should.equal(emptyConditional);
       });
     });
+
     describe('when it gets valid and invalid filters', () => {
       it('generates bind params and conditionals only from the valid filter', () => {
         const { bindParams, conditionals } = processor.processGetFilters({
@@ -109,6 +115,7 @@ describe('Test process get filters', () => {
         conditionals.should.equal(fooConditional);
       });
     });
+
     describe('when it gets filters that do not use the `filter[...]` syntax', () => {
       it('generates valid bind params and conditionals', () => {
         const { bindParams, conditionals } = processor.processGetFilters(nameFilter);
@@ -116,6 +123,7 @@ describe('Test process get filters', () => {
         conditionals.should.equal(nameConditional);
       });
     });
+
     describe('when it gets multiple valid filters', () => {
       it('generates valid bind params and conditionals', () => {
         const { bindParams, conditionals } = processor.processGetFilters({
