@@ -12,6 +12,16 @@ const doughResourcePath = 'doughs';
 const doughResourceUrl = resourcePathLink(apiBaseUrl, doughResourcePath);
 
 /**
+ * Replaces a null `specialInstructions` key with an empty string
+ *
+ * @param {object} dough
+ * @returns {object} the dough with `specialInstructions` updated
+ */
+const transformSpecialInstructions = (dough) => {
+  dough.specialInstructions = dough.specialInstructions || '';
+  return dough;
+};
+/**
  * Serialize doughResources to JSON API
  *
  * @param {object[]} rawDoughs Raw data rows from data source
@@ -26,6 +36,7 @@ const serializeDoughs = (rawDoughs, query) => {
     resourcePath: doughResourcePath,
     topLevelSelfLink,
     enableDataLinks: true,
+    transformFunction: transformSpecialInstructions,
   };
 
   return new JsonApiSerializer(
@@ -34,4 +45,27 @@ const serializeDoughs = (rawDoughs, query) => {
   ).serialize(rawDoughs);
 };
 
-export { serializeDoughs };
+/**
+ * Serializes a single dough
+ * @param {object} rawDough
+ * @param {string} query
+ * @returns {object} the serialized dough
+ */
+const serializeDough = (rawDough, query) => {
+  const topLevelSelfLink = resourcePathLink(apiBaseUrl, query);
+  const serializerArgs = {
+    identifierField: 'id',
+    resourceKeys: doughResourceKeys,
+    resourcePath: doughResourcePath,
+    topLevelSelfLink,
+    enableDataLinks: true,
+    transformFunction: transformSpecialInstructions,
+  };
+
+  return new JsonApiSerializer(
+    doughResourceType,
+    serializerOptions(serializerArgs),
+  ).serialize(rawDough);
+};
+
+export { serializeDoughs, serializeDough };

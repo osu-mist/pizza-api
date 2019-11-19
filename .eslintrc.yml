@@ -10,7 +10,7 @@ env:
   node: true
   mocha: true
 rules:
-  no-param-reassign: "off"
+  no-param-reassign: 'off'
   import/no-unresolved:
     - error
     - commonjs: true

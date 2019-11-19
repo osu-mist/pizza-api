@@ -1,5 +1,10 @@
+import { apiBaseUrl, resourcePathLink } from 'utils/uri-builder';
 import { errorHandler } from 'errors/errors';
+
 import { getDoughs, postDough } from '../db/oracledb/doughs-dao';
+
+const doughResourceUrl = resourcePathLink(apiBaseUrl, 'doughs');
+
 
 /**
  * Get doughs
@@ -22,7 +27,8 @@ const get = async (req, res) => {
  */
 const post = async (req, res) => {
   try {
-    const result = await postDough(req.query);
+    const result = await postDough(req.body);
+    res.setHeader('Location', `${doughResourceUrl}/${result.data.id}`);
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);
