@@ -38,11 +38,27 @@ const {
   invalidDoughsData,
 } = postDoughsData;
 
+const proxyquireDoughsDao = (connectionStub, serializeDoughsStub, serializeDoughStub) => {
+  const getConnectionStub = sinon.stub().resolves({
+    execute: connectionStub,
+    close: () => {},
+  });
+
+  return proxyquire('api/v1/db/oracledb/doughs-dao', {
+    './connection': {
+      getConnection: getConnectionStub,
+    },
+    '../../serializers/doughs-serializer': {
+      serializeDoughs: serializeDoughsStub,
+      serializeDough: serializeDoughStub,
+    },
+  });
+};
+
 describe('test doughs dao', () => {
   let serializeDoughsStub;
   let serializeDoughStub;
-  let getConnectionStub;
-  let connectionSpy;
+  let connectionStub;
   let doughsDao;
   beforeEach(() => {
     serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
@@ -52,20 +68,9 @@ describe('test doughs dao', () => {
     });
     describe('getDoughs', () => {
       beforeEach(() => {
-        connectionSpy = sinon.stub().returns(executeReturn);
-        getConnectionStub = sinon.stub().resolves({
-          execute: connectionSpy,
-          close: () => {},
-        });
+        connectionStub = sinon.stub().returns(executeReturn);
 
-        doughsDao = proxyquire('../../api/v1/db/oracledb/doughs-dao', {
-          './connection': {
-            getConnection: getConnectionStub,
-          },
-          '../../serializers/doughs-serializer': {
-            serializeDoughs: serializeDoughsStub,
-          },
-        });
+        doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
       });
     });
     afterEach(() => {
@@ -78,7 +83,7 @@ describe('test doughs dao', () => {
     describe('when it has an invalid filter', () => {
       it('does not parse the invalid filter', async () => {
         await doughsDao.getDoughs(invalidFilters);
-        connectionSpy
+        connectionStub
           .getCall(0)
           .should.have.been
           .calledWith(
@@ -102,7 +107,7 @@ describe('test doughs dao', () => {
     describe('when it has valid filters', () => {
       it('properly parses those filters into bind parameters', async () => {
         await doughsDao.getDoughs(waterTempFilter);
-        connectionSpy
+        connectionStub
           .should.have.been
           .calledWith(
             getDoughsQueryWithWaterTemp,
@@ -113,7 +118,7 @@ describe('test doughs dao', () => {
     describe('when it gets valid and invalid filters', () => {
       it('only parses the valid filters into bind parameters', async () => {
         await doughsDao.getDoughs(mixedValidFilters);
-        connectionSpy
+        connectionStub
           .should.have.been
           .calledWith(
             getDoughsQueryWithWaterTemp,
@@ -124,7 +129,7 @@ describe('test doughs dao', () => {
     describe('when it gets multiple valid filters', () => {
       it('properly parses all of those filters', async () => {
         await doughsDao.getDoughs(multipleFilters);
-        connectionSpy
+        connectionStub
           .should.have.been
           .calledWith(
             getDoughsQueryWithMultipleConditions,
@@ -136,36 +141,27 @@ describe('test doughs dao', () => {
 
   describe('postDoughs', () => {
     beforeEach(() => {
-      connectionSpy = sinon.stub().returns(testDbReturn);
-      getConnectionStub = sinon.stub().resolves({
-        execute: connectionSpy,
-        close: () => {},
-      });
+      connectionStub = sinon.stub().returns(testDbReturn);
 
-      doughsDao = proxyquire('../../api/v1/db/oracledb/doughs-dao', {
-        './connection': {
-          getConnection: getConnectionStub,
-        },
-        '../../serializers/doughs-serializer': {
-          serializeDoughs: serializeDoughsStub,
-          serializeDough: serializeDoughStub,
-        },
-      });
+      doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
     });
     describe('when it gets valid params', () => {
       beforeEach(async () => {
         await doughsDao.postDough(sampleValidDoughData);
       });
-      it('generates the right bind params', () => {
-        connectionSpy.should.have.been.calledWith(
+
+      it('generates the right bind params based on the inputs', () => {
+        connectionStub.should.have.been.calledWith(
           doughsPostQuery,
           doughsBindParams,
           { autoCommit: true },
         );
       });
-      it('passes the right values to serializeDough', () => {
+
+      it('passes a normalized raw doughs object with the right values to serializeDough', () => {
         serializeDoughStub.should.have.been.calledWith(normalizedDough);
       });
+
       it('returns the output of serializeDough', async () => {
         const result = doughsDao.postDough(sampleValidDoughData);
         return result.should.eventually.deep.equal(baseGetDoughsReturn);
@@ -174,6 +170,14 @@ describe('test doughs dao', () => {
     describe('when it gets invalid params', () => {
       it('throws an error', () => doughsDao
         .postDough(invalidDoughsData).should.be.rejected);
+
+      it('does not make a database call', async () => {
+        try {
+          await doughsDao.postDough(invalidDoughsData);
+        } catch {
+          connectionStub.should.not.have.been.called;
+        }
+      });
     });
   });
 });
