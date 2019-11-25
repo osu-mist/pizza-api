@@ -21,7 +21,7 @@ class GetFilterProcessor {
   static normalizeFilterName(filterName) {
     const filterTextRegex = /filter\[(.*)\]/g;
     const regexResults = filterTextRegex.exec(filterName);
-    return regexResults[1] || filterName;
+    return regexResults ? regexResults[1] : filterName;
   }
 
   /**

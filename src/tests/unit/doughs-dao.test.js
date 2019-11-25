@@ -7,8 +7,6 @@ import sinonChai from 'sinon-chai';
 
 import { getDoughsData, postDoughsData } from './test-data';
 
-sinon.replace(config, 'get', () => ({ oracledb: {} }));
-
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -61,17 +59,19 @@ describe('test doughs dao', () => {
   let connectionStub;
   let doughsDao;
   beforeEach(() => {
+    sinon.replace(config, 'get', () => ({ oracledb: {} }));
     serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
     serializeDoughStub = sinon.stub().returns(baseGetDoughsReturn);
-    afterEach(() => {
-      sinon.restore();
-    });
-    describe('getDoughs', () => {
-      beforeEach(() => {
-        connectionStub = sinon.stub().returns(executeReturn);
+    connectionStub = sinon.stub().returns(executeReturn);
+  });
+  afterEach(() => {
+    sinon.restore();
+  });
+  describe('getDoughs', () => {
+    beforeEach(() => {
+      connectionStub = sinon.stub().returns(executeReturn);
 
-        doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
-      });
+      doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
     });
     afterEach(() => {
       sinon.restore();
@@ -84,7 +84,6 @@ describe('test doughs dao', () => {
       it('does not parse the invalid filter', async () => {
         await doughsDao.getDoughs(invalidFilters);
         connectionStub
-          .getCall(0)
           .should.have.been
           .calledWith(
             getDoughsQuery,

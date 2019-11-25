@@ -134,10 +134,78 @@ const postDoughsData = {
       },
     },
   },
+};
+const processGetFiltersData = {
+  fooParamName: { name: 'filter[foo]' },
+  nameParamName: { name: 'name' },
+  fooColumnName: { foo: 'FOO' },
+  nameColumnName: { name: 'NAME' },
+  fooAndNameColumnNames: {
+    foo: 'FOO',
+    name: 'NAME',
+  },
+  fooFilter: {
+    'filter[foo]': 'baz',
+  },
+  normalizedFooFilter: {
+    foo: 'baz',
+  },
+  normalizedNameFilter: {
+    name: 'shrek',
+  },
+  fooBindParams: {
+    foo: 'baz',
+  },
+  fooConditional: 'FOO = :foo',
+  bahFilter: {
+    bah: 'humbug',
+  },
+  emptyBindParams: {},
+  emptyConditional: '',
+  nameFilter: {
+    name: 'shrek',
+  },
+  nameBindParams: {
+    name: 'shrek',
+  },
+  nameConditional: 'NAME = :name',
+  fooBahFilters: {
+    bah: 'humbug',
+    'filter[foo]': 'baz',
+  },
+  fooNameFilters: {
+    name: 'shrek',
+    'filter[foo]': 'baz',
+  },
+};
 
+const getIngredientsTestConditionals = 'TEST = :test';
+const getIngredientsQueryAliases = 'ID AS "id", TYPE AS "ingredientType", NAME AS "name", NOTES AS "notes"';
+const getIngredientsQuery = `SELECT ${getIngredientsQueryAliases} FROM INGREDIENTS WHERE ${getIngredientsTestConditionals}`;
+const emptyGetIngredientsQuery = `SELECT ${getIngredientsQueryAliases} FROM INGREDIENTS `;
+const getIngredientsData = {
+  getIngredientsQuery,
+  emptyGetIngredientsQuery,
+  testFilters: {
+    'filter[name]': 'cheddar',
+    invalidFilter: 'foo',
+  },
+  ingredientAliases: {
+    id: 'ID',
+    ingredientType: 'TYPE',
+    name: 'NAME',
+    notes: 'NOTES',
+  },
+  testBindParams: { test: true },
+  testConditionals: 'TEST = :test',
+  testSerializerReturn: { test: true },
+  testConnectionReturn: { rows: ['a', 'b', 'c'] },
+  testConnectionReturnRows: ['a', 'b', 'c'],
 };
 
 export {
   getDoughsData,
   postDoughsData,
+  getIngredientsData,
+  processGetFiltersData,
 };

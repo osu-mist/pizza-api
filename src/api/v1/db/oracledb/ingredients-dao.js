@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { getConnection } from 'api/v1/database/oracledb/connection';
+import { getConnection } from 'api/v1/db/oracledb/connection';
 import { serializeIngredients } from 'api/v1/serializers/ingredients-serializer';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
