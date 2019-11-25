@@ -24,7 +24,11 @@ const ingredientsColumnNames = {
  * @param {string} outBindParamName
  * @returns {string} the property name
  */
-const outBindParamToPropertyName = (outBindParamName) => outBindParamName.slice(0, -3);
+const outBindParamToPropertyName = (outBindParamName) => {
+  const outBindEndRegex = /(.*)Out$/;
+  const regexResults = outBindEndRegex.exec(outBindParamName);
+  return regexResults ? regexResults[1] : outBindParamName;
+};
 
 /**
  * A list of the columns in the INGREDIENTS table joined by commas
