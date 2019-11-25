@@ -15,6 +15,25 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
+const proxyquireIngredientsDao = (
+  connectionStub, serializeIngredientsStub, serializeIngredientStub,
+) => {
+  const getConnectionStub = sinon.stub().resolves({
+    execute: connectionStub,
+    close: () => {},
+  });
+
+  return proxyquire('api/v1/db/oracledb/doughs-dao', {
+    './connection': {
+      getConnection: getConnectionStub,
+    },
+    '../../serializers/doughs-serializer': {
+      serializeDoughs: serializeIngredientsStub,
+      serializeDough: serializeIngredientStub,
+    },
+  });
+};
+
 describe('test ingredients dao', () => {
   const {
     getIngredientsQuery,
@@ -28,6 +47,7 @@ describe('test ingredients dao', () => {
     testConnectionReturnRows,
   } = getIngredientsData;
   let serializeIngredientsStub;
+  let serializeIngredientStub;
   let getConnectionStub;
   let connectionStub;
   let ingredientsDao;
@@ -35,13 +55,8 @@ describe('test ingredients dao', () => {
   let getFilterProcessorContructorStub;
   beforeEach(() => {
     sinon.replace(config, 'get', () => ({ oracledb: {} }));
-    connectionStub = sinon.stub().returns(testConnectionReturn);
     serializeIngredientsStub = sinon.stub().returns(testSerializerReturn);
-
-    getConnectionStub = sinon.stub().resolves({
-      execute: connectionStub,
-      close: () => {},
-    });
+    serializeIngredientStub = sinon.stub().returns(testSerializerReturn);
 
     getFilterProcessorContructorStub = sinon.stub();
     getFilterProcessorStub = sinon.stub(GetFilterProcessor.prototype, 'processGetFilters').returns({
@@ -50,124 +65,128 @@ describe('test ingredients dao', () => {
     });
 
     Object.setPrototypeOf(GetFilterProcessor, getFilterProcessorContructorStub);
-
-    ingredientsDao = proxyquire('api/v1/db/oracledb/ingredients-dao', {
-      './connection': {
-        getConnection: getConnectionStub,
-      },
-      '../../serializers/ingredients-serializer': {
-        serializeIngredients: serializeIngredientsStub,
-      },
-    });
   });
-
   afterEach(() => {
     sinon.restore();
   });
-
-  describe('when the constructor for GetFilterProcessor is called', () => {
+  describe('getIngredients', () => {
     beforeEach(() => {
-      ingredientsDao = proxyquire('api/v1/db/oracledb/ingredients-dao', {
-        './connection': {
-          getConnection: getConnectionStub,
-        },
-        '../../serializers/ingredients-serializer': {
-          serializeIngredients: serializeIngredientsStub,
-        },
-        '../../../../utils/process-get-filters': {
-          GetFilterProcessor: getFilterProcessorContructorStub,
-        },
-      });
-    });
-
-    /*
-     * if our filter processor is initialized correctly, we can be basically sure
-     * that our filters will always be processed into bind params correctly
-     */
-    it('passes the right values to the GetFilterProcessor constructor', () => {
-      getFilterProcessorContructorStub.callCount.should.equal(1);
-      getFilterProcessorContructorStub.should.have.been.calledWith(
-        ingredientsGetParameters,
-        ingredientAliases,
+      connectionStub = sinon.stub().returns(testConnectionReturn);
+      ingredientsDao = proxyquireIngredientsDao(
+        connectionStub, serializeIngredientsStub, serializeIngredientStub,
       );
     });
-  });
-
-  describe('getIngredients', () => {
-    /*
-     * in the following two cases, we test to verify that our data flows smoothly
-     * from the inputs (filters/no filters) -> the filter processor -> the db connection
-     * -> the serializer -> back to the user
-    */
-    describe('when called with filters', () => {
-      let result;
-
-      beforeEach(async () => {
-        result = await ingredientsDao.getIngredients(testFilters);
-      });
-
-      it('passes those filters to processGetFilters', () => {
-        getFilterProcessorStub.should.have.been.calledWith(testFilters);
-      });
-
-      it('passes the right conditionals and bind params to connection.execute', () => {
-        connectionStub.should.have.been.calledWith(
-          getIngredientsQuery,
-          testBindParams,
-        );
-      });
-
-      it('extracts rows from the return of execute and passes them to serializeIngredients', () => {
-        serializeIngredientsStub.should.have.been.calledWith(testConnectionReturnRows);
-      });
-
-      it('returns the results of serializeIngredients', () => {
-        result.should.deep.equal(testSerializerReturn);
-      });
-    });
-    describe('when called without filters', () => {
-      let result;
-
-      beforeEach(async () => {
-        result = await ingredientsDao.getIngredients({});
-      });
-
-      it('passes no filters to processGetFilters', () => {
-        getFilterProcessorStub.should.have.been.calledWith({});
-      });
-
-      it('passes the right conditionals and bind params to connection.execute', () => {
-        connectionStub.should.have.been.calledWith(
-          getIngredientsQuery,
-          testBindParams,
-        );
-      });
-
-      it('extracts rows from the return of execute and passes them to serializeIngredients', () => {
-        serializeIngredientsStub.should.have.been.calledWith(testConnectionReturnRows);
-      });
-
-      it('returns the results of serializeIngredients', () => {
-        result.should.deep.equal(testSerializerReturn);
-      });
+    afterEach(() => {
+      sinon.restore();
     });
 
-    describe('when there are no conditionals', () => {
-      beforeEach(async () => {
-        getFilterProcessorStub.returns({ conditionals: '', bindParams: {} });
-        await ingredientsDao.getIngredients({});
+    describe('when the constructor for GetFilterProcessor is called', () => {
+      beforeEach(() => {
+        ingredientsDao = proxyquire('api/v1/db/oracledb/ingredients-dao', {
+          './connection': {
+            getConnection: getConnectionStub,
+          },
+          '../../serializers/ingredients-serializer': {
+            serializeIngredients: serializeIngredientsStub,
+          },
+          '../../../../utils/process-get-filters': {
+            GetFilterProcessor: getFilterProcessorContructorStub,
+          },
+        });
       });
 
       /*
-       * testing to see that sql generation is done correctly when no parameters
-       * are passed to the function
+       * if our filter processor is initialized correctly, we can be basically sure
+       * that our filters will always be processed into bind params correctly
        */
-      it('correctly generates the SQL query and bind params', () => {
-        connectionStub.should.have.been.calledWith(
-          emptyGetIngredientsQuery,
-          {},
+      it('passes the right values to the GetFilterProcessor constructor', () => {
+        getFilterProcessorContructorStub.callCount.should.equal(1);
+        getFilterProcessorContructorStub.should.have.been.calledWith(
+          ingredientsGetParameters,
+          ingredientAliases,
         );
       });
     });
+
+    describe('getIngredients', () => {
+      /*
+       * in the following two cases, we test to verify that our data flows smoothly
+       * from the inputs (filters/no filters) -> the filter processor -> the db connection
+       * -> the serializer -> back to the user
+       */
+      describe('when called with filters', () => {
+        let result;
+
+        beforeEach(async () => {
+          result = await ingredientsDao.getIngredients(testFilters);
+        });
+
+        it('passes those filters to processGetFilters', () => {
+          getFilterProcessorStub.should.have.been.calledWith(testFilters);
+        });
+
+        it('passes the right conditionals and bind params to connection.execute', () => {
+          connectionStub.should.have.been.calledWith(
+            getIngredientsQuery,
+            testBindParams,
+          );
+        });
+
+        it('extracts rows from the return of execute and passes them to serializeIngredients', () => {
+          serializeIngredientsStub.should.have.been.calledWith(testConnectionReturnRows);
+        });
+
+        it('returns the results of serializeIngredients', () => {
+          result.should.deep.equal(testSerializerReturn);
+        });
+      });
+      describe('when called without filters', () => {
+        let result;
+
+        beforeEach(async () => {
+          result = await ingredientsDao.getIngredients({});
+        });
+
+        it('passes no filters to processGetFilters', () => {
+          getFilterProcessorStub.should.have.been.calledWith({});
+        });
+
+        it('passes the right conditionals and bind params to connection.execute', () => {
+          connectionStub.should.have.been.calledWith(
+            getIngredientsQuery,
+            testBindParams,
+          );
+        });
+
+        it('extracts rows from the return of execute and passes them to serializeIngredients', () => {
+          serializeIngredientsStub.should.have.been.calledWith(testConnectionReturnRows);
+        });
+
+        it('returns the results of serializeIngredients', () => {
+          result.should.deep.equal(testSerializerReturn);
+        });
+      });
+
+      describe('when there are no conditionals', () => {
+        beforeEach(async () => {
+          getFilterProcessorStub.returns({ conditionals: '', bindParams: {} });
+          await ingredientsDao.getIngredients({});
+        });
+
+        /*
+         * testing to see that sql generation is done correctly when no parameters
+         * are passed to the function
+         */
+        it('correctly generates the SQL query and bind params', () => {
+          connectionStub.should.have.been.calledWith(
+            emptyGetIngredientsQuery,
+            {},
+          );
+        });
+      });
+    });
+  });
+  describe('postIngredient', () => {
+
   });
 });
