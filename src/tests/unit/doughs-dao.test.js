@@ -59,11 +59,13 @@ describe('test doughs dao', () => {
   let connectionStub;
   let doughsDao;
   beforeEach(() => {
+    sinon.replace(config, 'get', () => ({ oracledb: {} }));
     serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
     serializeDoughStub = sinon.stub().returns(baseGetDoughsReturn);
-    sinon.replace(config, 'get', () => ({ oracledb: {} }));
     connectionStub = sinon.stub().returns(executeReturn);
-    serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
+  });
+  afterEach(() => {
+    sinon.restore();
   });
   describe('getDoughs', () => {
     beforeEach(() => {
@@ -82,7 +84,6 @@ describe('test doughs dao', () => {
       it('does not parse the invalid filter', async () => {
         await doughsDao.getDoughs(invalidFilters);
         connectionStub
-          .getCall(0)
           .should.have.been
           .calledWith(
             getDoughsQuery,
@@ -106,7 +107,6 @@ describe('test doughs dao', () => {
       it('properly parses those filters into bind parameters', async () => {
         await doughsDao.getDoughs(waterTempFilter);
         connectionStub
-          .getCall(0)
           .should.have.been
           .calledWith(
             getDoughsQueryWithWaterTemp,
@@ -118,7 +118,6 @@ describe('test doughs dao', () => {
       it('only parses the valid filters into bind parameters', async () => {
         await doughsDao.getDoughs(mixedValidFilters);
         connectionStub
-          .getCall(0)
           .should.have.been
           .calledWith(
             getDoughsQueryWithWaterTemp,
@@ -130,7 +129,7 @@ describe('test doughs dao', () => {
       it('properly parses all of those filters', async () => {
         await doughsDao.getDoughs(multipleFilters);
         connectionStub
-          .getCall(0)
+          .should.have.been
           .calledWith(
             getDoughsQueryWithMultipleConditions,
             multipleFiltersBindParams,
