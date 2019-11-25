@@ -20,6 +20,7 @@ const ingredientsColumnNames = {
 /**
  * convert an output bind param name like `nameOut` to a
  * property name like `name` by removing 'Out' at the end of the string
+ *
  * @param {string} outBindParamName
  * @returns {string} the property name
  */
@@ -27,6 +28,7 @@ const outBindParamToPropertyName = (outBindParamName) => outBindParamName.slice(
 
 /**
  * A list of the columns in the INGREDIENTS table joined by commas
+ *
  * @constant
  * @type {string}
  */
@@ -37,6 +39,7 @@ const ingredientColumns = _.map(ingredientsProperties,
 /**
  * The full list of valid ingredient attributes for a POST request,
  * prepended with `:` and joined with commas
+ *
  * @constant
  * @type {string}
  */
@@ -45,8 +48,8 @@ const ingredientValues = _.map(ingredientsProperties, (propertyValues, property)
 
 /**
  * The "out" bind params for a POST/PATCH request to INGREDIENTS.
- *
  * These will be "filled" with the results of creating one or more rows
+ *
  * @constant
  * @type {object}
  */
@@ -62,6 +65,7 @@ const ingredientsOutBindParams = _.reduce(ingredientsProperties,
 /**
  * The column names referenced by the output bind params
  * used when inserting a new ingredient, joined with commas
+ *
  * @constant
  * @type {string}
  */
@@ -74,6 +78,7 @@ const ingredientsOutBindParamColumnNames = _.map(ingredientsOutBindParams,
 /**
  * The names of the out bind params used when inserting
  * a new ingredient, joined with commas
+ *
  * @constant
  * @type {string}
  */
@@ -155,6 +160,7 @@ const getPostBindParams = (body) => {
  * `RETURNS ... INTO ...` into the format of the return
  * from a `SELECT` query to it can be passed directly to
  * `serializeIngredient`.
+ *
  * @param {object} outBinds
  * @returns {object}
  */
@@ -166,6 +172,7 @@ const convertOutBindsToRawIngredient = (outBinds) => _.reduce(outBinds,
 
 /**
  * Use the data in `body` to create a new ingredient object.
+ *
  * @param {object} body
  * @returns {Promise<object>} an ingredient object
  */
