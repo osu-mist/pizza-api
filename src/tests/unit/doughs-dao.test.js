@@ -7,10 +7,6 @@ import sinonChai from 'sinon-chai';
 
 import { getDoughsData, postDoughsData } from './test-data';
 
-sinon.restore();
-
-sinon.replace(config, 'get', () => ({ oracledb: {} }));
-
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -65,6 +61,7 @@ describe('test doughs dao', () => {
   beforeEach(() => {
     serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
     serializeDoughStub = sinon.stub().returns(baseGetDoughsReturn);
+    sinon.replace(config, 'get', () => ({ oracledb: {} }));
     connectionStub = sinon.stub().returns(executeReturn);
     serializeDoughsStub = sinon.stub().returns(baseGetDoughsReturn);
   });

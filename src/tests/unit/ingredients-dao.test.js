@@ -11,10 +11,6 @@ import { GetFilterProcessor } from 'utils/process-get-filters';
 
 const ingredientsGetParameters = openapi.paths['/ingredients'].get.parameters;
 
-sinon.restore();
-
-sinon.replace(config, 'get', () => ({ oracledb: {} }));
-
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -38,6 +34,7 @@ describe('test ingredients dao', () => {
   let getFilterProcessorStub;
   let getFilterProcessorContructorStub;
   beforeEach(() => {
+    sinon.replace(config, 'get', () => ({ oracledb: {} }));
     connectionStub = sinon.stub().returns(testConnectionReturn);
     serializeIngredientsStub = sinon.stub().returns(testSerializerReturn);
 
