@@ -203,9 +203,60 @@ const getIngredientsData = {
   testConnectionReturnRows: ['a', 'b', 'c'],
 };
 
+const ingredientColumns = 'NAME, TYPE, NOTES';
+const ingredientValues = ':name, :ingredientType, :notes';
+const ingredientsOutBindParamColumnNames = 'ID, NAME, TYPE, NOTES';
+const ingredientsOutBindParamValues = ':idOut, :nameOut, :ingredientTypeOut, :notesOut';
+const postIngredientsQuery = `INSERT INTO INGREDIENTS (${ingredientColumns}) VALUES (${ingredientValues})
+  RETURNING ${ingredientsOutBindParamColumnNames} INTO ${ingredientsOutBindParamValues}`;
+const postIngredientData = {
+  testDbReturn: {
+    outBinds: {
+      idOut: [100],
+      nameOut: ['sausage'],
+      ingredientTypeOut: ['meat'],
+      notesOut: ['no notes'],
+    },
+  },
+  sampleValidIngredientData: {
+    data: {
+      type: 'ingredient',
+      attributes: {
+        name: 'sausage',
+        ingredientType: 'meat',
+        notes: 'no notes',
+      },
+    },
+  },
+  ingredientsPostQuery: postIngredientsQuery,
+  ingredientsBindParams: {
+    name: 'sausage',
+    ingredientType: 'meat',
+    notes: 'no notes',
+    idOut: { type: 2002, dir: 3003 },
+    nameOut: { type: 2001, dir: 3003 },
+    ingredientTypeOut: { type: 2001, dir: 3003 },
+    notesOut: { type: 2001, dir: 3003 },
+  },
+  normalizedIngredient: {
+    id: 100,
+    name: 'sausage',
+    ingredientType: 'meat',
+    notes: 'no notes',
+  },
+  invalidIngredientsData: {
+    data: {
+      type: 'ingredient',
+      attributes: {
+        foo: 'bar',
+      },
+    },
+  },
+};
 export {
   getDoughsData,
   postDoughsData,
   getIngredientsData,
+  postIngredientData,
   processGetFiltersData,
 };

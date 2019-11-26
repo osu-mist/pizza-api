@@ -5,7 +5,7 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getIngredientsData } from 'tests/unit/test-data';
+import { getIngredientsData, postIngredientData } from 'tests/unit/test-data';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 
@@ -23,29 +23,39 @@ const proxyquireIngredientsDao = (
     close: () => {},
   });
 
-  return proxyquire('api/v1/db/oracledb/doughs-dao', {
+  return proxyquire('api/v1/db/oracledb/ingredients-dao', {
     './connection': {
       getConnection: getConnectionStub,
     },
-    '../../serializers/doughs-serializer': {
-      serializeDoughs: serializeIngredientsStub,
-      serializeDough: serializeIngredientStub,
+    '../../serializers/ingredients-serializer': {
+      serializeIngredients: serializeIngredientsStub,
+      serializeIngredient: serializeIngredientStub,
     },
   });
 };
 
+const {
+  getIngredientsQuery,
+  emptyGetIngredientsQuery,
+  testFilters,
+  ingredientAliases,
+  testBindParams,
+  testSerializerReturn,
+  testConditionals,
+  testConnectionReturn,
+  testConnectionReturnRows,
+} = getIngredientsData;
+
+const {
+  testDbReturn,
+  sampleValidIngredientData,
+  ingredientsPostQuery,
+  ingredientsBindParams,
+  normalizedIngredient,
+  invalidIngredientsData,
+} = postIngredientData;
+
 describe('test ingredients dao', () => {
-  const {
-    getIngredientsQuery,
-    emptyGetIngredientsQuery,
-    testFilters,
-    ingredientAliases,
-    testBindParams,
-    testSerializerReturn,
-    testConditionals,
-    testConnectionReturn,
-    testConnectionReturnRows,
-  } = getIngredientsData;
   let serializeIngredientsStub;
   let serializeIngredientStub;
   let getConnectionStub;
@@ -187,6 +197,46 @@ describe('test ingredients dao', () => {
     });
   });
   describe('postIngredient', () => {
+    beforeEach(() => {
+      connectionStub = sinon.stub().returns(testDbReturn);
 
+      ingredientsDao = proxyquireIngredientsDao(
+        connectionStub, serializeIngredientsStub, serializeIngredientStub,
+      );
+    });
+    describe('when it gets valid params', () => {
+      beforeEach(async () => {
+        await ingredientsDao.postIngredient(sampleValidIngredientData);
+      });
+
+      it('generates the right bind params based on the inputs', () => {
+        connectionStub.should.have.been.calledWith(
+          ingredientsPostQuery,
+          ingredientsBindParams,
+          { autoCommit: true },
+        );
+      });
+
+      it('passes a normalized raw ingredients object with the right values to serializeIngredient', () => {
+        serializeIngredientStub.should.have.been.calledWith(normalizedIngredient);
+      });
+
+      it('returns the output of serializeIngredient', async () => {
+        const result = ingredientsDao.postIngredient(sampleValidIngredientData);
+        return result.should.eventually.deep.equal(testSerializerReturn);
+      });
+    });
+    describe('when it gets invalid params', () => {
+      it('throws an error', () => ingredientsDao
+        .postIngredient(invalidIngredientsData).should.be.rejected);
+
+      it('does not make a database call', async () => {
+        try {
+          await ingredientsDao.postIngredient(invalidIngredientsData);
+        } catch {
+          connectionStub.should.not.have.been.called;
+        }
+      });
+    });
   });
 });
