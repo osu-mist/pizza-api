@@ -5,6 +5,7 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 
 import { openapi } from 'utils/load-openapi';
+import { doughSerializerData } from './test-data';
 
 const doughAttributes = openapi.definitions.DoughAttributes.properties;
 
@@ -13,6 +14,12 @@ chai.should();
 let rawDough;
 let rawDoughs;
 let doughSerializer;
+
+const {
+  nullSpecialInstructionsDough,
+  emptyStringSpecialInstructionsDough,
+} = doughSerializerData;
+
 describe('test doughs serializer', () => {
   before(() => {
     sinon.replace(config, 'get', () => ({ oracledb: {} }));
@@ -27,21 +34,7 @@ describe('test doughs serializer', () => {
   describe('serializeDough', () => {
     describe('when it gets a dough object with specialInstructions = `null`', () => {
       beforeEach(() => {
-        rawDough = {
-          name: 'weeknight pizza dough',
-          id: 201,
-          gramsFlour: 500,
-          flourType: 'All Purpose',
-          gramsWater: 400,
-          waterTemp: 90,
-          gramsYeast: 5,
-          gramsSalt: 15,
-          bulkFermentTime: 60,
-          proofTime: 15,
-          gramsSugar: 0,
-          gramsOliveOil: 0,
-          specialInstructions: null,
-        };
+        rawDough = nullSpecialInstructionsDough;
       });
       it('converts specialInstructions to an empty string', () => {
         const serializedDough = doughSerializer.serializeDough(rawDough);
@@ -50,21 +43,7 @@ describe('test doughs serializer', () => {
     });
     describe('when it gets a dough with specialInstructions = \'\'', () => {
       beforeEach(() => {
-        rawDough = {
-          name: 'weeknight pizza dough',
-          id: 201,
-          gramsFlour: 500,
-          flourType: 'All Purpose',
-          gramsWater: 400,
-          waterTemp: 90,
-          gramsYeast: 5,
-          gramsSalt: 15,
-          bulkFermentTime: 60,
-          proofTime: 15,
-          gramsSugar: 0,
-          gramsOliveOil: 0,
-          specialInstructions: '',
-        };
+        rawDough = emptyStringSpecialInstructionsDough;
       });
       it('leaves specialInstructions as an empty string', () => {
         const serializedDough = doughSerializer.serializeDough(rawDough);
@@ -73,21 +52,7 @@ describe('test doughs serializer', () => {
     });
     describe('when it gets a raw dough with a valid format', () => {
       beforeEach(() => {
-        rawDough = {
-          name: 'weeknight pizza dough',
-          id: 201,
-          gramsFlour: 500,
-          flourType: 'All Purpose',
-          gramsWater: 400,
-          waterTemp: 90,
-          gramsYeast: 5,
-          gramsSalt: 15,
-          bulkFermentTime: 60,
-          proofTime: 15,
-          gramsSugar: 0,
-          gramsOliveOil: 0,
-          specialInstructions: '',
-        };
+        rawDough = emptyStringSpecialInstructionsDough;
       });
       it('adds a top level self link', () => {
         const serializedDough = doughSerializer.serializeDough(rawDough, 'doughs');
@@ -111,21 +76,7 @@ describe('test doughs serializer', () => {
     describe('when it gets a dough object array with valid formatting', () => {
       beforeEach(() => {
         rawDoughs = [
-          {
-            name: 'weeknight pizza dough',
-            id: 201,
-            gramsFlour: 500,
-            flourType: 'All Purpose',
-            gramsWater: 400,
-            waterTemp: 90,
-            gramsYeast: 5,
-            gramsSalt: 15,
-            bulkFermentTime: 60,
-            proofTime: 15,
-            gramsSugar: 0,
-            gramsOliveOil: 0,
-            specialInstructions: '',
-          },
+          emptyStringSpecialInstructionsDough,
         ];
       });
       it('returns an object with a data member that is an array', () => {
@@ -152,6 +103,17 @@ describe('test doughs serializer', () => {
       it('creates a top level link with parameters when parameters are passed', () => {
         const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs, { id: 1 });
         serializedDoughs.links.self.should.equal('/v1/doughs?id=1');
+      });
+    });
+    describe('when it gets a doughs array with `specialInstructions` = null', () => {
+      beforeEach(() => {
+        rawDoughs = [
+          nullSpecialInstructionsDough,
+        ];
+      });
+      it('replaces null with \'\'', () => {
+        const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs);
+        serializedDoughs.data[0].attributes.specialInstructions.should.equal('');
       });
     });
   });

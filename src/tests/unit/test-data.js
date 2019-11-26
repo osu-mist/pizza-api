@@ -253,10 +253,60 @@ const postIngredientData = {
     },
   },
 };
+const doughSerializerData = {
+  nullSpecialInstructionsDough: {
+    name: 'weeknight pizza dough',
+    id: 201,
+    gramsFlour: 500,
+    flourType: 'All Purpose',
+    gramsWater: 400,
+    waterTemp: 90,
+    gramsYeast: 5,
+    gramsSalt: 15,
+    bulkFermentTime: 60,
+    proofTime: 15,
+    gramsSugar: 0,
+    gramsOliveOil: 0,
+    specialInstructions: null,
+  },
+  emptyStringSpecialInstructionsDough: {
+    name: 'weeknight pizza dough',
+    id: 201,
+    gramsFlour: 500,
+    flourType: 'All Purpose',
+    gramsWater: 400,
+    waterTemp: 90,
+    gramsYeast: 5,
+    gramsSalt: 15,
+    bulkFermentTime: 60,
+    proofTime: 15,
+    gramsSugar: 0,
+    gramsOliveOil: 0,
+    specialInstructions: '',
+  },
+};
+
+const ingredientSerializerData = {
+  nullNotesIngredient: {
+    id: 201,
+    ingredientType: 'cheese',
+    name: 'mozzarella',
+    notes: null,
+  },
+  emptyStringNotesIngredient: {
+    id: 201,
+    ingredientType: 'cheese',
+    name: 'mozzarella',
+    notes: '',
+  },
+};
+
 export {
   getDoughsData,
   postDoughsData,
   getIngredientsData,
   postIngredientData,
   processGetFiltersData,
+  doughSerializerData,
+  ingredientSerializerData,
 };
