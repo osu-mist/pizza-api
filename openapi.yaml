@@ -751,8 +751,10 @@ definitions:
         type: string
         description: additional information about using or preparing the ingredient
         example: brown the sausage in a pan before baking
+        default: ''
   IngredientPostAttributes:
     required: [name, ingredientType]
+    additionalProperties: false
     properties: *ingredientProperties
   IngredientResource:
     properties:
@@ -769,8 +771,10 @@ definitions:
       attributes:
         $ref: '#/definitions/IngredientAttributes'
   IngredientPostBody:
+    required: [data]
     properties:
       data:
+        required: [attributes]
         properties:
           type: *ingredientType
           attributes:

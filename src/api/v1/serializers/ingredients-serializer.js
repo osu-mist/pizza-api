@@ -12,6 +12,16 @@ const ingredientResourcePath = 'ingredients';
 const ingredientResourceUrl = resourcePathLink(apiBaseUrl, ingredientResourcePath);
 
 /**
+ * Replaces a null `notes` key with an empty string
+ *
+ * @param {object} ingredient
+ * @returns {object} the ingredient with `notes` updated
+ */
+const transformNotes = (ingredient) => {
+  ingredient.notes = ingredient.notes || '';
+  return ingredient;
+};
+/**
  * Serialize doughResources to JSON API
  *
  * @param {object[]} rawIngredients Raw data rows from data source
@@ -26,6 +36,7 @@ const serializeIngredients = (rawIngredients, query) => {
     resourcePath: ingredientResourcePath,
     topLevelSelfLink,
     enableDataLinks: true,
+    transformFunction: transformNotes,
   };
 
   return new JsonApiSerializer(
@@ -34,4 +45,28 @@ const serializeIngredients = (rawIngredients, query) => {
   ).serialize(rawIngredients);
 };
 
-export { serializeIngredients };
+/**
+ * Serializes a single ingredient
+ *
+ * @param {object} rawIngredient
+ * @param {string} query
+ * @returns {object} the serialized ingredient
+ */
+const serializeIngredient = (rawIngredient, query) => {
+  const topLevelSelfLink = paramsLink(ingredientResourceUrl, query);
+  const serializerArgs = {
+    identifierField: 'id',
+    resourceKeys: ingredientResourceKeys,
+    resourcePath: ingredientResourcePath,
+    topLevelSelfLink,
+    enableDataLinks: true,
+    transformFunction: transformNotes,
+  };
+
+  return new JsonApiSerializer(
+    ingredientResourceType,
+    serializerOptions(serializerArgs),
+  ).serialize(rawIngredient);
+};
+
+export { serializeIngredients, serializeIngredient };

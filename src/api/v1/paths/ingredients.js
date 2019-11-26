@@ -1,6 +1,9 @@
+import { apiBaseUrl, resourcePathLink } from 'utils/uri-builder';
 import { errorHandler } from 'errors/errors';
 
-import { getIngredients } from 'api/v1/db/oracledb/ingredients-dao';
+import { getIngredients, postIngredient } from 'api/v1/db/oracledb/ingredients-dao';
+
+const ingredientResourceUrl = resourcePathLink(apiBaseUrl, 'ingredients');
 
 /**
  * GET ingredients
@@ -17,24 +20,17 @@ const get = async (req, res) => {
 };
 
 /**
- * stub post method
- * @returns {object}
+ * POST ingredients
+ *
+ * @type {RequestHandler}
  */
-const post = async () => ({
-  data: {
-    type: 'ingredient',
-    id: 'abc123',
-    links: {
-      self: 'string',
-    },
-    attributes: {
-      name: 'Sausage',
-      ingredientType: 'meat',
-      notes: 'brown the sausage in a pan before baking',
-    },
-  },
-  links: {
-    self: 'string',
-  },
-});
+const post = async (req, res) => {
+  try {
+    const result = await postIngredient(req.body);
+    res.setHeader('Location', `${ingredientResourceUrl}/${result.data.id}`);
+    return res.send(result);
+  } catch (err) {
+    return errorHandler(res, err);
+  }
+};
 export { get, post };
