@@ -47,6 +47,7 @@ const serializeIngredients = (rawIngredients, query) => {
 
 /**
  * Serializes a single ingredient
+ *
  * @param {object} rawIngredient
  * @param {string} query
  * @returns {object} the serialized ingredient
