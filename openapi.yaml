@@ -998,19 +998,19 @@ parameters:
     in: path
     name: pizzaId
     required: true
-    type: string
+    type: integer
     description: ID of pizza to retrieve
   doughId:
     in: path
     name: doughId
     required: true
-    type: string
+    type: integer
     description: ID of a dough to retrieve
   ingredientId:
     in: path
     name: ingredientId
     required: true
-    type: string
+    type: integer
     description: ID of an ingredient to retrieve
 responses:
   '400':

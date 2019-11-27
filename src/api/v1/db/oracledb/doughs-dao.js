@@ -245,4 +245,22 @@ const postDough = async (body) => {
   }
 };
 
-export { getDoughs, postDough };
+/**
+ * Get the dough from the database with id `id`
+ *
+ * @param {number} id
+ * @returns {Promise<object>} the dough with id `id`
+ */
+const getDoughById = async (id) => {
+  const query = doughsGetQuery('ID = :id');
+  const bindParams = { id };
+  const connection = await getConnection();
+  try {
+    const { rows } = await connection.execute(query, bindParams);
+    return serializeDough(rows, `doughs/${id}`);
+  } finally {
+    connection.close();
+  }
+};
+
+export { getDoughs, postDough, getDoughById };
