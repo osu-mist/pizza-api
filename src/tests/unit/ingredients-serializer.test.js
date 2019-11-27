@@ -14,11 +14,45 @@ chai.should();
 let rawIngredient;
 let rawIngredients;
 let ingredientSerializer;
+let serializerResult;
+let serializedIngredient;
+let serializedIngredients;
 
 const {
   nullNotesIngredient,
   emptyStringNotesIngredient,
 } = ingredientSerializerData;
+
+const initializeSerializeIngredientTest = (ingredientValue, ...serializerArgs) => {
+  beforeEach(() => {
+    rawIngredient = ingredientValue;
+    serializedIngredient = ingredientSerializer
+      .serializeIngredient(rawIngredient, ...serializerArgs);
+    serializerResult = serializedIngredient;
+  });
+};
+
+const initializeSerializeIngredientsTest = (ingredientsValue, ...serializerArgs) => {
+  beforeEach(() => {
+    rawIngredients = ingredientsValue;
+    serializedIngredients = ingredientSerializer
+      .serializeIngredients(rawIngredients, ...serializerArgs);
+    serializerResult = serializedIngredients;
+  });
+};
+
+const itMakesNotesAnEmptyString = () => {
+  it('makes special instructions an empty string', () => {
+    serializedIngredient
+      .data.attributes.notes.should.equal('');
+  });
+};
+
+const itCreatesTheCorrectTopLevelLink = (desiredLink) => {
+  it('create a correct top level link', () => {
+    serializerResult.links.self.should.equal(desiredLink);
+  });
+};
 
 describe('test ingredients serializer', () => {
   before(() => {
@@ -33,50 +67,28 @@ describe('test ingredients serializer', () => {
 
   describe('serializeIngredient', () => {
     describe('when it gets an ingredient object with `notes` = null', () => {
-      beforeEach(() => {
-        rawIngredient = nullNotesIngredient;
-      });
+      initializeSerializeIngredientTest(nullNotesIngredient);
 
-      it('changes null to empty string', () => {
-        const serializedIngredient = ingredientSerializer
-          .serializeIngredient(rawIngredient, '/ingredient');
-        serializedIngredient.data.attributes.notes.should.equal('');
-      });
+      itMakesNotesAnEmptyString();
     });
 
     describe('when it gets an ingredient with `notes` = \'\'', () => {
-      beforeEach(() => {
-        rawIngredient = emptyStringNotesIngredient;
-      });
+      initializeSerializeIngredientTest(emptyStringNotesIngredient);
 
-      it('leaves `notes` unchanged', () => {
-        const serializedIngredient = ingredientSerializer
-          .serializeIngredient(rawIngredient, '/ingredient');
-        serializedIngredient.data.attributes.notes.should.equal('');
-      });
+      itMakesNotesAnEmptyString();
     });
 
     describe('when it gets a raw ingredient with a valid format', () => {
-      beforeEach(() => {
-        rawIngredient = emptyStringNotesIngredient;
-      });
+      initializeSerializeIngredientTest(emptyStringNotesIngredient, 'ingredients');
 
-      it('adds a top level self link', () => {
-        const serializedIngredient = ingredientSerializer
-          .serializeIngredient(rawIngredient, 'ingredients');
-        serializedIngredient.links.self.should.equal('/v1/ingredients');
-      });
+      itCreatesTheCorrectTopLevelLink('/v1/ingredients');
 
       it('adds type and id at the top level of data', () => {
-        const serializedIngredient = ingredientSerializer
-          .serializeIngredient(rawIngredient, 'ingredients');
         serializedIngredient.data.type.should.equal('ingredient');
         serializedIngredient.data.id.should.equal('201');
       });
 
       it('adds all of the right attributes to `attributes`', () => {
-        const serializedIngredient = ingredientSerializer
-          .serializeIngredient(rawIngredient, 'ingredients');
         _.forIn(ingredientAttributes, (value, attribute) => {
           serializedIngredient.data.attributes.should.have.property(attribute);
         });
@@ -86,21 +98,13 @@ describe('test ingredients serializer', () => {
   });
   describe('serializeIngredients', () => {
     describe('when it gets a dough object with valid formatting', () => {
-      beforeEach(() => {
-        rawIngredients = [
-          emptyStringNotesIngredient,
-        ];
-      });
+      initializeSerializeIngredientsTest([emptyStringNotesIngredient]);
 
       it('returns an object with a data member that is an array', () => {
-        const serializedIngredients = ingredientSerializer
-          .serializeIngredients(rawIngredients);
         serializedIngredients.data.should.be.a('array');
       });
 
       it('populates the right attributes for each member of the data list', () => {
-        const serializedIngredients = ingredientSerializer
-          .serializeIngredients(rawIngredients);
         serializedIngredients.data.forEach((ingredient, index) => {
           _.forIn(ingredientAttributes, (value, attribute) => {
             ingredient.attributes.should.have.property(attribute);
@@ -113,29 +117,22 @@ describe('test ingredients serializer', () => {
         });
       });
 
-      it('creates a top level link when no parameters are passed', () => {
-        const serializedIngredients = ingredientSerializer
-          .serializeIngredients(rawIngredients);
-        serializedIngredients.links.self.should.equal('/v1/ingredients');
-      });
+      itCreatesTheCorrectTopLevelLink('/v1/ingredients');
 
-      it('creates a top level link when parameters are passed', () => {
-        const serializedIngredients = ingredientSerializer
-          .serializeIngredients(rawIngredients, { id: 1 });
-        serializedIngredients.links.self.should.equal('/v1/ingredients?id=1');
+      context('when parameters are passed', () => {
+        initializeSerializeIngredientsTest(
+          emptyStringNotesIngredient,
+          { id: 1 },
+        );
+
+        itCreatesTheCorrectTopLevelLink('/v1/ingredients?id=1');
       });
     });
 
     describe('when it gets a rawIngredient with `notes` = null', () => {
-      beforeEach(() => {
-        rawIngredients = [
-          nullNotesIngredient,
-        ];
-      });
+      initializeSerializeIngredientsTest([nullNotesIngredient]);
 
       it('converts that null to an empty string', () => {
-        const serializedIngredients = ingredientSerializer
-          .serializeIngredients(rawIngredients);
         serializedIngredients.data[0].attributes.notes.should.equal('');
       });
     });

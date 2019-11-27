@@ -13,12 +13,44 @@ chai.should();
 
 let rawDough;
 let rawDoughs;
+let serializedDough;
+let serializedDoughs;
+let serializerResult;
 let doughSerializer;
 
 const {
   nullSpecialInstructionsDough,
   emptyStringSpecialInstructionsDough,
 } = doughSerializerData;
+
+const initializeSerializeDoughTest = (doughValue, ...serializerArgs) => {
+  beforeEach(() => {
+    rawDough = doughValue;
+    serializedDough = doughSerializer.serializeDough(rawDough, ...serializerArgs);
+    serializerResult = serializedDough;
+  });
+};
+
+const initializeSerializeDoughsTest = (doughsValue, ...serializerArgs) => {
+  beforeEach(() => {
+    rawDoughs = doughsValue;
+    serializedDoughs = doughSerializer.serializeDoughs(rawDoughs, ...serializerArgs);
+    serializerResult = serializedDoughs;
+  });
+};
+
+const itMakesSpecialInstructionsAnEmptyString = () => {
+  it('makes special instructions an empty string', () => {
+    serializedDough
+      .data.attributes.specialInstructions.should.equal('');
+  });
+};
+
+const itCreatesTheCorrectTopLevelLink = (desiredLink) => {
+  it('create a correct top level link', () => {
+    serializerResult.links.self.should.equal(desiredLink);
+  });
+};
 
 describe('test doughs serializer', () => {
   before(() => {
@@ -33,45 +65,28 @@ describe('test doughs serializer', () => {
   });
   describe('serializeDough', () => {
     describe('when it gets a dough object with specialInstructions = `null`', () => {
-      beforeEach(() => {
-        rawDough = nullSpecialInstructionsDough;
-      });
+      initializeSerializeDoughTest(nullSpecialInstructionsDough);
 
-      it('converts specialInstructions to an empty string', () => {
-        const serializedDough = doughSerializer.serializeDough(rawDough);
-        serializedDough.data.attributes.specialInstructions.should.equal('');
-      });
+      itMakesSpecialInstructionsAnEmptyString();
     });
 
     describe('when it gets a dough with specialInstructions = \'\'', () => {
-      beforeEach(() => {
-        rawDough = emptyStringSpecialInstructionsDough;
-      });
+      initializeSerializeDoughTest(emptyStringSpecialInstructionsDough);
 
-      it('leaves specialInstructions as an empty string', () => {
-        const serializedDough = doughSerializer.serializeDough(rawDough);
-        serializedDough.data.attributes.specialInstructions.should.equal('');
-      });
+      itMakesSpecialInstructionsAnEmptyString();
     });
 
     describe('when it gets a raw dough with a valid format', () => {
-      beforeEach(() => {
-        rawDough = emptyStringSpecialInstructionsDough;
-      });
+      initializeSerializeDoughTest(emptyStringSpecialInstructionsDough, 'doughs');
 
-      it('adds a top level self link', () => {
-        const serializedDough = doughSerializer.serializeDough(rawDough, 'doughs');
-        serializedDough.links.self.should.equal('/v1/doughs');
-      });
+      itCreatesTheCorrectTopLevelLink('/v1/doughs');
 
       it('adds type and id at the top level of data', () => {
-        const serializedDough = doughSerializer.serializeDough(rawDough, 'doughs');
         serializedDough.data.type.should.equal('dough');
         serializedDough.data.id.should.equal('201');
       });
 
       it('adds all of the right attributes to `attributes`', () => {
-        const serializedDough = doughSerializer.serializeDough(rawDough, 'doughs');
         _.forIn(doughAttributes, (value, attribute) => {
           serializedDough.data.attributes.should.have.property(attribute);
         });
@@ -82,19 +97,13 @@ describe('test doughs serializer', () => {
 
   describe('serializeDoughs', () => {
     describe('when it gets a dough object array with valid formatting', () => {
-      beforeEach(() => {
-        rawDoughs = [
-          emptyStringSpecialInstructionsDough,
-        ];
-      });
+      initializeSerializeDoughsTest([emptyStringSpecialInstructionsDough]);
 
       it('returns an object with a data member that is an array', () => {
-        const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs, 'doughs');
         serializedDoughs.data.should.be.a('array');
       });
 
       it('populates the right attributes for each member of the data list', () => {
-        const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs, 'doughs');
         serializedDoughs.data.forEach((dough, index) => {
           _.forIn(doughAttributes, (value, attribute) => {
             dough.attributes.should.have.property(attribute);
@@ -107,25 +116,18 @@ describe('test doughs serializer', () => {
         });
       });
 
-      it('creates a top level link when no parameters are passed', () => {
-        const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs, '');
-        serializedDoughs.links.self.should.equal('/v1/doughs');
-      });
+      itCreatesTheCorrectTopLevelLink('/v1/doughs');
 
-      it('creates a top level link with parameters when parameters are passed', () => {
-        const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs, { id: 1 });
-        serializedDoughs.links.self.should.equal('/v1/doughs?id=1');
+      describe('when parameters are passed to the serializer', () => {
+        initializeSerializeDoughsTest([emptyStringSpecialInstructionsDough], { id: 1 });
+
+        itCreatesTheCorrectTopLevelLink('/v1/doughs?id=1');
       });
     });
     describe('when it gets a doughs array with `specialInstructions` = null', () => {
-      beforeEach(() => {
-        rawDoughs = [
-          nullSpecialInstructionsDough,
-        ];
-      });
+      initializeSerializeDoughsTest([nullSpecialInstructionsDough]);
 
       it('replaces null with \'\'', () => {
-        const serializedDoughs = doughSerializer.serializeDoughs(rawDoughs);
         serializedDoughs.data[0].attributes.specialInstructions.should.equal('');
       });
     });
