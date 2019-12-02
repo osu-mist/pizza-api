@@ -53,7 +53,7 @@ const serializeIngredients = (rawIngredients, query) => {
  * @returns {object} the serialized ingredient
  */
 const serializeIngredient = (rawIngredient, query) => {
-  const topLevelSelfLink = paramsLink(ingredientResourceUrl, query);
+  const topLevelSelfLink = resourcePathLink(apiBaseUrl, query);
   const serializerArgs = {
     identifierField: 'id',
     resourceKeys: ingredientResourceKeys,

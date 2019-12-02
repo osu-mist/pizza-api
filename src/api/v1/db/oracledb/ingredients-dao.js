@@ -190,7 +190,7 @@ const postIngredient = async (body) => {
       { autoCommit: true },
     );
     const rawIngredient = convertOutBindsToRawIngredient(result.outBinds);
-    return serializeIngredient(rawIngredient);
+    return serializeIngredient(rawIngredient, 'ingredients');
   } finally {
     connection.close();
   }

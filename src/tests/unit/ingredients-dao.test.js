@@ -218,7 +218,7 @@ describe('test ingredients dao', () => {
       });
 
       it('passes a normalized raw ingredients object with the right values to serializeIngredient', () => {
-        serializeIngredientStub.should.have.been.calledWith(normalizedIngredient);
+        serializeIngredientStub.should.have.been.calledWith(normalizedIngredient, 'ingredients');
       });
 
       it('returns the output of serializeIngredient', async () => {
