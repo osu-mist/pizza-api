@@ -5,7 +5,7 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getDoughsData, postDoughsData } from './test-data';
+import { getDoughsData, postDoughsData, getDoughByIdData } from './test-data';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -35,6 +35,11 @@ const {
   normalizedDough,
   invalidDoughsData,
 } = postDoughsData;
+
+const {
+  getDoughByIdQuery,
+  emptyDatabaseReturn,
+} = getDoughByIdData;
 
 const proxyquireDoughsDao = (connectionStub, serializeDoughsStub, serializeDoughStub) => {
   const getConnectionStub = sinon.stub().resolves({
@@ -176,6 +181,54 @@ describe('test doughs dao', () => {
         } catch {
           connectionStub.should.not.have.been.called;
         }
+      });
+    });
+  });
+  context('getDoughById', () => {
+    let result;
+    beforeEach(() => {
+      connectionStub = sinon.stub().returns(executeReturn);
+      doughsDao = proxyquireDoughsDao(
+        connectionStub,
+        serializeDoughsStub,
+        serializeDoughStub,
+      );
+    });
+    context('when called with an integer id', () => {
+      beforeEach(async () => {
+        result = doughsDao.getDoughById(1);
+        await result;
+      });
+
+      it('calls execute with the right query and bind params', () => {
+        connectionStub.should.have.been.calledWith(
+          getDoughByIdQuery,
+          { id: 1 },
+        );
+      });
+
+      it('extracts rows from the return and passes them to the serializer', () => {
+        serializeDoughStub.should.have.been.calledWith(
+          executeReturnRows,
+          'doughs/1',
+        );
+      });
+
+      it('returns the result from the serializer', async () => result
+        .should.eventually.deep.equal(baseGetDoughsReturn));
+
+      context('when the database returns an empty result', () => {
+        beforeEach(async () => {
+          connectionStub.returns(emptyDatabaseReturn);
+          await doughsDao.getDoughById(1);
+        });
+
+        it('passes an empty array to the serializer', () => {
+          serializeDoughStub.should.have.been.calledWith(
+            [],
+            'doughs/1',
+          );
+        });
       });
     });
   });

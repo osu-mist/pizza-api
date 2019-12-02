@@ -135,6 +135,12 @@ const postDoughsData = {
     },
   },
 };
+
+const getDoughByIdData = {
+  getDoughByIdQuery: `SELECT ${getDoughsConditions} FROM DOUGHS WHERE ID = :id`,
+  emptyDatabaseReturn: { rows: [] },
+};
+
 const processGetFiltersData = {
   fooParamName: { name: 'filter[foo]' },
   nameParamName: { name: 'name' },
@@ -304,6 +310,7 @@ const ingredientSerializerData = {
 export {
   getDoughsData,
   postDoughsData,
+  getDoughByIdData,
   getIngredientsData,
   postIngredientData,
   processGetFiltersData,
