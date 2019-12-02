@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import { getDoughById } from 'api/v1/db/oracledb/doughs-dao';
 import { errorBuilder, errorHandler } from 'errors/errors';
 
@@ -9,8 +11,8 @@ import { errorBuilder, errorHandler } from 'errors/errors';
 const get = async (req, res) => {
   try {
     const result = await getDoughById(req.params.doughId);
-    if (result.data.length === 0) {
-      return errorBuilder(res, '404', `No dough with id ${req.params.doughId} exists`);
+    if (_.isEmpty(result.data)) {
+      return errorBuilder(res, '404', `No dough with ID ${req.params.doughId} exists`);
     }
     return res.send(result);
   } catch (err) {
