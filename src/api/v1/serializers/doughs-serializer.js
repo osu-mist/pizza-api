@@ -19,6 +19,22 @@ const doughResourceUrl = resourcePathLink(apiBaseUrl, doughResourcePath);
  */
 const transformSpecialInstructions = (dough) => {
   dough.specialInstructions = dough.specialInstructions || '';
+
+  const intFields = [
+    'gramsFlour',
+    'gramsWater',
+    'waterTemp',
+    'gramsSalt',
+    'gramsSugar',
+    'gramsYeast',
+    'gramsOliveOil',
+    'bulkFermentTime',
+    'proofTime',
+  ];
+  intFields.forEach((field) => {
+    dough[field] = parseInt(dough[field], 10);
+  });
+
   return dough;
 };
 /**
