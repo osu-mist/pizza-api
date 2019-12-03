@@ -143,6 +143,53 @@ const getDoughByIdData = {
   singleRecord: 'a',
 };
 
+const updatedDoughsByIdData = {
+  updateDoughNameQuery: `UPDATE DOUGHS 
+  SET NAME = :name
+  WHERE ID = :id
+  RETURNING ID, NAME, GRAMS_FLOUR, FLOUR_TYPE, GRAMS_WATER, WATER_TEMP, GRAMS_YEAST, GRAMS_SALT, GRAMS_SUGAR, GRAMS_OLIVE_OIL, BULK_FERMENT_TIME, PROOF_TIME, SPECIAL_INSTRUCTIONS INTO :idOut, :nameOut, :gramsFlourOut, :flourTypeOut, :gramsWaterOut, :waterTempOut, :gramsYeastOut, :gramsSaltOut, :gramsSugarOut, :gramsOliveOilOut, :bulkFermentTimeOut, :proofTimeOut, :specialInstructionsOut`,
+  doughsOutBinds: {
+    bulkFermentTimeOut: { dir: 3003, type: 2002 },
+    flourTypeOut: { dir: 3003, type: 2001 },
+    gramsFlourOut: { dir: 3003, type: 2002 },
+    gramsOliveOilOut: { dir: 3003, type: 2002 },
+    gramsSaltOut: { dir: 3003, type: 2002 },
+    gramsSugarOut: { dir: 3003, type: 2002 },
+    gramsWaterOut: { dir: 3003, type: 2002 },
+    gramsYeastOut: { dir: 3003, type: 2002 },
+    idOut: { dir: 3003, type: 2002 },
+    nameOut: { dir: 3003, type: 2001 },
+    proofTimeOut: { dir: 3003, type: 2002 },
+    specialInstructionsOut: { dir: 3003, type: 2001 },
+    waterTempOut: { dir: 3003, type: 2002 },
+  },
+  doughPatchBodyWithInvalidAttribute: {
+    data: {
+      type: 'dough',
+      id: '1',
+      attributes: {
+        foo: 'bar',
+      },
+    },
+  },
+  doughsPatchBodyWithEmptyAttributes: {
+    data: {
+      type: 'dough',
+      id: '1',
+      attributes: {},
+    },
+  },
+  doughPatchBodyWithName: {
+    data: {
+      type: 'dough',
+      id: '1',
+      attributes: {
+        name: 'test',
+      },
+    },
+  },
+};
+
 const processGetFiltersData = {
   fooParamName: { name: 'filter[foo]' },
   nameParamName: { name: 'name' },
@@ -313,6 +360,7 @@ export {
   getDoughsData,
   postDoughsData,
   getDoughByIdData,
+  updatedDoughsByIdData,
   getIngredientsData,
   postIngredientData,
   processGetFiltersData,

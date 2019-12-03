@@ -1,5 +1,6 @@
-import { getDoughById } from 'api/v1/db/oracledb/doughs-dao';
+import { getDoughById, updateDoughById } from 'api/v1/db/oracledb/doughs-dao';
 import { errorBuilder, errorHandler } from 'errors/errors';
+
 
 /**
  * Get a dough with id `req.params.doughId`
@@ -19,10 +20,24 @@ const get = async (req, res) => {
 };
 
 /**
- * stub of patch function
+ * Update a dough with the ID specified in the request body
  *
- * @returns null
+ * @type {RequestHandler}
  */
-const patch = async () => null;
+const patch = async (req, res) => {
+  try {
+    if (req.params.doughId !== req.body.data.id) {
+      return errorBuilder(
+        res,
+        '409',
+        `ID ${req.params.doughId} in URL parameter does not match ID ${req.body.data.id} in body`,
+      );
+    }
+    const result = await updateDoughById(req.body);
+    return res.send(result);
+  } catch (err) {
+    return errorHandler(res, err);
+  }
+};
 
 export { get, patch };
