@@ -39,6 +39,8 @@ const {
 const {
   getDoughByIdQuery,
   emptyDatabaseReturn,
+  singleRecordDatabaseReturn,
+  singleRecord,
 } = getDoughByIdData;
 
 const proxyquireDoughsDao = (connectionStub, serializeDoughsStub, serializeDoughStub) => {
@@ -187,29 +189,29 @@ describe('test doughs dao', () => {
   context('getDoughById', () => {
     let result;
     beforeEach(() => {
-      connectionStub = sinon.stub().returns(executeReturn);
+      connectionStub = sinon.stub().returns(singleRecordDatabaseReturn);
       doughsDao = proxyquireDoughsDao(
         connectionStub,
         serializeDoughsStub,
         serializeDoughStub,
       );
     });
-    context('when called with an integer id', () => {
+    context('when called with an integer-formatted id', () => {
       beforeEach(async () => {
-        result = doughsDao.getDoughById(1);
+        result = doughsDao.getDoughById('1');
         await result;
       });
 
       it('calls execute with the right query and bind params', () => {
         connectionStub.should.have.been.calledWith(
           getDoughByIdQuery,
-          { id: 1 },
+          { id: '1' },
         );
       });
 
       it('extracts rows from the return and passes them to the serializer', () => {
         serializeDoughStub.should.have.been.calledWith(
-          executeReturnRows,
+          singleRecord,
           'doughs/1',
         );
       });
@@ -219,15 +221,24 @@ describe('test doughs dao', () => {
 
       context('when the database returns an empty result', () => {
         beforeEach(async () => {
-          connectionStub.returns(emptyDatabaseReturn);
-          await doughsDao.getDoughById(1);
+          connectionStub = sinon.stub().returns(emptyDatabaseReturn);
+          serializeDoughStub = sinon.stub();
+          doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
+          await doughsDao.getDoughById('1');
         });
 
-        it('passes an empty array to the serializer', () => {
-          serializeDoughStub.should.have.been.calledWith(
-            [],
-            'doughs/1',
-          );
+        it("doesn't pass a value to the serializer", () => {
+          serializeDoughStub.should.not.have.been.called;
+        });
+      });
+      context('when the database returns multiple results', () => {
+        beforeEach(async () => {
+          connectionStub = sinon.stub().returns(executeReturn);
+          doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
+          result = doughsDao.getDoughById('1');
+        });
+        it('throws an error', () => {
+          result.should.be.rejected;
         });
       });
     });

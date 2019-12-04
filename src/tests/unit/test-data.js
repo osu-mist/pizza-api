@@ -139,6 +139,8 @@ const postDoughsData = {
 const getDoughByIdData = {
   getDoughByIdQuery: `SELECT ${getDoughsConditions} FROM DOUGHS WHERE ID = :id`,
   emptyDatabaseReturn: { rows: [] },
+  singleRecordDatabaseReturn: { rows: ['a'] },
+  singleRecord: 'a',
 };
 
 const processGetFiltersData = {
