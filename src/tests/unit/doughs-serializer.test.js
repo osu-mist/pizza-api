@@ -46,6 +46,23 @@ const itMakesSpecialInstructionsAnEmptyString = () => {
   });
 };
 
+const itConvertsIntegerFieldsFromStrings = () => {
+  it('converts integer fields from strings', () => {
+    [
+      'gramsFlour',
+      'gramsWater',
+      'waterTemp',
+      'gramsYeast',
+      'gramsSalt',
+      'bulkFermentTime',
+      'proofTime',
+      'gramsSugar',
+      'gramsOliveOil',
+    ].forEach((attribute) => serializedDough
+      .data.attributes[attribute].should.be.a('number'));
+  });
+};
+
 const itCreatesTheCorrectTopLevelLink = (desiredLink) => {
   it('create a correct top level link', () => {
     serializerResult.links.self.should.equal(desiredLink);
@@ -73,13 +90,15 @@ describe('test doughs serializer', () => {
     describe('when it gets a dough with specialInstructions = \'\'', () => {
       initializeSerializeDoughTest(emptyStringSpecialInstructionsDough);
 
-      itMakesSpecialInstructionsAnEmptyString();
+      itConvertsIntegerFieldsFromStrings();
     });
 
     describe('when it gets a raw dough with a valid format', () => {
       initializeSerializeDoughTest(emptyStringSpecialInstructionsDough, 'doughs');
 
       itCreatesTheCorrectTopLevelLink('/v1/doughs');
+
+      itConvertsIntegerFieldsFromStrings();
 
       it('adds type and id at the top level of data', () => {
         serializedDough.data.type.should.equal('dough');
@@ -98,6 +117,21 @@ describe('test doughs serializer', () => {
   describe('serializeDoughs', () => {
     describe('when it gets a dough object array with valid formatting', () => {
       initializeSerializeDoughsTest([emptyStringSpecialInstructionsDough]);
+
+      it('converts integer fields from strings', () => {
+        [
+          'gramsFlour',
+          'gramsWater',
+          'waterTemp',
+          'gramsYeast',
+          'gramsSalt',
+          'bulkFermentTime',
+          'proofTime',
+          'gramsSugar',
+          'gramsOliveOil',
+        ].forEach((attribute) => serializedDoughs
+          .data[0].attributes[attribute].should.be.a('number'));
+      });
 
       it('returns an object with a data member that is an array', () => {
         serializedDoughs.data.should.be.a('array');
