@@ -81,24 +81,16 @@ describe('test doughs serializer', () => {
     sinon.restore();
   });
   describe('serializeDough', () => {
-    describe('when it gets a dough object with specialInstructions = `null`', () => {
-      initializeSerializeDoughTest(nullSpecialInstructionsDough);
-
-      itMakesSpecialInstructionsAnEmptyString();
-    });
-
-    describe('when it gets a dough with specialInstructions = \'\'', () => {
-      initializeSerializeDoughTest(emptyStringSpecialInstructionsDough);
-
-      itConvertsIntegerFieldsFromStrings();
-    });
-
-    describe('when it gets a raw dough with a valid format', () => {
+    describe('when it gets a singleton dough object with a valid format', () => {
       initializeSerializeDoughTest(emptyStringSpecialInstructionsDough, 'doughs');
 
       itCreatesTheCorrectTopLevelLink('/v1/doughs');
 
       itConvertsIntegerFieldsFromStrings();
+
+      it('returns `data` as an object', () => {
+        serializedDough.data.should.be.a('object');
+      });
 
       it('adds type and id at the top level of data', () => {
         serializedDough.data.type.should.equal('dough');
@@ -110,6 +102,18 @@ describe('test doughs serializer', () => {
           serializedDough.data.attributes.should.have.property(attribute);
         });
         serializedDough.data.attributes.should.not.have.property('id');
+      });
+
+      describe('when it gets a dough object with specialInstructions = `null`', () => {
+        initializeSerializeDoughTest(nullSpecialInstructionsDough);
+
+        itMakesSpecialInstructionsAnEmptyString();
+      });
+
+      describe('when it gets a dough with specialInstructions = \'\'', () => {
+        initializeSerializeDoughTest(emptyStringSpecialInstructionsDough);
+
+        itConvertsIntegerFieldsFromStrings();
       });
     });
   });

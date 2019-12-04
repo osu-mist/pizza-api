@@ -238,7 +238,7 @@ describe('test doughs dao', () => {
           result = doughsDao.getDoughById('1');
         });
         it('throws an error', () => {
-          result.should.be.rejected;
+          result.should.be.rejectedWith('Got multiple values with the same ID');
         });
       });
     });
