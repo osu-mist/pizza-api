@@ -196,4 +196,24 @@ const postIngredient = async (body) => {
   }
 };
 
-export { getIngredients, postIngredient };
+/**
+ * Get a single ingredient with ID `id` from the database
+ *
+ * @param {string} id
+ * @returns {Promise<object>} the ingredient with ID `id`
+ */
+const getIngredientById = async (id) => {
+  const query = getIngredientsQuery('ID = :id');
+  const bindParams = { id };
+  const connection = await getConnection();
+  try {
+    const { rows } = await connection.execute(query, bindParams);
+    if (rows.length === 1) return serializeIngredient(rows[0], `ingredients/${id}`);
+    if (rows.length > 1) throw new Error("database return shouldn't have multiple rows");
+    return null;
+  } finally {
+    connection.close();
+  }
+};
+
+export { getIngredients, postIngredient, getIngredientById };

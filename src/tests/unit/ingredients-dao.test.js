@@ -239,4 +239,14 @@ describe('test ingredients dao', () => {
       });
     });
   });
+  context('getIngredientById', () => {
+    context('when it gets an integer-formatted id', () => {
+      context('when the database returns an empty result', () => {
+
+      });
+      context('when the database returns multiple results', () => {
+
+      });
+    });
+  });
 });
