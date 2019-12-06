@@ -248,7 +248,7 @@ const postDough = async (body) => {
 /**
  * Get the dough from the database with id `id`
  *
- * @param {number} id
+ * @param {string} id
  * @returns {Promise<object>} the dough with id `id`
  */
 const getDoughById = async (id) => {
@@ -257,7 +257,9 @@ const getDoughById = async (id) => {
   const connection = await getConnection();
   try {
     const { rows } = await connection.execute(query, bindParams);
-    return serializeDough(rows, `doughs/${id}`);
+    if (rows.length === 1) return serializeDough(rows[0], `doughs/${id}`);
+    if (rows.length > 1) throw new Error("database return shouldn't have multiple values");
+    return null;
   } finally {
     connection.close();
   }
