@@ -89,7 +89,7 @@ describe('test doughs serializer', () => {
       itConvertsIntegerFieldsFromStrings();
 
       it('returns `data` as an object', () => {
-        serializedDough.data.should.be.a('object');
+        serializedDough.data.should.be.an('object');
       });
 
       it('adds type and id at the top level of data', () => {
@@ -138,7 +138,7 @@ describe('test doughs serializer', () => {
       });
 
       it('returns an object with a data member that is an array', () => {
-        serializedDoughs.data.should.be.a('array');
+        serializedDoughs.data.should.be.an('array');
       });
 
       it('populates the right attributes for each member of the data list', () => {
@@ -149,7 +149,7 @@ describe('test doughs serializer', () => {
           });
           dough.attributes.should.not.have.property('id');
           dough.type.should.equal('dough');
-          dough.id.should.equal(String(rawDoughs[index].id));
+          dough.id.should.equal(rawDoughs[index].id);
           dough.links.self.should.equal(`/v1/doughs/${rawDoughs[index].id}`);
         });
       });

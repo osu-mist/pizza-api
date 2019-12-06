@@ -112,7 +112,7 @@ describe('test ingredients serializer', () => {
           });
           ingredient.attributes.should.not.have.property('id');
           ingredient.type.should.equal('ingredient');
-          ingredient.id.should.equal(String(rawIngredients[index].id));
+          ingredient.id.should.equal(rawIngredients[index].id);
           ingredient.links.self.should.equal(`/v1/ingredients/${rawIngredients[index].id}`);
         });
       });

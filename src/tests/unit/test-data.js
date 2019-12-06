@@ -220,7 +220,7 @@ const postIngredientsQuery = `INSERT INTO INGREDIENTS (${ingredientColumns}) VAL
 const postIngredientData = {
   testDbReturn: {
     outBinds: {
-      idOut: [100],
+      idOut: ['100'],
       nameOut: ['sausage'],
       ingredientTypeOut: ['meat'],
       notesOut: ['no notes'],
@@ -247,7 +247,7 @@ const postIngredientData = {
     notesOut: { type: 2001, dir: 3003 },
   },
   normalizedIngredient: {
-    id: 100,
+    id: '100',
     name: 'sausage',
     ingredientType: 'meat',
     notes: 'no notes',
@@ -296,13 +296,13 @@ const doughSerializerData = {
 
 const ingredientSerializerData = {
   nullNotesIngredient: {
-    id: 201,
+    id: '201',
     ingredientType: 'cheese',
     name: 'mozzarella',
     notes: null,
   },
   emptyStringNotesIngredient: {
-    id: 201,
+    id: '201',
     ingredientType: 'cheese',
     name: 'mozzarella',
     notes: '',
