@@ -224,7 +224,7 @@ const getDoughs = async (filters) => {
  */
 const getBindParams = (body, baseValue = {}) => {
   const { attributes } = body.data;
-  const bindParams = baseValue;
+  const bindParams = _.cloneDeep(baseValue);
   _.forEach(attributes, (attributeValue, attributeName) => {
     if (!(attributeName in doughsProperties)) {
       throw new Error('Invalid attribute found');
