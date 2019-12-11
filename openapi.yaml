@@ -786,7 +786,21 @@ definitions:
           type: *ingredientType
           id: *ingredientId
           attributes:
-            $ref: '#/definitions/IngredientAttributes'
+            type: object
+            properties: &ingredientProperties
+              name:
+                type: string
+                description: the name of the ingredient
+                example: Sausage
+              ingredientType:
+                type: string
+                description: the type of the ingredient
+                enum: *ingredientTypeEnum
+                example: meat
+              notes:
+                type: string
+                description: additional information about using or preparing the ingredient
+                example: brown the sausage in a pan before baking
   DoughResult:
     properties:
       data:

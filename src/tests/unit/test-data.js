@@ -41,7 +41,7 @@ const doughsColumns = '(NAME, GRAMS_FLOUR, FLOUR_TYPE, GRAMS_WATER, WATER_TEMP, 
 const doughsValues = '(:name, :gramsFlour, :flourType, :gramsWater, :waterTemp, :gramsYeast, :gramsSalt, :gramsSugar, :gramsOliveOil, :bulkFermentTime, :proofTime, :specialInstructions)';
 const doughsOutColumns = 'ID, NAME, GRAMS_FLOUR, FLOUR_TYPE, GRAMS_WATER, WATER_TEMP, GRAMS_YEAST, GRAMS_SALT, GRAMS_SUGAR, GRAMS_OLIVE_OIL, BULK_FERMENT_TIME, PROOF_TIME, SPECIAL_INSTRUCTIONS';
 const doughsOutBindParams = ':idOut, :nameOut, :gramsFlourOut, :flourTypeOut, :gramsWaterOut, :waterTempOut, :gramsYeastOut, :gramsSaltOut, :gramsSugarOut, :gramsOliveOilOut, :bulkFermentTimeOut, :proofTimeOut, :specialInstructionsOut';
-const doughsQuery = `INSERT INTO DOUGHS ${doughsColumns} VALUES ${doughsValues} 
+const doughsQuery = `INSERT INTO DOUGHS ${doughsColumns} VALUES ${doughsValues}
    RETURNING ${doughsOutColumns} INTO ${doughsOutBindParams}`;
 
 const postDoughsData = {
@@ -144,7 +144,7 @@ const getDoughByIdData = {
 };
 
 const updateDoughsByIdData = {
-  updateDoughNameQuery: `UPDATE DOUGHS 
+  updateDoughNameQuery: `UPDATE DOUGHS
   SET NAME = :name
   WHERE ID = :id
   RETURNING ID, NAME, GRAMS_FLOUR, FLOUR_TYPE, GRAMS_WATER, WATER_TEMP, GRAMS_YEAST, GRAMS_SALT, GRAMS_SUGAR, GRAMS_OLIVE_OIL, BULK_FERMENT_TIME, PROOF_TIME, SPECIAL_INSTRUCTIONS INTO :idOut, :nameOut, :gramsFlourOut, :flourTypeOut, :gramsWaterOut, :waterTempOut, :gramsYeastOut, :gramsSaltOut, :gramsSugarOut, :gramsOliveOilOut, :bulkFermentTimeOut, :proofTimeOut, :specialInstructionsOut`,
@@ -311,6 +311,7 @@ const postIngredientData = {
   sampleValidIngredientData: {
     data: {
       type: 'ingredient',
+      id: '100',
       attributes: {
         name: 'sausage',
         ingredientType: 'meat',
@@ -323,7 +324,7 @@ const postIngredientData = {
     name: 'sausage',
     ingredientType: 'meat',
     notes: 'no notes',
-    idOut: { type: 2002, dir: 3003 },
+    idOut: { type: 2001, dir: 3003 },
     nameOut: { type: 2001, dir: 3003 },
     ingredientTypeOut: { type: 2001, dir: 3003 },
     notesOut: { type: 2001, dir: 3003 },
@@ -351,6 +352,57 @@ const getIngredientByIdData = {
   singleRecord: 'a',
   emptyRecordReturn: { rows: [] },
   getIngredientByIdQuery: 'SELECT ID AS "id", TYPE AS "ingredientType", NAME AS "name", NOTES AS "notes" FROM INGREDIENTS WHERE ID = :id',
+};
+
+const updateIngredientByIdData = {
+  updateIngredientQuery: `UPDATE INGREDIENTS
+  SET NAME = :name, TYPE = :ingredientType, NOTES = :notes
+  WHERE ID = :id
+  RETURNING ID, NAME, TYPE, NOTES INTO :idOut, :nameOut, :ingredientTypeOut, :notesOut`,
+  updateIngredientsBindParams: {
+    id: '100',
+    name: 'sausage',
+    ingredientType: 'meat',
+    notes: 'no notes',
+    idOut: { type: 2001, dir: 3003 },
+    nameOut: { type: 2001, dir: 3003 },
+    ingredientTypeOut: { type: 2001, dir: 3003 },
+    notesOut: { type: 2001, dir: 3003 },
+  },
+  emptyUpdateRecordReturn: {
+    rowsAffected: 0,
+    outBinds: {
+      idOut: [],
+      nameOut: [],
+      ingredientTypeOut: [],
+      notesOut: [],
+    },
+  },
+  differentIdDbReturn: {
+    outBinds: {
+      idOut: ['200'],
+      nameOut: ['sausage'],
+      ingredientTypeOut: ['meat'],
+      notesOut: ['no notes'],
+    },
+  },
+  sampleInvalidIngredientData: {
+    data: {
+      type: 'ingredient',
+      id: '100',
+      attributes: {
+        foo: 'bar',
+      },
+    },
+  },
+  sampleEmptyAttributesData: {
+    data: {
+      type: 'ingredient',
+      id: '100',
+      attributes: {},
+    },
+  },
+
 };
 const doughSerializerData = {
   nullSpecialInstructionsDough: {
@@ -408,6 +460,7 @@ export {
   getIngredientsData,
   postIngredientData,
   getIngredientByIdData,
+  updateIngredientByIdData,
   processGetFiltersData,
   doughSerializerData,
   ingredientSerializerData,

@@ -1,4 +1,4 @@
-import { getIngredientById } from 'api/v1/db/oracledb/ingredients-dao';
+import { getIngredientById, updateIngredientById } from 'api/v1/db/oracledb/ingredients-dao';
 import { errorBuilder, errorHandler } from 'errors/errors';
 
 /**
@@ -23,6 +23,20 @@ const get = async (req, res) => {
  *
  * @type {RequestHandler}
  */
-const patch = () => null;
+const patch = async (req, res) => {
+  try {
+    if (req.params.ingredientId !== req.body.data.id) {
+      return errorBuilder(
+        res,
+        '409',
+        `ID ${req.params.ingredientId} in URL does not match ID ${req.body.data.id} in body`,
+      );
+    }
+    const result = await updateIngredientById(req.body);
+    return res.send(result);
+  } catch (err) {
+    return errorHandler(res, err);
+  }
+};
 
 export { get, patch };

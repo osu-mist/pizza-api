@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import oracledb from 'oracledb';
 
-import { openapi } from 'utils/load-openapi';
+import { getConnection } from 'api/v1/db/oracledb/connection';
 import { serializeDough, serializeDoughs } from 'api/v1/serializers/doughs-serializer';
-import { getConnection } from './connection';
+import { getBindParams } from 'utils/bind-params';
+import { openapi } from 'utils/load-openapi';
 
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
 const doughsProperties = openapi.definitions.DoughAttributes.properties;
@@ -211,30 +212,6 @@ const getDoughs = async (filters) => {
 };
 
 /**
- * Generate bind params from a POST or PATCH body, assuming invalid attributes
- * have been removed and non-included values have been substituted for their
- * defaults. If included, the return will include the values in `baseValue`.
- *
- * @param {object} body
- * @param {object} baseValue use to include other out bind variables that are not in body
- * @returns {object} bindparams
- * @throws {Error} when an attribute not in doughsProperties is found in body.
- * It's assumed that body has already been checked for invalid properties meaning that when
- * one is found here it's a server error rather than a user error.
- */
-const getBindParams = (body, baseValue = {}) => {
-  const { attributes } = body.data;
-  const bindParams = _.cloneDeep(baseValue);
-  _.forEach(attributes, (attributeValue, attributeName) => {
-    if (!(attributeName in doughsProperties)) {
-      throw new Error('Invalid attribute found');
-    }
-    bindParams[attributeName] = attributeValue;
-  });
-  return bindParams;
-};
-
-/**
  * Converts the return value of a SQL query that uses
  * `RETURNS ... INTO ...` into the format of the return
  * from a `SELECT` query to it can be passed directly to
@@ -254,7 +231,7 @@ const convertOutBindsToRawDough = (outBinds) => _.reduce(outBinds,
  * @returns {Promise<object>} a stub dough object
  */
 const postDough = async (body) => {
-  const bindParams = getBindParams(body, doughsOutBindParams);
+  const bindParams = getBindParams(body, doughsProperties, doughsOutBindParams);
   const connection = await getConnection();
   try {
     const result = await connection.execute(
@@ -296,7 +273,7 @@ const getDoughById = async (id) => {
  * @returns {object} `bindParams` and `query`
  */
 const createPatchQueryAndBindParams = (body) => {
-  const inBindParams = getBindParams(body);
+  const inBindParams = getBindParams(body, doughsProperties);
 
   const query = doughsPatchQuery(inBindParams);
 
