@@ -81,7 +81,7 @@ const doughsOutBindParams = _.reduce(doughsProperties,
     bindParam.dir = oracledb.BIND_OUT;
     outBindParams[`${name}Out`] = bindParam;
     return outBindParams;
-  }, { idOut: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT } });
+  }, { idOut: { type: oracledb.STRING, dir: oracledb.BIND_OUT } });
 
 /**
  * The column names referenced by the output bind params

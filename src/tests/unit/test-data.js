@@ -84,7 +84,7 @@ const postDoughsData = {
   },
 
   doughsBindParams: {
-    idOut: { type: 2002, dir: 3003 },
+    idOut: { type: 2001, dir: 3003 },
     nameOut: { type: 2001, dir: 3003 },
     gramsFlourOut: { type: 2002, dir: 3003 },
     flourTypeOut: { type: 2001, dir: 3003 },
@@ -143,7 +143,7 @@ const getDoughByIdData = {
   singleRecord: 'a',
 };
 
-const updatedDoughsByIdData = {
+const updateDoughsByIdData = {
   updateDoughNameQuery: `UPDATE DOUGHS 
   SET NAME = :name
   WHERE ID = :id
@@ -157,7 +157,7 @@ const updatedDoughsByIdData = {
     gramsSugarOut: { dir: 3003, type: 2002 },
     gramsWaterOut: { dir: 3003, type: 2002 },
     gramsYeastOut: { dir: 3003, type: 2002 },
-    idOut: { dir: 3003, type: 2002 },
+    idOut: { dir: 3003, type: 2001 },
     nameOut: { dir: 3003, type: 2001 },
     proofTimeOut: { dir: 3003, type: 2002 },
     specialInstructionsOut: { dir: 3003, type: 2001 },
@@ -377,7 +377,7 @@ export {
   getDoughsData,
   postDoughsData,
   getDoughByIdData,
-  updatedDoughsByIdData,
+  updateDoughsByIdData,
   getIngredientsData,
   postIngredientData,
   processGetFiltersData,

@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import {
-  getDoughsData, postDoughsData, getDoughByIdData, updatedDoughsByIdData,
+  getDoughsData, postDoughsData, getDoughByIdData, updateDoughsByIdData,
 } from './test-data';
 
 chai.should();
@@ -52,7 +52,7 @@ const {
   doughsPatchBodyWithEmptyAttributes,
   doughPatchBodyWithName,
   updateDoughNameQuery,
-} = updatedDoughsByIdData;
+} = updateDoughsByIdData;
 
 const proxyquireDoughsDao = (connectionStub, serializeDoughsStub, serializeDoughStub) => {
   const getConnectionStub = sinon.stub().resolves({
