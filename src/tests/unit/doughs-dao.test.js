@@ -51,6 +51,7 @@ const {
   doughPatchBodyWithInvalidAttribute,
   doughsPatchBodyWithEmptyAttributes,
   doughPatchBodyWithName,
+  noRowsAffectedDatabaseReturn,
   updateDoughNameQuery,
 } = updateDoughsByIdData;
 
@@ -308,6 +309,13 @@ describe('test doughs dao', () => {
         it('throws an error', () => {
           result.should.be.rejectedWith('ID returned from database does not match input ID');
         });
+      });
+      context('when the database returns an empty result from the path query', () => {
+        beforeEach(async () => {
+          connectionStub.returns(noRowsAffectedDatabaseReturn);
+          result = doughsDao.updateDoughById(doughPatchBodyWithName);
+        });
+        it('returns null', () => result.should.eventually.deep.equal(null));
       });
     });
     context('when it gets an attribute not in doughsProperties', () => {

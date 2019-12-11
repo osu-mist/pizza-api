@@ -205,6 +205,24 @@ const updateDoughsByIdData = {
       specialInstructionsOut: [null],
     },
   },
+  noRowsAffectedDatabaseReturn: {
+    rowsAffected: 0,
+    outBinds: {
+      idOut: [],
+      nameOut: [],
+      gramsFlourOut: [],
+      flourTypeOut: [],
+      gramsWaterOut: [],
+      waterTempOut: [],
+      gramsYeastOut: [],
+      gramsSaltOut: [],
+      gramsSugarOut: [],
+      gramsOliveOilOut: [],
+      bulkFermentTimeOut: [],
+      proofTimeOut: [],
+      specialInstructionsOut: [],
+    },
+  },
 };
 
 const processGetFiltersData = {

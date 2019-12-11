@@ -329,6 +329,8 @@ const updateDoughById = async (body) => {
       { autoCommit: true },
     );
 
+    if (result.rowsAffected === 0) return null;
+
     const rawDough = convertOutBindsToRawDough(result.outBinds);
     if (rawDough.id !== body.data.id) throw new Error('ID returned from database does not match input ID');
     return serializeDough(rawDough, `doughs/${body.data.id}`);
