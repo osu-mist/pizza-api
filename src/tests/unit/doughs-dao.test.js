@@ -46,6 +46,7 @@ const {
 } = getDoughByIdData;
 
 const {
+  dbReturnWithDifferentId,
   doughsOutBinds,
   doughPatchBodyWithInvalidAttribute,
   doughsPatchBodyWithEmptyAttributes,
@@ -266,7 +267,7 @@ describe('test doughs dao', () => {
         connectionStub.should.have.been.called;
         connectionStub.should.have.been.calledWith(
           getDoughByIdQuery,
-          { id: '1' },
+          { id: '201' },
         );
       });
     });
@@ -277,12 +278,15 @@ describe('test doughs dao', () => {
         result = doughsDao.updateDoughById(doughPatchBodyWithName);
         await result;
       });
+      afterEach(() => {
+        connectionStub.reset();
+      });
       it('executes an UPDATE query with only the right attributes', () => {
         connectionStub.should.have.been.calledWith(
           updateDoughNameQuery,
           {
             ...doughsOutBinds,
-            id: '1',
+            id: '201',
             name: 'test',
           },
           { autoCommit: true },
@@ -291,11 +295,20 @@ describe('test doughs dao', () => {
       it('correctly normalizes the outbinds in the database return', () => {
         serializeDoughStub.should.have.been.calledWith(
           normalizedDough,
-          'doughs/1',
+          'doughs/201',
         );
       });
       it('returns the result from the serializer',
         () => result.should.eventually.deep.equal(baseGetDoughsReturn));
+      context('when the normalized value has a different ID from the input', () => {
+        beforeEach(async () => {
+          connectionStub.returns(dbReturnWithDifferentId);
+          result = doughsDao.updateDoughById(doughPatchBodyWithName);
+        });
+        it('throws an error', () => {
+          result.should.be.rejectedWith('ID returned from database does not match input ID');
+        });
+      });
     });
     context('when it gets an attribute not in doughsProperties', () => {
       beforeEach(async () => {

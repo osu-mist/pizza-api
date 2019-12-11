@@ -166,7 +166,7 @@ const updatedDoughsByIdData = {
   doughPatchBodyWithInvalidAttribute: {
     data: {
       type: 'dough',
-      id: '1',
+      id: '201',
       attributes: {
         foo: 'bar',
       },
@@ -175,17 +175,34 @@ const updatedDoughsByIdData = {
   doughsPatchBodyWithEmptyAttributes: {
     data: {
       type: 'dough',
-      id: '1',
+      id: '201',
       attributes: {},
     },
   },
   doughPatchBodyWithName: {
     data: {
       type: 'dough',
-      id: '1',
+      id: '201',
       attributes: {
         name: 'test',
       },
+    },
+  },
+  dbReturnWithDifferentId: {
+    outBinds: {
+      idOut: ['2'],
+      nameOut: ['weeknight pizza dough'],
+      gramsFlourOut: ['500'],
+      flourTypeOut: ['All Purpose'],
+      gramsWaterOut: ['400'],
+      waterTempOut: ['90'],
+      gramsYeastOut: ['5'],
+      gramsSaltOut: ['15'],
+      gramsSugarOut: ['0'],
+      gramsOliveOilOut: ['0'],
+      bulkFermentTimeOut: ['60'],
+      proofTimeOut: ['15'],
+      specialInstructionsOut: [null],
     },
   },
 };

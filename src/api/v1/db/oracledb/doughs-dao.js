@@ -296,15 +296,15 @@ const getDoughById = async (id) => {
  * @returns {object} `bindParams` and `query`
  */
 const createPatchQueryAndBindParams = (body) => {
-  const inBindparams = getBindParams(body);
+  const inBindParams = getBindParams(body);
 
-  const query = doughsPatchQuery(inBindparams);
+  const query = doughsPatchQuery(inBindParams);
 
-  const bindParams = _.assign(
-    inBindparams,
-    doughsOutBindParams,
-    { id: body.data.id },
-  );
+  const bindParams = {
+    ...inBindParams,
+    ...doughsOutBindParams,
+    ...{ id: body.data.id },
+  };
 
   return { query, bindParams };
 };
@@ -330,6 +330,7 @@ const updateDoughById = async (body) => {
     );
 
     const rawDough = convertOutBindsToRawDough(result.outBinds);
+    if (rawDough.id !== body.data.id) throw new Error('ID returned from database does not match input ID');
     return serializeDough(rawDough, `doughs/${body.data.id}`);
   } finally {
     connection.close();
