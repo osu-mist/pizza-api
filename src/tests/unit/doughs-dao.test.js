@@ -264,6 +264,7 @@ describe('test doughs dao', () => {
         result = doughsDao.updateDoughById(doughsPatchBodyWithEmptyAttributes);
         await result;
       });
+
       it('executes a SELECT query against the database', () => {
         connectionStub.should.have.been.called;
         connectionStub.should.have.been.calledWith(
@@ -279,9 +280,11 @@ describe('test doughs dao', () => {
         result = doughsDao.updateDoughById(doughPatchBodyWithName);
         await result;
       });
+
       afterEach(() => {
         connectionStub.reset();
       });
+
       it('executes an UPDATE query with only the right attributes', () => {
         connectionStub.should.have.been.calledWith(
           updateDoughNameQuery,
@@ -293,19 +296,23 @@ describe('test doughs dao', () => {
           { autoCommit: true },
         );
       });
+
       it('correctly normalizes the outbinds in the database return', () => {
         serializeDoughStub.should.have.been.calledWith(
           normalizedDough,
           'doughs/201',
         );
       });
+
       it('returns the result from the serializer',
         () => result.should.eventually.deep.equal(baseGetDoughsReturn));
+
       context('when the normalized value has a different ID from the input', () => {
         beforeEach(async () => {
           connectionStub.returns(dbReturnWithDifferentId);
           result = doughsDao.updateDoughById(doughPatchBodyWithName);
         });
+
         it('throws an error', () => {
           result.should.be.rejectedWith('ID returned from database does not match input ID');
         });
@@ -315,6 +322,7 @@ describe('test doughs dao', () => {
           connectionStub.returns(noRowsAffectedDatabaseReturn);
           result = doughsDao.updateDoughById(doughPatchBodyWithName);
         });
+
         it('returns null', () => result.should.eventually.deep.equal(null));
       });
     });
@@ -324,7 +332,9 @@ describe('test doughs dao', () => {
         doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
         result = doughsDao.updateDoughById(doughPatchBodyWithInvalidAttribute);
       });
+
       it('throws an error', () => result.should.be.rejectedWith('Invalid attribute'));
+
       it('does not call the database', async () => {
         try {
           await result;
