@@ -5,9 +5,10 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getIngredientsData, postIngredientData } from 'tests/unit/test-data';
+import { getIngredientsData, postIngredientData, getIngredientByIdData } from 'tests/unit/test-data';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
+
 
 const ingredientsGetParameters = openapi.paths['/ingredients'].get.parameters;
 
@@ -54,6 +55,13 @@ const {
   normalizedIngredient,
   invalidIngredientsData,
 } = postIngredientData;
+
+const {
+  emptyRecordReturn,
+  getIngredientByIdQuery,
+  singleRecord,
+  singleRecordReturn,
+} = getIngredientByIdData;
 
 describe('test ingredients dao', () => {
   let serializeIngredientsStub;
@@ -240,12 +248,58 @@ describe('test ingredients dao', () => {
     });
   });
   context('getIngredientById', () => {
+    let result;
+    let id;
+    beforeEach(() => {
+      ingredientsDao = proxyquireIngredientsDao(
+        connectionStub,
+        serializeIngredientsStub,
+        serializeIngredientStub,
+      );
+      result = ingredientsDao.getIngredientById(id);
+    });
+
+    afterEach(() => {
+      connectionStub.resetHistory();
+      serializeIngredientStub.resetHistory();
+      serializeIngredientStub.resetHistory();
+    });
+
     context('when it gets an integer-formatted id', () => {
-      context('when the database returns an empty result', () => {
-
+      before(() => {
+        connectionStub = sinon.stub().returns(singleRecordReturn);
+        id = '1';
       });
-      context('when the database returns multiple results', () => {
 
+      it('calls execute with the right query and bind params', () => {
+        connectionStub.should.have.been.calledWith(
+          getIngredientByIdQuery,
+          { id: '1' },
+        );
+      });
+
+      it('extracts rows from the result and passes it to the serializer', () => {
+        serializeIngredientStub.should.have.been.calledWith(
+          singleRecord,
+          'ingredients/1',
+        );
+      });
+
+      it('returns the result from the serializer', () => result
+        .should.eventually.deep.equal(testSerializerReturn));
+
+      context('when the database returns an empty result', () => {
+        before(() => {
+          connectionStub = sinon.stub().returns(emptyRecordReturn);
+        });
+
+        it('returns null', () => result.should.eventually.deep.equal(null));
+      });
+
+      context('when the database returns multiple results', () => {
+        before(() => {
+          connectionStub = sinon.stub().returns(testConnectionReturn);
+        });
       });
     });
   });

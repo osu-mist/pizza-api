@@ -261,6 +261,15 @@ const postIngredientData = {
     },
   },
 };
+
+const getIngredientByIdData = {
+  singleRecordReturn: {
+    rows: ['a'],
+  },
+  singleRecord: 'a',
+  emptyRecordReturn: { rows: [] },
+  getIngredientByIdQuery: 'SELECT ID AS "id", TYPE AS "ingredientType", NAME AS "name", NOTES AS "notes" FROM INGREDIENTS WHERE ID = :id',
+};
 const doughSerializerData = {
   nullSpecialInstructionsDough: {
     name: 'weeknight pizza dough',
@@ -315,6 +324,7 @@ export {
   getDoughByIdData,
   getIngredientsData,
   postIngredientData,
+  getIngredientByIdData,
   processGetFiltersData,
   doughSerializerData,
   ingredientSerializerData,
