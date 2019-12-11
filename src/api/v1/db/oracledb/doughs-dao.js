@@ -118,7 +118,7 @@ const doughsGetQuery = (conditionals) => `SELECT ${doughColumnAliases} FROM DOUG
  * @constant
  * @type {string}
  */
-const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues}) 
+const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues})
    RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
 
 /**
@@ -138,7 +138,7 @@ const doughsUpdateColumns = (bindParams) => _.map(bindParams,
  * @param {object} bindParams
  * @returns {string}
  */
-const doughsPatchQuery = (bindParams) => `UPDATE DOUGHS 
+const doughsPatchQuery = (bindParams) => `UPDATE DOUGHS
   SET ${doughsUpdateColumns(bindParams)}
   WHERE ID = :id
   RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
