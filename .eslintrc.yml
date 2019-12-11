@@ -25,6 +25,7 @@ rules:
   import/no-default-export:
     - error
   no-unused-expressions: 'off'
+  no-trailing-spaces: 'error'
   chai-friendly/no-unused-expressions: 'error'
   jsdoc/require-param:
     - warn

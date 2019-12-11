@@ -5,7 +5,9 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getDoughsData, postDoughsData, getDoughByIdData } from './test-data';
+import {
+  getDoughsData, postDoughsData, getDoughByIdData, updateDoughsByIdData,
+} from './test-data';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -42,6 +44,16 @@ const {
   singleRecordDatabaseReturn,
   singleRecord,
 } = getDoughByIdData;
+
+const {
+  dbReturnWithDifferentId,
+  doughsOutBinds,
+  doughPatchBodyWithInvalidAttribute,
+  doughsPatchBodyWithEmptyAttributes,
+  doughPatchBodyWithName,
+  noRowsAffectedDatabaseReturn,
+  updateDoughNameQuery,
+} = updateDoughsByIdData;
 
 const proxyquireDoughsDao = (connectionStub, serializeDoughsStub, serializeDoughStub) => {
   const getConnectionStub = sinon.stub().resolves({
@@ -240,6 +252,95 @@ describe('test doughs dao', () => {
         it('throws an error', () => {
           result.should.be.rejectedWith('Got multiple values with the same ID');
         });
+      });
+    });
+  });
+  context('updateDoughById', () => {
+    let result;
+    context('when it gets input with an empty attributes key', () => {
+      beforeEach(async () => {
+        connectionStub = sinon.stub().returns(singleRecordDatabaseReturn);
+        doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
+        result = doughsDao.updateDoughById(doughsPatchBodyWithEmptyAttributes);
+        await result;
+      });
+
+      it('executes a SELECT query against the database', () => {
+        connectionStub.should.have.been.called;
+        connectionStub.should.have.been.calledWith(
+          getDoughByIdQuery,
+          { id: '201' },
+        );
+      });
+    });
+    context('when it gets input with at least one valid attribute', () => {
+      beforeEach(async () => {
+        connectionStub = sinon.stub().returns(testDbReturn);
+        doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
+        result = doughsDao.updateDoughById(doughPatchBodyWithName);
+        await result;
+      });
+
+      afterEach(() => {
+        connectionStub.reset();
+      });
+
+      it('executes an UPDATE query with only the right attributes', () => {
+        connectionStub.should.have.been.calledWith(
+          updateDoughNameQuery,
+          {
+            ...doughsOutBinds,
+            id: '201',
+            name: 'test',
+          },
+          { autoCommit: true },
+        );
+      });
+
+      it('correctly normalizes the outbinds in the database return', () => {
+        serializeDoughStub.should.have.been.calledWith(
+          normalizedDough,
+          'doughs/201',
+        );
+      });
+
+      it('returns the result from the serializer',
+        () => result.should.eventually.deep.equal(baseGetDoughsReturn));
+
+      context('when the normalized value has a different ID from the input', () => {
+        beforeEach(async () => {
+          connectionStub.returns(dbReturnWithDifferentId);
+          result = doughsDao.updateDoughById(doughPatchBodyWithName);
+        });
+
+        it('throws an error', () => {
+          result.should.be.rejectedWith('ID returned from database does not match input ID');
+        });
+      });
+      context('when the database returns an empty result from the path query', () => {
+        beforeEach(async () => {
+          connectionStub.returns(noRowsAffectedDatabaseReturn);
+          result = doughsDao.updateDoughById(doughPatchBodyWithName);
+        });
+
+        it('returns null', () => result.should.eventually.deep.equal(null));
+      });
+    });
+    context('when it gets an attribute not in doughsProperties', () => {
+      beforeEach(async () => {
+        connectionStub = sinon.stub().returns(singleRecordDatabaseReturn);
+        doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
+        result = doughsDao.updateDoughById(doughPatchBodyWithInvalidAttribute);
+      });
+
+      it('throws an error', () => result.should.be.rejectedWith('Invalid attribute'));
+
+      it('does not call the database', async () => {
+        try {
+          await result;
+        } catch {
+          connectionStub.should.not.have.been.called;
+        }
       });
     });
   });

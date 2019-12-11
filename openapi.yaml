@@ -889,11 +889,67 @@ definitions:
     required: [data]
     properties:
       data:
+        required: 
+          - type
+          - id
+          - attributes
         properties:
           type: *doughType
           id: *doughId
           attributes:
-            $ref: '#/definitions/DoughAttributes'
+            type: object
+            additionalProperties: false
+            properties: 
+              name:
+                type: string
+                description: the name of the dough recipe
+                example: weeknight pizza dough
+                minLength: 1
+              gramsFlour:
+                type: integer
+                description: the amount of flour used, in grams
+                example: 500
+              flourType:
+                type: string
+                description: the name of the kind of flour used
+                example: All Purpose
+                minLength: 1
+              gramsWater:
+                type: integer
+                description: the amount of water used, in grams
+                example: 400
+              waterTemp:
+                type: integer
+                description: the temperature in Fahrenheit to heat the water to
+                example: 90
+              gramsYeast:
+                type: integer
+                description: the amount of yeast to use, in grams
+                example: 5
+              gramsSalt:
+                type: integer
+                description: the amount of salt to use, in grams
+                example: 15
+              gramsSugar:
+                type: integer
+                description: the amount of sugar to use, in grams
+                example: 20
+              gramsOliveOil:
+                type: integer
+                description: the amount of olive oil to use, in grams
+                example: 50
+              bulkFermentTime:
+                type: integer
+                description: the time in minutes to spend on the bulk ferment
+                example: 60
+              proofTime:
+                type: integer
+                description: the time in minutes to spend on the proof
+                example: 15
+              specialInstructions:
+                type: string
+                description: any additional instructions not captured in the main object
+                example: keep the dough in the fridge during the bulk ferment
   DoughPostBody:
     required: [data]
     properties:

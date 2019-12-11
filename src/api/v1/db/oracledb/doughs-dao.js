@@ -81,7 +81,7 @@ const doughsOutBindParams = _.reduce(doughsProperties,
     bindParam.dir = oracledb.BIND_OUT;
     outBindParams[`${name}Out`] = bindParam;
     return outBindParams;
-  }, { idOut: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT } });
+  }, { idOut: { type: oracledb.STRING, dir: oracledb.BIND_OUT } });
 
 /**
  * The column names referenced by the output bind params
@@ -114,11 +114,34 @@ const doughsGetQuery = (conditionals) => `SELECT ${doughColumnAliases} FROM DOUG
 
 /**
  * A query to create a new dough
+ *
  * @constant
  * @type {string}
  */
-const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues}) 
+const doughsPostQuery = `INSERT INTO DOUGHS (${doughColumns}) VALUES (${doughValues})
    RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
+
+/**
+ * Converts bind params to a list of column assignments for an UPDATE statement
+ * written as COLUMN = :bindParam and joined with commas
+ *
+ * @param {object} bindParams
+ * @returns {string} column assignments
+ */
+const doughsUpdateColumns = (bindParams) => _.map(bindParams,
+  (bindParamValue, bindParamName) => `${doughColumnNames[bindParamName]} = :${bindParamName}`)
+  .join(', ');
+
+/**
+ * Generates a query to update a dough record
+ *
+ * @param {object} bindParams
+ * @returns {string}
+ */
+const doughsPatchQuery = (bindParams) => `UPDATE DOUGHS
+  SET ${doughsUpdateColumns(bindParams)}
+  WHERE ID = :id
+  RETURNING ${doughsOutBindParamColumnNames} INTO ${doughsOutBindParamValues}`;
 
 /**
  * Removes the "filter[]" wrapper from a filter parameter
@@ -188,19 +211,20 @@ const getDoughs = async (filters) => {
 };
 
 /**
- * Generate bind params from a POST body, assuming invalid attributes
+ * Generate bind params from a POST or PATCH body, assuming invalid attributes
  * have been removed and non-included values have been substituted for their
- * defaults
+ * defaults. If included, the return will include the values in `baseValue`.
  *
  * @param {object} body
+ * @param {object} baseValue use to include other out bind variables that are not in body
  * @returns {object} bindparams
  * @throws {Error} when an attribute not in doughsProperties is found in body.
  * It's assumed that body has already been checked for invalid properties meaning that when
  * one is found here it's a server error rather than a user error.
  */
-const getPostBindParams = (body) => {
+const getBindParams = (body, baseValue = {}) => {
   const { attributes } = body.data;
-  const bindParams = doughsOutBindParams;
+  const bindParams = _.cloneDeep(baseValue);
   _.forEach(attributes, (attributeValue, attributeName) => {
     if (!(attributeName in doughsProperties)) {
       throw new Error('Invalid attribute found');
@@ -230,7 +254,7 @@ const convertOutBindsToRawDough = (outBinds) => _.reduce(outBinds,
  * @returns {Promise<object>} a stub dough object
  */
 const postDough = async (body) => {
-  const bindParams = getPostBindParams(body);
+  const bindParams = getBindParams(body, doughsOutBindParams);
   const connection = await getConnection();
   try {
     const result = await connection.execute(
@@ -265,4 +289,56 @@ const getDoughById = async (id) => {
   }
 };
 
-export { getDoughs, postDough, getDoughById };
+/**
+ * convert object body to an UPDATE query with correct bind params
+ *
+ * @param {object} body a PATCH request body
+ * @returns {object} `bindParams` and `query`
+ */
+const createPatchQueryAndBindParams = (body) => {
+  const inBindParams = getBindParams(body);
+
+  const query = doughsPatchQuery(inBindParams);
+
+  const bindParams = {
+    ...inBindParams,
+    ...doughsOutBindParams,
+    ...{ id: body.data.id },
+  };
+
+  return { query, bindParams };
+};
+
+
+/**
+ * Update a specific dough recipe
+ *
+ * @param {object} body
+ * @returns {Promise<object>} the updated dough
+ */
+const updateDoughById = async (body) => {
+  if (_.isEmpty(body.data.attributes)) return getDoughById(body.data.id);
+
+  const { bindParams, query } = createPatchQueryAndBindParams(body);
+  const connection = await getConnection();
+
+  try {
+    const result = await connection.execute(
+      query,
+      bindParams,
+      { autoCommit: true },
+    );
+
+    if (result.rowsAffected === 0) return null;
+
+    const rawDough = convertOutBindsToRawDough(result.outBinds);
+    if (rawDough.id !== body.data.id) throw new Error('ID returned from database does not match input ID');
+    return serializeDough(rawDough, `doughs/${body.data.id}`);
+  } finally {
+    connection.close();
+  }
+};
+
+export {
+  getDoughs, postDough, getDoughById, updateDoughById,
+};
