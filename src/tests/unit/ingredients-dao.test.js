@@ -323,7 +323,6 @@ describe('test ingredients dao', () => {
         serializeIngredientsStub,
         serializeIngredientStub,
       );
-      result = ingredientsDao.updateIngredientById(body);
     });
     afterEach(() => {
       connectionStub.resetHistory();
@@ -332,6 +331,7 @@ describe('test ingredients dao', () => {
     });
     context('when it gets a well formatted body', () => {
       beforeEach(async () => {
+        result = ingredientsDao.updateIngredientById(body);
         await result;
       });
       before(() => {
@@ -366,6 +366,9 @@ describe('test ingredients dao', () => {
       });
     });
     context('when the query returns a result with a non matching ID', () => {
+      beforeEach(() => {
+        result = ingredientsDao.updateIngredientById(body);
+      });
       before(() => {
         body = sampleValidIngredientData;
         connectionStub = sinon.stub().resolves(differentIdDbReturn);
@@ -376,6 +379,9 @@ describe('test ingredients dao', () => {
     context('when it gets a body with invalid attributes', () => {
       before(() => {
         body = sampleInvalidIngredientData;
+      });
+      beforeEach(() => {
+        result = ingredientsDao.updateIngredientById(body);
       });
       it('throws an error', async () => result
         .should.be.rejectedWith('Invalid attribute foo found'));
@@ -393,8 +399,8 @@ describe('test ingredients dao', () => {
         body = sampleEmptyAttributesData;
         connectionStub = sinon.stub().resolves(singleRecordReturn);
       });
-
       beforeEach(async () => {
+        result = ingredientsDao.updateIngredientById(body);
         await result;
       });
 
