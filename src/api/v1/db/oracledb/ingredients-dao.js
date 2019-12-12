@@ -6,7 +6,6 @@ import { serializeIngredients, serializeIngredient } from 'api/v1/serializers/in
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 
-
 const ingredientsGetParameters = openapi.paths['/ingredients'].get.parameters;
 const ingredientsProperties = openapi.definitions.IngredientAttributes.properties;
 
@@ -208,9 +207,9 @@ const getIngredientById = async (id) => {
   const connection = await getConnection();
   try {
     const { rows } = await connection.execute(query, bindParams);
-    if (rows.length === 1) return serializeIngredient(rows[0], `ingredients/${id}`);
     if (rows.length > 1) throw new Error("database return shouldn't have multiple rows");
-    return null;
+    if (rows.length === 0) return null;
+    return serializeIngredient(rows[0], `ingredients/${id}`);
   } finally {
     connection.close();
   }

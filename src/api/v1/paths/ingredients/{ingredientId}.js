@@ -25,6 +25,4 @@ const get = async (req, res) => {
  */
 const patch = () => null;
 
-export {
-  get, patch,
-};
+export { get, patch };
