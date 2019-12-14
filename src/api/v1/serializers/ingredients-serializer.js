@@ -17,7 +17,7 @@ const ingredientResourceUrl = resourcePathLink(apiBaseUrl, ingredientResourcePat
  * @param {object} ingredient
  * @returns {object} the ingredient with `notes` updated
  */
-const transformNotes = (ingredient) => {
+const transformIngredient = (ingredient) => {
   ingredient.notes = ingredient.notes || '';
   return ingredient;
 };
@@ -36,7 +36,7 @@ const serializeIngredients = (rawIngredients, query) => {
     resourcePath: ingredientResourcePath,
     topLevelSelfLink,
     enableDataLinks: true,
-    transformFunction: transformNotes,
+    transformFunction: transformIngredient,
   };
 
   return new JsonApiSerializer(
@@ -60,7 +60,7 @@ const serializeIngredient = (rawIngredient, query) => {
     resourcePath: ingredientResourcePath,
     topLevelSelfLink,
     enableDataLinks: true,
-    transformFunction: transformNotes,
+    transformFunction: transformIngredient,
   };
 
   return new JsonApiSerializer(
@@ -69,4 +69,4 @@ const serializeIngredient = (rawIngredient, query) => {
   ).serialize(rawIngredient);
 };
 
-export { serializeIngredients, serializeIngredient };
+export { serializeIngredients, serializeIngredient, transformIngredient };

@@ -452,6 +452,116 @@ const ingredientSerializerData = {
   },
 };
 
+const serializePizzaData = {
+  baseInputPizza: {
+    id: '1',
+    name: 'sample pizza',
+    ovenTemp: '500',
+    bakeTime: '10',
+    specialInstructions: null,
+    ingredients: [
+      {
+        id: '1',
+        name: 'sausage',
+        ingredientType: 'meat',
+        notes: null,
+      },
+    ],
+    dough: {
+      name: 'weeknight pizza dough',
+      id: '201',
+      gramsFlour: '500',
+      flourType: 'All Purpose',
+      gramsWater: '400',
+      waterTemp: '90',
+      gramsYeast: '5',
+      gramsSalt: '15',
+      bulkFermentTime: '60',
+      proofTime: '15',
+      gramsSugar: '0',
+      gramsOliveOil: '0',
+      specialInstructions: null,
+    },
+  },
+  goalSerializedPizza: {
+    data: {
+      attributes: {
+        name: 'sample pizza',
+        ovenTemp: 500,
+        bakeTime: 10,
+        specialInstructions: '',
+      },
+      id: '1',
+      type: 'string',
+      relationships: {
+        ingredients: {
+          data: [
+            {
+              type: 'ingredient',
+              id: '1',
+            },
+          ],
+          links: {
+            related: '/v1/pizzas/1/ingredients',
+            self: '/v1/pizzas/1/relationships/ingredients',
+          },
+        },
+        dough: {
+          data: {
+            type: 'dough',
+            id: '201',
+          },
+          links: {
+            related: '/v1/pizzas/1/dough',
+            self: '/v1/pizzas/1/relationships/dough',
+          },
+        },
+      },
+    },
+    links: {
+      self: '/v1/pizzas/1',
+    },
+    included: [
+      {
+        type: 'dough',
+        id: '201',
+        attributes: {
+          name: 'weeknight pizza dough',
+          gramsFlour: 500,
+          flourType: 'All Purpose',
+          gramsWater: 400,
+          waterTemp: 90,
+          gramsYeast: 5,
+          gramsSalt: 15,
+          gramsSugar: 0,
+          gramsOliveOil: 0,
+          bulkFermentTime: 60,
+          proofTime: 15,
+          specialInstructions: '',
+        },
+        relationships: {},
+        links: {
+          self: '/v1/dough/201',
+        },
+      },
+      {
+        type: 'ingredient',
+        id: '1',
+        attributes: {
+          name: 'sausage',
+          ingredientType: 'meat',
+          notes: '',
+        },
+        relationships: {},
+        links: {
+          self: '/v1/ingredients/1',
+        },
+      },
+
+    ],
+  },
+};
+
 export {
   getDoughsData,
   postDoughsData,
@@ -464,4 +574,5 @@ export {
   processGetFiltersData,
   doughSerializerData,
   ingredientSerializerData,
+  serializePizzaData,
 };
