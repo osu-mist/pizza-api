@@ -22,7 +22,7 @@ const ingredientResourceKeys = _.keys(ingredientResourceProp.attributes.properti
 /**
  * Replace `null` with empty string and conver to int as appropriate
  *
- * @param {object} rawPizza a pizza object from the database
+ * @param {oracledb.RawPizza} rawPizza a pizza object from the database
  * @returns {object} the transformed pizza
  */
 const transformRawPizza = (rawPizza) => {

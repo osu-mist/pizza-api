@@ -35,7 +35,7 @@ const getPizzaByIdQuery = `SELECT ${pizzaColumnAliases} FROM PIZZAS WHERE ID = :
  *  `pizzaId`
  *
  * @param {string} pizzaId
- * @returns {Array} an array of unserialized ingredient objects
+ * @returns {oracledb.RawIngredient[]} an array of unserialized ingredient objects
  */
 const getPizzaIngredients = async (pizzaId) => {
   const query = `SELECT
@@ -63,7 +63,7 @@ const getPizzaIngredients = async (pizzaId) => {
  * Get a "deserialized" dough object using `getDoughById`
  *
  * @param {string} doughId the ID of the dough to get
- * @returns {object} a raw dough object
+ * @returns {oracledb.RawDough[]} a raw dough object
  */
 const getPizzaDough = async (doughId) => {
   const serializedDough = await getDoughById(doughId);
@@ -94,8 +94,8 @@ const getPizzaById = async (pizzaId) => {
 
     const { doughId } = rows[0];
 
-    const dough = await getPizzaDough(doughId);
-    const ingredients = await getPizzaIngredients(pizzaId);
+    const dough = getPizzaDough(doughId);
+    const ingredients = getPizzaIngredients(pizzaId);
 
     const rawPizza = {
       dough,
