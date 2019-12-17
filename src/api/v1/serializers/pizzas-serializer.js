@@ -53,7 +53,7 @@ const transformRawPizza = (rawPizza) => {
  */
 const addCompoundRelationship = (options, relationName, relationKeys, idField = 'id') => {
   const resourceUrl = resourcePathLink(apiBaseUrl, relationName);
-  options.attributes.push(relationName);
+  options.attributes = _.concat(options.attributes, relationName);
   options[relationName] = {
     ref: (collection, field) => field[idField],
     included: true,
