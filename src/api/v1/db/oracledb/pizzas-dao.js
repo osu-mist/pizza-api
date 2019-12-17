@@ -38,13 +38,13 @@ const getPizzaByIdQuery = `SELECT ${pizzaColumnAliases} FROM PIZZAS WHERE ID = :
  * @returns {Array} an array of unserialized ingredient objects
  */
 const getPizzaIngredients = async (pizzaId) => {
-  const query = `SELECT
-    INGREDIENTS.ID AS "id",
-      INGREDIENTS.TYPE AS "ingredientType",
-      INGREDIENTS.NAME AS "name",
-      INGREDIENTS.NOTES AS "notes"
-    FROM PIZZA_INGREDIENTS INNER JOIN INGREDIENTS ON
-      PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID
+  const query = `SELECT INGREDIENTS.ID AS "id",
+        INGREDIENTS.TYPE AS "ingredientType",
+        INGREDIENTS.NAME AS "name",
+        INGREDIENTS.NOTES AS "notes"
+    FROM PIZZA_INGREDIENTS
+    INNER JOIN INGREDIENTS
+        ON PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID
     WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id`;
   const bindParams = { id: pizzaId };
   const connection = await getConnection();

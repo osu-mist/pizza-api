@@ -1,5 +1,5 @@
 import { getPizzaById } from 'api/v1/db/oracledb/pizzas-dao';
-import { errorHandler } from 'errors/errors';
+import { errorBuilder, errorHandler } from 'errors/errors';
 
 /**
  * Get a pizza by ID
@@ -9,6 +9,9 @@ import { errorHandler } from 'errors/errors';
 const get = async (req, res) => {
   try {
     const result = await getPizzaById(req.params.pizzaId);
+    if (result === null) {
+      return errorBuilder(res, '404', `No pizza with ID ${req.params.pizzaId} found`);
+    }
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);
