@@ -94,6 +94,7 @@ const serializePizza = (rawPizza, query) => {
   options = addCompoundRelationship(options, 'dough', doughResourceKeys);
   options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys);
 
+
   // need to depluralize type of `ingredients` compound resources . . . somehow
   // returning `undefined` means it uses the default value
   options.typeForAttribute = (attribute, data) => ('ingredientType' in data ? 'ingredient' : undefined);

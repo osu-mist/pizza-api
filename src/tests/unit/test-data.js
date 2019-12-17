@@ -539,7 +539,6 @@ const serializePizzaData = {
           proofTime: 15,
           specialInstructions: '',
         },
-        relationships: {},
         links: {
           self: '/v1/dough/201',
         },
@@ -552,7 +551,6 @@ const serializePizzaData = {
           ingredientType: 'meat',
           notes: '',
         },
-        relationships: {},
         links: {
           self: '/v1/ingredients/1',
         },

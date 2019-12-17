@@ -36,7 +36,7 @@ const serializerOptions = (serializerArgs) => {
   const resourceUrl = resourcePathLink(apiBaseUrl, resourcePath);
   const options = {
     pluralizeType: false,
-    attributes: resourceKeys,
+    attributes: _.clone(resourceKeys),
     id: identifierField,
     keyForAttribute: keyForAttribute || 'camelCase',
     dataLinks: {
