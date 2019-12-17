@@ -58,12 +58,8 @@ const proxyquirePizzasDao = () => {
 
 
 describe('test pizzas DAO', () => {
-  before(() => {
-    sinon.replace(config, 'get', () => ({ oracledb: {} }));
-  });
-  after(() => {
-    sinon.restore();
-  });
+  before(() => sinon.replace(config, 'get', () => ({ oracledb: {} })));
+  after(() => sinon.restore());
   context('getPizzaById', () => {
     let inputId;
     before(() => {

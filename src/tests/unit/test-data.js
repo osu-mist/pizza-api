@@ -564,7 +564,14 @@ const serializePizzaData = {
 
 const getPizzaByIdData = {
   getPizzaByIdQuery: 'SELECT ID AS "id", DOUGH_ID AS "doughId", NAME AS "name", BAKE_TIME AS "bakeTime", OVEN_TEMP AS "ovenTemp", SPECIAL_INSTRUCTIONS AS "specialInstructions" FROM PIZZAS WHERE ID = :id',
-  getPizzaIngredientsQuery: 'SELECT INGREDIENTS.ID AS "id", INGREDIENTS.TYPE AS "ingredientType", INGREDIENTS.NAME as "name", INGREDIENTS.NOTES AS "notes" FROM PIZZA_INGREDIENTS INNER JOIN INGREDIENTS ON PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id',
+  getPizzaIngredientsQuery: `SELECT
+    INGREDIENTS.ID AS "id",
+      INGREDIENTS.TYPE AS "ingredientType",
+      INGREDIENTS.NAME AS "name",
+      INGREDIENTS.NOTES AS "notes"
+    FROM PIZZA_INGREDIENTS INNER JOIN INGREDIENTS ON
+      PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID
+    WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id`,
   fullRawPizza: {
     bakeTime: '10',
     dough: {

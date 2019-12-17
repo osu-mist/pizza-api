@@ -20,9 +20,7 @@ describe('test pizzas serializer', () => {
     sinon.replace(config, 'get', () => ({ oracledb: {} }));
     pizzasSerializer = proxyquire('../../api/v1/serializers/pizzas-serializer', {});
   });
-  after(() => {
-    sinon.restore();
-  });
+  after(() => sinon.restore());
   context('serializePizza', () => {
     let inputPizza;
     let serializedPizza;

@@ -13,9 +13,22 @@ const pizzaColumns = {
   specialInstructions: 'SPECIAL_INSTRUCTIONS',
 };
 
+/**
+ * A list of columns in the PIZZAS table aliased to their
+ * corresponding PizzaResource attribute names
+ *
+ * @const {string}
+ */
 const pizzaColumnAliases = _.map(pizzaColumns,
   (columnName, attributeName) => `${columnName} AS "${attributeName}"`)
   .join(', ');
+
+/**
+ * A SQL query to get a pizza with a specific ID
+ *
+ * @const {string}
+ */
+const getPizzaByIdQuery = `SELECT ${pizzaColumnAliases} FROM PIZZAS WHERE ID = :id`;
 
 /**
  * Fetch all the ingredients associated with the pizza with id
@@ -25,7 +38,14 @@ const pizzaColumnAliases = _.map(pizzaColumns,
  * @returns {Array} an array of unserialized ingredient objects
  */
 const getPizzaIngredients = async (pizzaId) => {
-  const query = 'SELECT INGREDIENTS.ID AS "id", INGREDIENTS.TYPE AS "ingredientType", INGREDIENTS.NAME as "name", INGREDIENTS.NOTES AS "notes" FROM PIZZA_INGREDIENTS INNER JOIN INGREDIENTS ON PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id';
+  const query = `SELECT
+    INGREDIENTS.ID AS "id",
+      INGREDIENTS.TYPE AS "ingredientType",
+      INGREDIENTS.NAME AS "name",
+      INGREDIENTS.NOTES AS "notes"
+    FROM PIZZA_INGREDIENTS INNER JOIN INGREDIENTS ON
+      PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID
+    WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id`;
   const bindParams = { id: pizzaId };
   const connection = await getConnection();
   try {
@@ -57,7 +77,6 @@ const getPizzaDough = async (doughId) => {
   return deserializedDough;
 };
 
-const getPizzaByIdQuery = `SELECT ${pizzaColumnAliases} FROM PIZZAS WHERE ID = :id`;
 /**
  * Fetch the pizza with ID `pizzaId`
  *
