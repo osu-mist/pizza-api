@@ -562,6 +562,101 @@ const serializePizzaData = {
   },
 };
 
+const getPizzaByIdData = {
+  getPizzaByIdQuery: 'SELECT ID AS "id", DOUGH_ID AS "doughId", NAME AS "name", BAKE_TIME AS "bakeTime", OVEN_TEMP AS "ovenTemp", SPECIAL_INSTRUCTIONS AS "specialInstructions" FROM PIZZAS WHERE ID = :id',
+  getPizzaIngredientsQuery: 'SELECT INGREDIENTS.ID AS "id", INGREDIENTS.TYPE AS "ingredientType", INGREDIENTS.NAME as "name", INGREDIENTS.NOTES AS "notes" FROM PIZZA_INGREDIENTS INNER JOIN INGREDIENTS ON PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id',
+  fullRawPizza: {
+    bakeTime: '10',
+    dough: {
+      bulkFermentTime: '60',
+      flourType: 'All Purpose',
+      gramsFlour: '500',
+      gramsOliveOil: '0',
+      gramsSalt: '15',
+      gramsSugar: '0',
+      gramsWater: '400',
+      gramsYeast: '5',
+      id: '201',
+      name: 'weeknight pizza dough',
+      proofTime: '15',
+      specialInstructions: null,
+      waterTemp: '90',
+    },
+    id: '1',
+    ingredients: [{
+      id: '1', name: 'sausage', notes: null, type: 'meat',
+    }],
+    name: 'sample pizza',
+    ovenTemp: '500',
+    specialInstructions: null,
+  },
+  pizzaDbReturn: {
+    rows: [
+      {
+        id: '1',
+        name: 'sample pizza',
+        ovenTemp: '500',
+        bakeTime: '10',
+        specialInstructions: null,
+      },
+    ],
+  },
+  emptyDbReturn: {
+    rows: [],
+  },
+  pizzaIngredientsDbReturn: {
+    rows: [
+      {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      },
+    ],
+  },
+  multipleRowsReturn: {
+    rows: [
+      {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      }, {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      }, {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      },
+    ],
+  },
+  serializedDoughReturn: {
+    data: {
+      id: '1',
+      attributes: {
+        name: 'weeknight pizza dough',
+        id: '201',
+        gramsFlour: '500',
+        flourType: 'All Purpose',
+        gramsWater: '400',
+        waterTemp: '90',
+        gramsYeast: '5',
+        gramsSalt: '15',
+        bulkFermentTime: '60',
+        proofTime: '15',
+        gramsSugar: '0',
+        gramsOliveOil: '0',
+        specialInstructions: null,
+      },
+    },
+  },
+  baseSerializerReturn: { data: [] },
+};
+
 export {
   getDoughsData,
   postDoughsData,
@@ -571,6 +666,7 @@ export {
   postIngredientData,
   getIngredientByIdData,
   updateIngredientByIdData,
+  getPizzaByIdData,
   processGetFiltersData,
   doughSerializerData,
   ingredientSerializerData,
