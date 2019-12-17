@@ -231,7 +231,7 @@ const createPatchQueryAndBindParams = (body) => {
   const bindParams = {
     ...inBindParams,
     ...ingredientsOutBindParams,
-    ...{ id: body.data.id },
+    id: body.data.id,
   };
 
   return { query, bindParams };

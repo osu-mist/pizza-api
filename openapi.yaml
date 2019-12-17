@@ -782,6 +782,7 @@ definitions:
   IngredientPatchBody:
     properties:
       data:
+        required: [type, id, attributes]
         properties:
           type: *ingredientType
           id: *ingredientId
@@ -792,6 +793,7 @@ definitions:
                 type: string
                 description: the name of the ingredient
                 example: Sausage
+                minLength: 1
               ingredientType:
                 type: string
                 description: the type of the ingredient

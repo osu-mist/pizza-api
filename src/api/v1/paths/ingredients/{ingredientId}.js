@@ -33,6 +33,13 @@ const patch = async (req, res) => {
       );
     }
     const result = await updateIngredientById(req.body);
+    if (result === null) {
+      return errorBuilder(
+        res,
+        '404',
+        `No ingredient with ID ${req.params.ingredientId} exists`,
+      );
+    }
     return res.send(result);
   } catch (err) {
     return errorHandler(res, err);
