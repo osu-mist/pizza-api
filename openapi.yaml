@@ -780,6 +780,7 @@ definitions:
           attributes:
             $ref: '#/definitions/IngredientPostAttributes'
   IngredientPatchBody:
+    required: [data]
     properties:
       data:
         required: [type, id, attributes]
