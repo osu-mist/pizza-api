@@ -51,7 +51,8 @@ const transformRawPizza = (rawPizza) => {
  * @param {string} idField
  * @returns {object} `options` with `relationName` added
  */
-const addCompoundRelationship = (options, relationName, relationKeys, idField = 'id') => {
+const addCompoundRelationship = (options, relationName, relationKeys) => {
+  const idField = 'id';
   const resourceUrl = resourcePathLink(apiBaseUrl, relationName);
   options.attributes = _.concat(options.attributes, relationName);
   options[relationName] = {
