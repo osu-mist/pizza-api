@@ -249,9 +249,8 @@ describe('test doughs dao', () => {
           doughsDao = proxyquireDoughsDao(connectionStub, serializeDoughsStub, serializeDoughStub);
           result = doughsDao.getDoughById('1');
         });
-        it('throws an error', () => {
-          result.should.be.rejectedWith('Got multiple values with the same ID');
-        });
+        it('throws an error', () => result
+          .should.be.rejectedWith("database return shouldn't have multiple values"));
       });
     });
   });

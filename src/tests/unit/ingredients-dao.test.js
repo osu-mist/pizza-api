@@ -5,7 +5,9 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getIngredientsData, postIngredientData, getIngredientByIdData } from 'tests/unit/test-data';
+import {
+  getIngredientsData, postIngredientData, getIngredientByIdData, updateIngredientByIdData,
+} from 'tests/unit/test-data';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 
@@ -62,6 +64,15 @@ const {
   singleRecord,
   singleRecordReturn,
 } = getIngredientByIdData;
+
+const {
+  differentIdDbReturn,
+  emptyUpdateRecordReturn,
+  sampleEmptyAttributesData,
+  sampleInvalidIngredientData,
+  updateIngredientQuery,
+  updateIngredientsBindParams,
+} = updateIngredientByIdData;
 
 describe('test ingredients dao', () => {
   let serializeIngredientsStub;
@@ -300,6 +311,103 @@ describe('test ingredients dao', () => {
         before(() => {
           connectionStub = sinon.stub().returns(testConnectionReturn);
         });
+      });
+    });
+  });
+  context('updateIngredientById', () => {
+    let result;
+    let body;
+    beforeEach(() => {
+      ingredientsDao = proxyquireIngredientsDao(
+        connectionStub,
+        serializeIngredientsStub,
+        serializeIngredientStub,
+      );
+    });
+    afterEach(() => {
+      connectionStub.resetHistory();
+      serializeIngredientStub.resetHistory();
+      serializeIngredientsStub.resetHistory();
+    });
+    context('when it gets a well formatted body', () => {
+      beforeEach(async () => {
+        result = ingredientsDao.updateIngredientById(body);
+        await result;
+      });
+      before(() => {
+        body = sampleValidIngredientData;
+        connectionStub = sinon.stub().returns(testDbReturn);
+      });
+      it('calls the database with the right query and bind params', () => {
+        connectionStub.should.have.been.calledWith(
+          updateIngredientQuery,
+          updateIngredientsBindParams,
+          { autoCommit: true },
+        );
+      });
+
+      it('normalizes the result correctly and passes it to the serializer', () => {
+        serializeIngredientStub.should.have.been.calledWith(
+          normalizedIngredient,
+          'ingredients/100',
+        );
+      });
+
+      it('returns the result of the serializer', () => result
+        .should.eventually.deep.equal(testSerializerReturn));
+
+      context('when the query has no affected rows', () => {
+        before(() => {
+          connectionStub = sinon.stub().returns(emptyUpdateRecordReturn);
+        });
+        it('returns null', () => {
+          result.should.eventually.deep.equal(null);
+        });
+      });
+    });
+    context('when the query returns a result with a non matching ID', () => {
+      beforeEach(() => {
+        result = ingredientsDao.updateIngredientById(body);
+      });
+      before(() => {
+        body = sampleValidIngredientData;
+        connectionStub = sinon.stub().resolves(differentIdDbReturn);
+      });
+      it('throws an error', async () => result
+        .should.be.rejectedWith('ID returned from database does not match input ID'));
+    });
+    context('when it gets a body with invalid attributes', () => {
+      before(() => {
+        body = sampleInvalidIngredientData;
+      });
+      beforeEach(() => {
+        result = ingredientsDao.updateIngredientById(body);
+      });
+      it('throws an error', async () => result
+        .should.be.rejectedWith('Invalid attribute foo found'));
+
+      it("doesn't call the database", async () => {
+        try {
+          await result;
+        } catch {
+          connectionStub.should.not.have.been.called;
+        }
+      });
+    });
+    context('when it gets a body with empty attributes', () => {
+      before(() => {
+        body = sampleEmptyAttributesData;
+        connectionStub = sinon.stub().resolves(singleRecordReturn);
+      });
+      beforeEach(async () => {
+        result = ingredientsDao.updateIngredientById(body);
+        await result;
+      });
+
+      it('calls the database with a SELECT query instead', () => {
+        connectionStub.should.have.been.calledWith(
+          getIngredientByIdQuery,
+        );
       });
     });
   });

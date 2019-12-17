@@ -3,6 +3,7 @@ import oracledb from 'oracledb';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { serializeIngredients, serializeIngredient } from 'api/v1/serializers/ingredients-serializer';
+import { getBindParams } from 'utils/bind-params';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 
@@ -63,7 +64,7 @@ const ingredientsOutBindParams = _.reduce(ingredientsProperties,
     bindParam.dir = oracledb.BIND_OUT;
     outBindParams[`${name}Out`] = bindParam;
     return outBindParams;
-  }, { idOut: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT } });
+  }, { idOut: { type: oracledb.STRING, dir: oracledb.BIND_OUT } });
 
 /**
  * The column names referenced by the output bind params
@@ -89,6 +90,29 @@ const ingredientsOutBindParamValues = _.map(ingredientsOutBindParams,
   (paramValue, paramName) => `:${paramName}`)
   .join(', ');
 
+
+/**
+ * Convert bind params to a list of column assignments for an UPDATE
+ * statement
+ *
+ * @param {object} bindParams
+ * @returns {string}
+ */
+const ingredientsUpdateColumns = (bindParams) => _.map(bindParams,
+  (bindParamValue, bindParamName) => `${ingredientsColumnNames[bindParamName]} = :${bindParamName}`)
+  .join(', ');
+
+/**
+ * Return an UPDATE query to update the attributes in
+ * `bindParams`
+ *
+ * @param {object} bindParams
+ * @returns {string} the assembled query
+ */
+const ingredientsPatchQuery = (bindParams) => `UPDATE INGREDIENTS
+  SET ${ingredientsUpdateColumns(bindParams)}
+  WHERE ID = :id
+  RETURNING ${ingredientsOutBindParamColumnNames} INTO ${ingredientsOutBindParamValues}`;
 /**
  * SQL aliases for mapping INGREDIENTS column names to
  * IngredientResource property names
@@ -136,29 +160,6 @@ const getIngredients = async (filters) => {
 };
 
 /**
- * Generate bind params from a POST body, assuming invalid attributes
- * have been removed and non-included values have been substituted for their
- * defaults
- *
- * @param {object} body
- * @returns {object} bindparams
- * @throws {Error} when an attribute not in ingredientsProperties is found in body.
- * It's assumed that body has already been checked for invalid properties meaning that when
- * one is found here it's a server error rather than a user error.
- */
-const getPostBindParams = (body) => {
-  const { attributes } = body.data;
-  const bindParams = ingredientsOutBindParams;
-  _.forEach(attributes, (attributeValue, attributeName) => {
-    if (!(attributeName in ingredientsProperties)) {
-      throw new Error('Invalid attribute found');
-    }
-    bindParams[attributeName] = attributeValue;
-  });
-  return bindParams;
-};
-
-/**
  * Converts the return value of a SQL query that uses
  * `RETURNS ... INTO ...` into the format of the return
  * from a `SELECT` query to it can be passed directly to
@@ -180,7 +181,7 @@ const convertOutBindsToRawIngredient = (outBinds) => _.reduce(outBinds,
  * @returns {Promise<object>} an ingredient object
  */
 const postIngredient = async (body) => {
-  const bindParams = getPostBindParams(body);
+  const bindParams = getBindParams(body, ingredientsProperties, ingredientsOutBindParams);
   const connection = await getConnection();
   try {
     const result = await connection.execute(
@@ -215,4 +216,55 @@ const getIngredientById = async (id) => {
   }
 };
 
-export { getIngredients, postIngredient, getIngredientById };
+/**
+ * convert object body into an UPDATE query with the correct bind params
+ *
+ * @param {object} body a PATCH request body
+ * @returns {object} bind params and query
+ */
+const createPatchQueryAndBindParams = (body) => {
+  const inBindParams = getBindParams(body, ingredientsProperties);
+
+
+  const query = ingredientsPatchQuery(inBindParams);
+
+  const bindParams = {
+    ...inBindParams,
+    ...ingredientsOutBindParams,
+    id: body.data.id,
+  };
+
+  return { query, bindParams };
+};
+
+/**
+ * update an ingredient with ID `body.data.id` using
+ * `body.data.attributes`
+ *
+ * @param {object} body
+ * @returns {Promise<object>} the updated ingredient
+ */
+const updateIngredientById = async (body) => {
+  if (_.isEmpty(body.data.attributes)) return getIngredientById(body.data.id);
+
+  const { query, bindParams } = createPatchQueryAndBindParams(body);
+  const connection = await getConnection();
+  try {
+    const result = await connection.execute(
+      query,
+      bindParams,
+      { autoCommit: true },
+    );
+
+    if (result.rowsAffected === 0) return null;
+
+    const rawIngredient = convertOutBindsToRawIngredient(result.outBinds);
+    if (rawIngredient.id !== body.data.id) throw new Error('ID returned from database does not match input ID');
+    return serializeIngredient(rawIngredient, `ingredients/${body.data.id}`);
+  } finally {
+    connection.close();
+  }
+};
+export {
+  getIngredients, postIngredient, getIngredientById, updateIngredientById,
+};
