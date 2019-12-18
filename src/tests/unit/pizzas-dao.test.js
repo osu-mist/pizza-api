@@ -15,27 +15,23 @@ let connectionStub;
 let getDoughByIdStub;
 let pizzasDao;
 let result;
-let resultError;
 let serializePizzaStub;
 
 const {
   baseSerializerReturn,
   emptyDbReturn,
   fullRawPizza,
-  getPizzaByIdQuery,
+  fullRawPizzaReturn,
+  getPizzaDoughQuery,
   getPizzaIngredientsQuery,
-  multipleRowsReturn,
-  pizzaDbReturn,
-  pizzaIngredientsDbReturn,
-  serializedDoughReturn,
+  getPizzaQuery,
+  rawPizzaReturnNullIngredients,
+  rawPizzaReturnNullDough,
+  rawPizzaReturnWithoutDough,
+  rawPizzaReturnWithoutIngredients,
+  rawPizzaReturnWithoutIngredientsOrDough,
+  getPizzaIngredientsAndDoughQuery,
 } = getPizzaByIdData;
-
-const setUpDatabaseStubs = (firstCall, secondCall, serializerReturn) => {
-  connectionStub = sinon.stub();
-  connectionStub.onCall(0).resolves(firstCall);
-  connectionStub.onCall(1).resolves(secondCall);
-  getDoughByIdStub = sinon.stub().returns(serializerReturn);
-};
 
 const proxyquirePizzasDao = () => {
   const getConnectionStub = sinon.stub().resolves({
@@ -62,48 +58,42 @@ describe('test pizzas DAO', () => {
   after(() => sinon.restore());
   context('getPizzaById', () => {
     let inputId;
+    let inputQuery;
     before(() => {
       serializePizzaStub = sinon.stub().returns(baseSerializerReturn);
     });
     beforeEach(async () => {
       pizzasDao = proxyquirePizzasDao();
-      try {
-        result = await pizzasDao.getPizzaById(inputId, { includes: ['dough', 'ingredients'] });
-      } catch (err) {
-        resultError = err;
-      }
+      result = await pizzasDao.getPizzaById(inputId, inputQuery);
     });
     afterEach(() => {
       serializePizzaStub.resetHistory();
       connectionStub.resetHistory();
     });
-    context('when it is called with a valid id', () => {
+    context('when it is called with ingredients and doughs included', () => {
       before(() => {
         inputId = '1';
+        inputQuery = { includes: ['dough', 'ingredients'] };
       });
       context('when the database returns valid results for doughs, ingredients, and pizzas', () => {
         before(() => {
-          setUpDatabaseStubs(pizzaDbReturn, pizzaIngredientsDbReturn, serializedDoughReturn);
+          connectionStub = sinon.stub().resolves(fullRawPizzaReturn);
         });
+
         it('calls the database once with the correct query to fetch a pizza', () => {
-          connectionStub.getCall(0).should.have.been.calledWith(
-            getPizzaByIdQuery,
+          connectionStub.should.have.been.calledWith(
+            getPizzaIngredientsAndDoughQuery,
             { id: '1' },
           );
         });
-        it('calls the database a second time with the correct query to fetch ingredients for a pizza', () => {
-          connectionStub.getCall(1).should.have.been.calledWith(
-            getPizzaIngredientsQuery,
-            { id: '1' },
-          );
-        });
+
         it('generates doughs, ingredients, and pizza values correctly from the database returns', () => {
           serializePizzaStub.should.have.been.calledWith(
             fullRawPizza,
             'pizzas/1',
           );
         });
-        it('returns the result of the serialize', () => {
+        it('returns the result of the serializer', () => {
           result.should.deep.equal(baseSerializerReturn);
         });
       });
@@ -112,40 +102,82 @@ describe('test pizzas DAO', () => {
           connectionStub = sinon.stub();
           connectionStub.onCall(0).returns(emptyDbReturn);
         });
-        it('only calls the database once', () => {
-          connectionStub.should.have.been.calledOnce;
-        });
+
         it('returns null', () => {
           should.equal(result, null);
         });
       });
       context('when the database returns no ingredient results', () => {
         before(() => {
-          connectionStub = sinon.stub();
-          setUpDatabaseStubs(pizzaDbReturn, emptyDbReturn, serializedDoughReturn);
+          connectionStub = sinon.stub().resolves(rawPizzaReturnNullIngredients);
         });
-        it('generates a raw pizza with an empty array for the ingredients member', () => {
+
+        it('generates a raw pizza with ingredients as an empty array', () => {
           serializePizzaStub.getCall(0).args[0].ingredients.should.deep.equal([]);
         });
       });
       context('when the database returns no dough results', () => {
         before(() => {
-          setUpDatabaseStubs(pizzaDbReturn, emptyDbReturn, null);
+          connectionStub = sinon.stub().resolves(rawPizzaReturnNullDough);
         });
-        it('generates a raw pizza with dough equal to empty object', () => {
+
+        it('generates a raw pizza with dough as an empty object', () => {
           serializePizzaStub.getCall(0).args[0].dough.should.deep.equal({});
         });
       });
-      context('when the database returns multiple pizza results', () => {
-        before(() => {
-          setUpDatabaseStubs(multipleRowsReturn, pizzaIngredientsDbReturn, serializedDoughReturn);
-        });
-        it('throws an error', () => {
-          resultError.message.should.equal('Returned multiple outputs for the same ID');
-        });
-        it('only calls the database once', () => {
-          connectionStub.should.have.been.calledOnce;
-        });
+    });
+    context('when it is called with only ingredients included', () => {
+      before(() => {
+        inputQuery = { includes: ['ingredients'] };
+        connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutDough);
+      });
+      it('does not query the database for doughs', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzaIngredientsQuery,
+          { id: '1' },
+        );
+      });
+      it('does not generate a doughs member of pizzas', () => {
+        serializePizzaStub.getCall(0).args[0].should.not.have.property('dough');
+      });
+      it('does include ingredients in pizzas', () => {
+        serializePizzaStub.getCall(0).args[0].should.have.property('ingredients');
+      });
+    });
+    context('when it is called with only dough included', () => {
+      before(() => {
+        inputQuery = { includes: ['dough'] };
+        connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutIngredients);
+      });
+      it('does not query the database for ingredients', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzaDoughQuery,
+          { id: '1' },
+        );
+      });
+      it('does not generate an ingredients member of pizzas', () => {
+        serializePizzaStub.getCall(0).args[0].should.not.have.property('ingredients');
+      });
+      it('does include dough in pizza', () => {
+        serializePizzaStub.getCall(0).args[0].should.have.property('dough');
+      });
+    });
+    context('when it is called with neither ingredients nor doughs included', () => {
+      before(() => {
+        inputQuery = {};
+        connectionStub = sinon.stub()
+          .resolves(rawPizzaReturnWithoutIngredientsOrDough);
+      });
+
+      it('does not query the database for ingredients or doughs', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzaQuery,
+          { id: '1' },
+        );
+      });
+      it('does not generate dough or ingredients members', () => {
+        serializePizzaStub.getCall(0).args[0].should.not.have.property('ingredients');
+        serializePizzaStub.getCall(0).args[0].should.not.have.property('dough');
       });
     });
   });

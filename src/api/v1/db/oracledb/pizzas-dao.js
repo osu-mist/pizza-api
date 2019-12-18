@@ -55,10 +55,10 @@ const getColumnAliases = (included) => {
   return columns;
 };
 
-const innerJoinDoughs = 'INNER JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID';
+const innerJoinDoughs = 'LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID';
 
-const innerJoinIngredients = `INNER JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
-  INNER JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID`;
+const innerJoinIngredients = `LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
+  LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID`;
 /**
  * A query to fetch a pizza with, optionally, its ingredients and doughs
  *
@@ -83,6 +83,7 @@ const fullPizzaQuery = (included) => `SELECT
  * @returns {object}
  */
 const extractRawResource = (resourceName, resourceAttributes, row) => {
+  if (row[`${resourceName}_id`] === null) return null;
   const rawResource = {};
   _.keys(resourceAttributes).forEach(
     (attributeName) => {
@@ -118,14 +119,15 @@ const normalizePizzaRows = (rows, included) => {
     const pizza = extractRawResource('PIZZA', pizzaColumns, head);
 
     if (doughsIncluded) {
-      pizza.dough = extractRawResource('DOUGH', doughColumnNames, head);
+      const dough = extractRawResource('DOUGH', doughColumnNames, head);
+      pizza.dough = dough || {};
     }
 
     if (ingredientsIncluded) {
       pizza.ingredients = [];
       while (index < rows.length && rows[index].PIZZA_id === head.PIZZA_id) {
         const ingredient = extractRawResource('INGREDIENT', ingredientsColumnNames, rows[index]);
-        pizza.ingredients.push(ingredient);
+        if (ingredient) pizza.ingredients.push(ingredient);
         index += 1;
       }
     } else {
@@ -148,12 +150,12 @@ const getPizzaById = async (pizzaId, query) => {
   const bindParams = { id: pizzaId };
   const connection = await getConnection();
   try {
+    console.log(fullPizzaQuery(included));
     const { rows } = await connection.execute(fullPizzaQuery(included), bindParams);
 
     const pizzas = normalizePizzaRows(rows, included);
 
     if (pizzas.length === 0) return null;
-    if (pizzas.length > 1) throw new Error('Got multiple results for the same ID');
 
     return serializePizza(pizzas[0], `pizzas/${pizzaId}`);
   } finally {
