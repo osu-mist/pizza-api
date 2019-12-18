@@ -68,7 +68,7 @@ describe('test pizzas DAO', () => {
     beforeEach(async () => {
       pizzasDao = proxyquirePizzasDao();
       try {
-        result = await pizzasDao.getPizzaById(inputId);
+        result = await pizzasDao.getPizzaById(inputId, { includes: ['dough', 'ingredients'] });
       } catch (err) {
         resultError = err;
       }

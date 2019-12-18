@@ -8,7 +8,8 @@ import { errorBuilder, errorHandler } from 'errors/errors';
  */
 const get = async (req, res) => {
   try {
-    const result = await getPizzaById(req.params.pizzaId);
+    console.log(req.query);
+    const result = await getPizzaById(req.params.pizzaId, req.query);
     if (result === null) {
       return errorBuilder(res, '404', `No pizza with ID ${req.params.pizzaId} found`);
     }

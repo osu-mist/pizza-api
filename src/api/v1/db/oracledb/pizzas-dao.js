@@ -1,8 +1,9 @@
 import _ from 'lodash';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
-import { getDoughById } from 'api/v1/db/oracledb/doughs-dao';
+import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
 import { serializePizza } from 'api/v1/serializers/pizzas-serializer';
+import { ingredientsColumnNames } from './ingredients-dao';
 
 const pizzaColumns = {
   id: 'ID',
@@ -14,96 +15,147 @@ const pizzaColumns = {
 };
 
 /**
- * A list of columns in the PIZZAS table aliased to their
- * corresponding PizzaResource attribute names
+ * Transform a resource with name `resourceName` and
+ * table `resourceTableName` into an array of strings written as
+ * `TABLENAME.COLUMNAME = "RESOURCENAME_attributeName"
  *
- * @const {string}
+ * @param {string} resourceName
+ * @param {string} resourceTableName
+ * @param {object} resourceColumns
+ * @returns {object[]}
  */
-const pizzaColumnAliases = _.map(pizzaColumns,
-  (columnName, attributeName) => `${columnName} AS "${attributeName}"`)
-  .join(', ');
+const resourceColumnAliases = (
+  resourceName,
+  resourceTableName,
+  resourceColumns,
+) => _.map(resourceColumns,
+  (columnName, attributeName) => `${resourceTableName}.${columnName} AS "${resourceName}_${attributeName}"`);
 
 /**
- * A SQL query to get a pizza with a specific ID
+ * Returns a list of column aliases for pizzas, and, optionally,
+ * doughs and ingredients based on the values in `included`
  *
- * @const {string}
+ * @param {string[]} included
+ * @returns {string[]}
  */
-const getPizzaByIdQuery = `SELECT ${pizzaColumnAliases} FROM PIZZAS WHERE ID = :id`;
+const getColumnAliases = (included) => {
+  const columns = resourceColumnAliases('PIZZA', 'PIZZAS', pizzaColumns);
 
-/**
- * Fetch all the ingredients associated with the pizza with id
- *  `pizzaId`
- *
- * @param {string} pizzaId
- * @returns {Array} an array of unserialized ingredient objects
- */
-const getPizzaIngredients = async (pizzaId) => {
-  const query = `SELECT INGREDIENTS.ID AS "id",
-        INGREDIENTS.TYPE AS "ingredientType",
-        INGREDIENTS.NAME AS "name",
-        INGREDIENTS.NOTES AS "notes"
-    FROM PIZZA_INGREDIENTS
-    INNER JOIN INGREDIENTS
-        ON PIZZA_INGREDIENTS.INGREDIENT_ID = INGREDIENTS.ID
-    WHERE PIZZA_INGREDIENTS.PIZZA_ID = :id`;
-  const bindParams = { id: pizzaId };
-  const connection = await getConnection();
-  try {
-    const result = await connection.execute(
-      query,
-      bindParams,
+  if (included.includes('dough')) {
+    columns.push(
+      ...resourceColumnAliases('DOUGH', 'DOUGHS', doughColumnNames),
     );
-    return result.rows;
-  } finally {
-    connection.close();
   }
+  if (included.includes('ingredients')) {
+    columns.push(
+      ...resourceColumnAliases('INGREDIENT', 'INGREDIENTS', ingredientsColumnNames),
+    );
+  }
+
+  return columns;
+};
+
+const innerJoinDoughs = 'INNER JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID';
+
+const innerJoinIngredients = `INNER JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
+  INNER JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID`;
+/**
+ * A query to fetch a pizza with, optionally, its ingredients and doughs
+ *
+ * @param {Array} included
+ * @returns {string}
+ */
+const fullPizzaQuery = (included) => `SELECT
+  ${getColumnAliases(included).join(', ')}
+  FROM PIZZAS 
+  ${included.includes('dough') ? innerJoinDoughs : ''}
+  ${included.includes('ingredients') ? innerJoinIngredients : ''}
+  WHERE PIZZAS.ID = :id`;
+
+/**
+ * Extracts resource attributes from a row object with
+ * column names formatted like RESOURCENAME_attributeName
+ * for a resource with name `resourceName` and attributes `resourceAttributes`
+ *
+ * @param {string} resourceName should be written in all caps
+ * @param {object} resourceAttributes
+ * @param {object} row
+ * @returns {object}
+ */
+const extractRawResource = (resourceName, resourceAttributes, row) => {
+  const rawResource = {};
+  _.keys(resourceAttributes).forEach(
+    (attributeName) => {
+      rawResource[attributeName] = row[`${resourceName}_${attributeName}`];
+    },
+  );
+  return rawResource;
 };
 
 /**
- * Get a "deserialized" dough object using `getDoughById`
+ * Turn raw database output from `fullPizzaQuery` into
+ * an array of raw dough objects with doughs and ingredients
  *
- * @param {string} doughId the ID of the dough to get
- * @returns {object} a raw dough object
+ * @param {Array} rows
+ * @param {Array} included
+ * @returns {Array} an array of raw pizza objects
  */
-const getPizzaDough = async (doughId) => {
-  const serializedDough = await getDoughById(doughId);
+const normalizePizzaRows = (rows, included) => {
+  let doughsIncluded = false;
+  let head;
+  let ingredientsIncluded = false;
+  let index = 0;
+  const pizzas = [];
 
-  if (serializedDough === null) return {};
+  if (included) {
+    doughsIncluded = included.includes('dough');
+    ingredientsIncluded = included.includes('ingredients');
+  }
 
-  const deserializedDough = {
-    id: serializedDough.data.id,
-    ...serializedDough.data.attributes,
-  };
-  return deserializedDough;
+
+  while (index < rows.length) {
+    head = rows[index];
+    const pizza = extractRawResource('PIZZA', pizzaColumns, head);
+
+    if (doughsIncluded) {
+      pizza.dough = extractRawResource('DOUGH', doughColumnNames, head);
+    }
+
+    if (ingredientsIncluded) {
+      pizza.ingredients = [];
+      while (index < rows.length && rows[index].PIZZA_id === head.PIZZA_id) {
+        const ingredient = extractRawResource('INGREDIENT', ingredientsColumnNames, rows[index]);
+        pizza.ingredients.push(ingredient);
+        index += 1;
+      }
+    } else {
+      index += 1;
+    }
+    pizzas.push(pizza);
+  }
+  return pizzas;
 };
 
 /**
  * Fetch the pizza with ID `pizzaId`
  *
  * @param {string} pizzaId
+ * @param {object} query Query parameters for the request
  * @returns {Promise<object>} the full pizza record
  */
-const getPizzaById = async (pizzaId) => {
+const getPizzaById = async (pizzaId, query) => {
+  const included = _.get(query, 'includes', []);
   const bindParams = { id: pizzaId };
   const connection = await getConnection();
   try {
-    const { rows } = await connection.execute(getPizzaByIdQuery, bindParams);
+    const { rows } = await connection.execute(fullPizzaQuery(included), bindParams);
 
-    if (rows.length > 1) throw new Error('Returned multiple outputs for the same ID');
-    if (rows.length === 0) return null;
+    const pizzas = normalizePizzaRows(rows, included);
 
-    const { doughId } = rows[0];
+    if (pizzas.length === 0) return null;
+    if (pizzas.length > 1) throw new Error('Got multiple results for the same ID');
 
-    const dough = await getPizzaDough(doughId);
-    const ingredients = await getPizzaIngredients(pizzaId);
-
-    const rawPizza = {
-      dough,
-      ingredients,
-      ...rows[0],
-    };
-
-    return serializePizza(rawPizza, `pizzas/${pizzaId}`);
+    return serializePizza(pizzas[0], `pizzas/${pizzaId}`);
   } finally {
     connection.close();
   }

@@ -26,8 +26,12 @@ const ingredientResourceKeys = _.keys(ingredientResourceProp.attributes.properti
  * @returns {object} the transformed pizza
  */
 const transformRawPizza = (rawPizza) => {
-  rawPizza.ingredients.map((rawIngredient) => transformIngredient(rawIngredient));
-  rawPizza.dough = transformDough(rawPizza.dough);
+  if ('ingredients' in rawPizza) {
+    rawPizza.ingredients.map((rawIngredient) => transformIngredient(rawIngredient));
+  }
+  if ('dough' in rawPizza) {
+    rawPizza.dough = transformDough(rawPizza.dough);
+  }
 
   rawPizza.specialInstructions = rawPizza.specialInstructions || '';
 
@@ -92,8 +96,12 @@ const serializePizza = (rawPizza, query) => {
   };
 
   let options = serializerOptions(serializerArgs);
-  options = addCompoundRelationship(options, 'dough', doughResourceKeys);
-  options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys);
+  if ('dough' in rawPizza) {
+    options = addCompoundRelationship(options, 'dough', doughResourceKeys);
+  }
+  if ('ingredients' in rawPizza) {
+    options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys);
+  }
 
 
   // need to depluralize type of `ingredients` compound resources . . . somehow

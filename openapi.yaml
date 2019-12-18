@@ -134,6 +134,16 @@ paths:
         - pizza
       parameters:
         - $ref: '#/parameters/pizzaId'
+        - in: query
+          name: include
+          description: a comma separated list of relationship names to include in the response
+          type: array
+          items:
+            type: string
+            enum: [dough, ingredients]
+          collectionFormat: csv
+          default: []
+          allowEmptyValue: false
       responses:
         '200':
           description: A single pizza
