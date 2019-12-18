@@ -65,8 +65,7 @@ const innerJoinIngredients = `LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_I
  * @param {Array} included
  * @returns {string}
  */
-const fullPizzaQuery = (included) => `SELECT
-  ${getColumnAliases(included).join(', ')}
+const getPizzaByIdQuery = (included) => `SELECT ${getColumnAliases(included).join(', ')}
   FROM PIZZAS 
   ${included.includes('dough') ? innerJoinDoughs : ''}
   ${included.includes('ingredients') ? innerJoinIngredients : ''}
@@ -113,7 +112,6 @@ const normalizePizzaRows = (rows, included) => {
     ingredientsIncluded = included.includes('ingredients');
   }
 
-
   while (index < rows.length) {
     head = rows[index];
     const pizza = extractRawResource('PIZZA', pizzaColumns, head);
@@ -150,8 +148,7 @@ const getPizzaById = async (pizzaId, query) => {
   const bindParams = { id: pizzaId };
   const connection = await getConnection();
   try {
-    console.log(fullPizzaQuery(included));
-    const { rows } = await connection.execute(fullPizzaQuery(included), bindParams);
+    const { rows } = await connection.execute(getPizzaByIdQuery(included), bindParams);
 
     const pizzas = normalizePizzaRows(rows, included);
 

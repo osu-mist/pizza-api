@@ -52,7 +52,6 @@ const proxyquirePizzasDao = () => {
   });
 };
 
-
 describe('test pizzas DAO', () => {
   before(() => sinon.replace(config, 'get', () => ({ oracledb: {} })));
   after(() => sinon.restore());
@@ -62,14 +61,17 @@ describe('test pizzas DAO', () => {
     before(() => {
       serializePizzaStub = sinon.stub().returns(baseSerializerReturn);
     });
+
     beforeEach(async () => {
       pizzasDao = proxyquirePizzasDao();
       result = await pizzasDao.getPizzaById(inputId, inputQuery);
     });
+
     afterEach(() => {
       serializePizzaStub.resetHistory();
       connectionStub.resetHistory();
     });
+
     context('when it is called with ingredients and doughs included', () => {
       before(() => {
         inputId = '1';
@@ -93,6 +95,7 @@ describe('test pizzas DAO', () => {
             'pizzas/1',
           );
         });
+
         it('returns the result of the serializer', () => {
           result.should.deep.equal(baseSerializerReturn);
         });
@@ -131,6 +134,7 @@ describe('test pizzas DAO', () => {
         inputQuery = { includes: ['ingredients'] };
         connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutDough);
       });
+
       it('does not query the database for doughs', () => {
         connectionStub.should.have.been.calledWith(
           getPizzaIngredientsQuery,
@@ -140,6 +144,7 @@ describe('test pizzas DAO', () => {
       it('does not generate a doughs member of pizzas', () => {
         serializePizzaStub.getCall(0).args[0].should.not.have.property('dough');
       });
+
       it('does include ingredients in pizzas', () => {
         serializePizzaStub.getCall(0).args[0].should.have.property('ingredients');
       });
@@ -149,12 +154,14 @@ describe('test pizzas DAO', () => {
         inputQuery = { includes: ['dough'] };
         connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutIngredients);
       });
+
       it('does not query the database for ingredients', () => {
         connectionStub.should.have.been.calledWith(
           getPizzaDoughQuery,
           { id: '1' },
         );
       });
+
       it('does not generate an ingredients member of pizzas', () => {
         serializePizzaStub.getCall(0).args[0].should.not.have.property('ingredients');
       });
@@ -175,6 +182,7 @@ describe('test pizzas DAO', () => {
           { id: '1' },
         );
       });
+
       it('does not generate dough or ingredients members', () => {
         serializePizzaStub.getCall(0).args[0].should.not.have.property('ingredients');
         serializePizzaStub.getCall(0).args[0].should.not.have.property('dough');
