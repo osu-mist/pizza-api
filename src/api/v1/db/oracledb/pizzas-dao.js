@@ -97,19 +97,18 @@ const extractRawResource = (resourceName, resourceAttributes, row) => {
  * an array of raw dough objects with doughs and ingredients
  *
  * @param {Array} rows
- * @param {Array} included
  * @returns {Array} an array of raw pizza objects
  */
-const normalizePizzaRows = (rows, included) => {
+const normalizePizzaRows = (rows) => {
   let doughsIncluded = false;
   let head;
   let ingredientsIncluded = false;
   let index = 0;
   const pizzas = [];
 
-  if (included) {
-    doughsIncluded = included.includes('dough');
-    ingredientsIncluded = included.includes('ingredients');
+  if (rows[0]) {
+    doughsIncluded = 'DOUGH_id' in rows[0];
+    ingredientsIncluded = 'INGREDIENT_id' in rows[0];
   }
 
   while (index < rows.length) {
@@ -150,7 +149,7 @@ const getPizzaById = async (pizzaId, query) => {
   try {
     const { rows } = await connection.execute(getPizzaByIdQuery(included), bindParams);
 
-    const pizzas = normalizePizzaRows(rows, included);
+    const pizzas = normalizePizzaRows(rows);
 
     if (pizzas.length === 0) return null;
 
