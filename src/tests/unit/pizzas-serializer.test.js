@@ -124,5 +124,25 @@ describe('test pizzas serializer', () => {
         should.equal(serializedPizza.included, undefined);
       });
     });
+    context('when it gets a raw pizza with no ingredients member', () => {
+      before(() => {
+        inputPizza = _.omit(baseInputPizza, 'ingredients');
+      });
+
+      it('includes an ingredients relationship member with no data', () => {
+        serializedPizza.data.relationships.ingredients.should.not.be.null;
+        should.equal(serializedPizza.data.relationships.ingredients.data, undefined);
+      });
+    });
+    context('when it gets a raw pizza with no dough member', () => {
+      before(() => {
+        inputPizza = _.omit(baseInputPizza, 'dough');
+      });
+
+      it('includes a dough relationship member with no data', () => {
+        serializedPizza.data.relationships.dough.should.not.be.null;
+        should.equal(serializedPizza.data.relationships.dough.data, undefined);
+      });
+    });
   });
 });

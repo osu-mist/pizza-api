@@ -53,25 +53,32 @@ const transformRawPizza = (rawPizza) => {
  * @param {string} relationName
  * @param {object} relationKeys
  * @param {string} idField
+ * @param {boolean} [ignoreRelationshipData=false] used when the `data` member of
+ * the relationship should be omitted
  * @returns {object} `options` with `relationName` added
  */
-const addCompoundRelationship = (options, relationName, relationKeys) => {
+const addCompoundRelationship = (
+  options,
+  relationName,
+  relationKeys,
+  ignoreRelationshipData = false,
+) => {
   const idField = 'id';
   const resourceUrl = resourcePathLink(apiBaseUrl, relationName);
   options.attributes = _.concat(options.attributes, relationName);
   options[relationName] = {
-    ref: (collection, field) => field[idField],
+    ref: (collection, field) => (field && idField in field ? field[idField] : undefined),
     included: true,
     attributes: relationKeys,
+    ignoreRelationshipData,
+    nullIfMissing: true,
     relationshipLinks: {
       related: `${options.topLevelLinks.self}/${relationName}`,
       self: `${options.topLevelLinks.self}/relationships/${relationName}`,
     },
     includedLinks: {
-      self: (collection, field) => resourcePathLink(
-        resourceUrl,
-        field[idField],
-      ),
+      self: (collection,
+        field) => (field ? resourcePathLink(resourceUrl, field[idField]) : undefined),
     },
   };
   return options;
@@ -98,9 +105,13 @@ const serializePizza = (rawPizza, query) => {
   let options = serializerOptions(serializerArgs);
   if ('dough' in rawPizza) {
     options = addCompoundRelationship(options, 'dough', doughResourceKeys);
+  } else {
+    options = addCompoundRelationship(options, 'dough', doughResourceKeys, true);
   }
   if ('ingredients' in rawPizza) {
     options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys);
+  } else {
+    options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys, true);
   }
 
   // need to depluralize type of `ingredients` compound resources . . . somehow
