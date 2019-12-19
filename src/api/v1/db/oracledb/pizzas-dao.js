@@ -62,11 +62,11 @@ const innerJoinIngredients = `LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_I
 /**
  * A query to fetch a pizza with, optionally, its ingredients and doughs
  *
- * @param {Array} included
+ * @param {string[]} included
  * @returns {string}
  */
 const getPizzaByIdQuery = (included) => `SELECT ${getColumnAliases(included).join(', ')}
-  FROM PIZZAS 
+  FROM PIZZAS
   ${included.includes('dough') ? innerJoinDoughs : ''}
   ${included.includes('ingredients') ? innerJoinIngredients : ''}
   WHERE PIZZAS.ID = :id`;
@@ -96,8 +96,8 @@ const extractRawResource = (resourceName, resourceAttributes, row) => {
  * Turn raw database output from `fullPizzaQuery` into
  * an array of raw dough objects with doughs and ingredients
  *
- * @param {Array} rows
- * @returns {Array} an array of raw pizza objects
+ * @param {object[]} rows
+ * @returns {object[]} an array of raw pizza objects
  */
 const normalizePizzaRows = (rows) => {
   let doughsIncluded = false;
@@ -143,7 +143,7 @@ const normalizePizzaRows = (rows) => {
  * @returns {Promise<object>} the full pizza record
  */
 const getPizzaById = async (pizzaId, query) => {
-  const included = _.get(query, 'includes', []);
+  const included = _.get(query, 'include', []);
   const bindParams = { id: pizzaId };
   const connection = await getConnection();
   try {

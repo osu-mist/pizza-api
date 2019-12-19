@@ -75,7 +75,7 @@ describe('test pizzas DAO', () => {
     context('when it is called with ingredients and doughs included', () => {
       before(() => {
         inputId = '1';
-        inputQuery = { includes: ['dough', 'ingredients'] };
+        inputQuery = { include: ['dough', 'ingredients'] };
       });
       context('when the database returns valid results for doughs, ingredients, and pizzas', () => {
         before(() => {
@@ -131,7 +131,7 @@ describe('test pizzas DAO', () => {
     });
     context('when it is called with only ingredients included', () => {
       before(() => {
-        inputQuery = { includes: ['ingredients'] };
+        inputQuery = { include: ['ingredients'] };
         connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutDough);
       });
 
@@ -151,7 +151,7 @@ describe('test pizzas DAO', () => {
     });
     context('when it is called with only dough included', () => {
       before(() => {
-        inputQuery = { includes: ['dough'] };
+        inputQuery = { include: ['dough'] };
         connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutIngredients);
       });
 
