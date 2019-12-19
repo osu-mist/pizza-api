@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
 import { serializePizza } from 'api/v1/serializers/pizzas-serializer';
+import { strip } from 'utils/strip-whitespace';
 import { ingredientsColumnNames } from './ingredients-dao';
 
 const pizzaColumns = {
@@ -65,11 +66,11 @@ const innerJoinIngredients = `LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_I
  * @param {string[]} included
  * @returns {string}
  */
-const getPizzaByIdQuery = (included) => `SELECT ${getColumnAliases(included).join(', ')}
+const getPizzaByIdQuery = (included) => strip(`SELECT ${getColumnAliases(included).join(', ')}
   FROM PIZZAS
   ${included.includes('dough') ? innerJoinDoughs : ''}
   ${included.includes('ingredients') ? innerJoinIngredients : ''}
-  WHERE PIZZAS.ID = :id`;
+  WHERE PIZZAS.ID = :id`);
 
 /**
  * Extracts resource attributes from a row object with
