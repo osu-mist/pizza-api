@@ -1,4 +1,4 @@
-import { strip } from 'utils/strip-whitespace';
+import dedent from 'dedent';
 
 const getDoughsConditions = 'ID AS "id", NAME AS "name",'
   + ' GRAMS_FLOUR AS "gramsFlour", GRAMS_WATER AS "gramsWater",'
@@ -563,78 +563,82 @@ const serializePizzaData = {
 };
 
 const getPizzaByIdData = {
-  getPizzaIngredientsAndDoughQuery: strip(`SELECT PIZZAS.ID AS "PIZZA_id",
-        PIZZAS.DOUGH_ID AS "PIZZA_doughId",
-        PIZZAS.NAME AS "PIZZA_name",
-        PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
-        PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
-        PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
-        DOUGHS.ID AS "DOUGH_id",
-        DOUGHS.NAME AS "DOUGH_name",
-        DOUGHS.GRAMS_FLOUR AS "DOUGH_gramsFlour",
-        DOUGHS.GRAMS_WATER AS "DOUGH_gramsWater",
-        DOUGHS.FLOUR_TYPE AS "DOUGH_flourType",
-        DOUGHS.WATER_TEMP AS "DOUGH_waterTemp",
-        DOUGHS.GRAMS_YEAST AS "DOUGH_gramsYeast",
-        DOUGHS.GRAMS_SALT AS "DOUGH_gramsSalt",
-        DOUGHS.GRAMS_SUGAR AS "DOUGH_gramsSugar",
-        DOUGHS.GRAMS_OLIVE_OIL AS "DOUGH_gramsOliveOil",
-        DOUGHS.BULK_FERMENT_TIME AS "DOUGH_bulkFermentTime",
-        DOUGHS.PROOF_TIME AS "DOUGH_proofTime",
-        DOUGHS.SPECIAL_INSTRUCTIONS AS "DOUGH_specialInstructions",
-        INGREDIENTS.ID AS "INGREDIENT_id",
-        INGREDIENTS.TYPE AS "INGREDIENT_ingredientType",
-        INGREDIENTS.NAME AS "INGREDIENT_name",
-        INGREDIENTS.NOTES AS "INGREDIENT_notes"
-  FROM PIZZAS
-  LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID
-  LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
-  LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID
-  WHERE PIZZAS.ID = :id`),
-  getPizzaIngredientsQuery: strip(`SELECT PIZZAS.ID AS "PIZZA_id",
-        PIZZAS.DOUGH_ID AS "PIZZA_doughId",
-        PIZZAS.NAME AS "PIZZA_name",
-        PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
-        PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
-        PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
-        INGREDIENTS.ID AS "INGREDIENT_id",
-        INGREDIENTS.TYPE AS "INGREDIENT_ingredientType",
-        INGREDIENTS.NAME AS "INGREDIENT_name",
-        INGREDIENTS.NOTES AS "INGREDIENT_notes"
-  FROM PIZZAS
-  LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
-  LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID
-  WHERE PIZZAS.ID = :id`),
-  getPizzaDoughQuery: strip(`SELECT PIZZAS.ID AS "PIZZA_id",
-       PIZZAS.DOUGH_ID AS "PIZZA_doughId",
-       PIZZAS.NAME AS "PIZZA_name",
-       PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
-       PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
-       PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
-       DOUGHS.ID AS "DOUGH_id",
-       DOUGHS.NAME AS "DOUGH_name",
-       DOUGHS.GRAMS_FLOUR AS "DOUGH_gramsFlour",
-       DOUGHS.GRAMS_WATER AS "DOUGH_gramsWater",
-       DOUGHS.FLOUR_TYPE AS "DOUGH_flourType",
-       DOUGHS.WATER_TEMP AS "DOUGH_waterTemp",
-       DOUGHS.GRAMS_YEAST AS "DOUGH_gramsYeast",
-       DOUGHS.GRAMS_SALT AS "DOUGH_gramsSalt",
-       DOUGHS.GRAMS_SUGAR AS "DOUGH_gramsSugar",
-       DOUGHS.GRAMS_OLIVE_OIL AS "DOUGH_gramsOliveOil",
-       DOUGHS.BULK_FERMENT_TIME AS "DOUGH_bulkFermentTime",
-       DOUGHS.PROOF_TIME AS "DOUGH_proofTime",
-       DOUGHS.SPECIAL_INSTRUCTIONS AS "DOUGH_specialInstructions"
-  FROM PIZZAS
-  LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID
-  WHERE PIZZAS.ID = :id`),
-  getPizzaQuery: strip(`SELECT PIZZAS.ID AS "PIZZA_id",
-       PIZZAS.DOUGH_ID AS "PIZZA_doughId",
-       PIZZAS.NAME AS "PIZZA_name",
-       PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
-       PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
-       PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
-  FROM PIZZAS
-  WHERE PIZZAS.ID = :id`),
+  getPizzaIngredientsAndDoughQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
+      DOUGHS.ID AS "DOUGH_id",
+      DOUGHS.NAME AS "DOUGH_name",
+      DOUGHS.GRAMS_FLOUR AS "DOUGH_gramsFlour",
+      DOUGHS.GRAMS_WATER AS "DOUGH_gramsWater",
+      DOUGHS.FLOUR_TYPE AS "DOUGH_flourType",
+      DOUGHS.WATER_TEMP AS "DOUGH_waterTemp",
+      DOUGHS.GRAMS_YEAST AS "DOUGH_gramsYeast",
+      DOUGHS.GRAMS_SALT AS "DOUGH_gramsSalt",
+      DOUGHS.GRAMS_SUGAR AS "DOUGH_gramsSugar",
+      DOUGHS.GRAMS_OLIVE_OIL AS "DOUGH_gramsOliveOil",
+      DOUGHS.BULK_FERMENT_TIME AS "DOUGH_bulkFermentTime",
+      DOUGHS.PROOF_TIME AS "DOUGH_proofTime",
+      DOUGHS.SPECIAL_INSTRUCTIONS AS "DOUGH_specialInstructions",
+      INGREDIENTS.ID AS "INGREDIENT_id",
+      INGREDIENTS.TYPE AS "INGREDIENT_ingredientType",
+      INGREDIENTS.NAME AS "INGREDIENT_name",
+      INGREDIENTS.NOTES AS "INGREDIENT_notes"
+    FROM PIZZAS
+    LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID
+    LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
+    LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID
+    WHERE PIZZAS.ID = :id`,
+  getPizzaIngredientsQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
+      INGREDIENTS.ID AS "INGREDIENT_id",
+      INGREDIENTS.TYPE AS "INGREDIENT_ingredientType",
+      INGREDIENTS.NAME AS "INGREDIENT_name",
+      INGREDIENTS.NOTES AS "INGREDIENT_notes"
+    FROM PIZZAS
+
+    LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
+    LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID
+    WHERE PIZZAS.ID = :id`,
+  getPizzaDoughQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
+      DOUGHS.ID AS "DOUGH_id",
+      DOUGHS.NAME AS "DOUGH_name",
+      DOUGHS.GRAMS_FLOUR AS "DOUGH_gramsFlour",
+      DOUGHS.GRAMS_WATER AS "DOUGH_gramsWater",
+      DOUGHS.FLOUR_TYPE AS "DOUGH_flourType",
+      DOUGHS.WATER_TEMP AS "DOUGH_waterTemp",
+      DOUGHS.GRAMS_YEAST AS "DOUGH_gramsYeast",
+      DOUGHS.GRAMS_SALT AS "DOUGH_gramsSalt",
+      DOUGHS.GRAMS_SUGAR AS "DOUGH_gramsSugar",
+      DOUGHS.GRAMS_OLIVE_OIL AS "DOUGH_gramsOliveOil",
+      DOUGHS.BULK_FERMENT_TIME AS "DOUGH_bulkFermentTime",
+      DOUGHS.PROOF_TIME AS "DOUGH_proofTime",
+      DOUGHS.SPECIAL_INSTRUCTIONS AS "DOUGH_specialInstructions"
+    FROM PIZZAS
+    LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID
+
+    WHERE PIZZAS.ID = :id`,
+  getPizzaQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
+    FROM PIZZAS
+
+
+    WHERE PIZZAS.ID = :id`,
   fullRawPizza: {
     id: '1',
     bakeTime: '10',
