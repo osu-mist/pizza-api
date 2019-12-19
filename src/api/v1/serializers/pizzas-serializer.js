@@ -51,7 +51,7 @@ const transformRawPizza = (rawPizza) => {
  *
  * @param {object} options
  * @param {string} relationName
- * @param {object} relationKeys
+ * @param {string[]} relationKeys
  * @param {string} idField
  * @param {boolean} [ignoreRelationshipData=false] used when the `data` member of
  * the relationship should be omitted
@@ -67,7 +67,7 @@ const addCompoundRelationship = (
   const resourceUrl = resourcePathLink(apiBaseUrl, relationName);
   options.attributes = _.concat(options.attributes, relationName);
   options[relationName] = {
-    ref: (collection, field) => (field && idField in field ? field[idField] : undefined),
+    ref: (collection, field) => (field ? field[idField] : undefined),
     included: true,
     attributes: relationKeys,
     ignoreRelationshipData,
@@ -103,16 +103,15 @@ const serializePizza = (rawPizza, query) => {
   };
 
   let options = serializerOptions(serializerArgs);
-  if ('dough' in rawPizza) {
-    options = addCompoundRelationship(options, 'dough', doughResourceKeys);
-  } else {
-    options = addCompoundRelationship(options, 'dough', doughResourceKeys, true);
-  }
-  if ('ingredients' in rawPizza) {
-    options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys);
-  } else {
-    options = addCompoundRelationship(options, 'ingredients', ingredientResourceKeys, true);
-  }
+
+  _.forEach({ dough: doughResourceKeys, ingredients: ingredientResourceKeys },
+    (resourceKeys, relationName) => {
+      if (relationName in rawPizza) {
+        options = addCompoundRelationship(options, relationName, resourceKeys);
+      } else {
+        options = addCompoundRelationship(options, relationName, resourceKeys, true);
+      }
+    });
 
   // need to depluralize type of `ingredients` compound resources . . . somehow
   // returning `undefined` means it uses the default value
