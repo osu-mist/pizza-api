@@ -24,6 +24,10 @@ class GetFilterProcessor {
     return regexResults ? regexResults[1] : filterName;
   }
 
+  static reduceToFilterParameters(filters) {
+    return filters.filter((filter) => filter.match(/filter\[.*\]/g));
+  }
+
   /**
    * Initializes a new filter process using the parameters from the
    * get request for the resource and a map of column names to resource attribute names

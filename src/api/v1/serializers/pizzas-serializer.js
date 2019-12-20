@@ -5,13 +5,14 @@ import { transformDough } from 'api/v1/serializers/doughs-serializer';
 import { transformIngredient } from 'api/v1/serializers/ingredients-serializer';
 import { serializerOptions } from 'utils/jsonapi';
 import { openapi } from 'utils/load-openapi';
-import { apiBaseUrl, resourcePathLink } from 'utils/uri-builder';
+import { apiBaseUrl, paramsLink, resourcePathLink } from 'utils/uri-builder';
 
 
 const pizzaResourceProp = openapi.definitions.PizzaResource.properties;
 const pizzaResourceType = pizzaResourceProp.type.enum[0];
 const pizzaResourceKeys = _.keys(pizzaResourceProp.attributes.properties);
 const pizzaResourcePath = 'pizzas';
+const pizzaResourceUrl = resourcePathLink(apiBaseUrl, pizzaResourcePath);
 
 const doughResourceProp = openapi.definitions.DoughRecipe.properties;
 const doughResourceKeys = _.keys(doughResourceProp.attributes.properties);
@@ -73,8 +74,8 @@ const addCompoundRelationship = (
     ignoreRelationshipData,
     nullIfMissing: true,
     relationshipLinks: {
-      related: `${options.topLevelLinks.self}/${relationName}`,
-      self: `${options.topLevelLinks.self}/relationships/${relationName}`,
+      related: (collection) => `${pizzaResourceUrl}/${collection.id}/${relationName}`,
+      self: (collection) => `${pizzaResourceUrl}/${collection.id}/relationships/${relationName}`,
     },
     includedLinks: {
       self: (collection,
@@ -82,6 +83,49 @@ const addCompoundRelationship = (
     },
   };
   return options;
+};
+
+/**
+ *
+ * @param {*} options
+ * @param {*} rawPizza
+ * @returns {object} the updated options
+ */
+const addRelationshipOptions = (options, rawPizza) => {
+  _.forEach({ dough: doughResourceKeys, ingredients: ingredientResourceKeys },
+    (resourceKeys, relationName) => {
+      if (relationName in rawPizza) {
+        options = addCompoundRelationship(options, relationName, resourceKeys);
+      } else {
+        options = addCompoundRelationship(options, relationName, resourceKeys, true);
+      }
+    });
+  return options;
+};
+/**
+ *
+ * @param {*} rawPizza
+ * @param {*} query
+ * @returns {object} the serialized pizzas
+ */
+const serializePizzas = (rawPizzas, query) => {
+  const topLevelSelfLink = paramsLink(pizzaResourceUrl, query);
+  const serializerArgs = {
+    identifierField: 'id',
+    resourceKeys: pizzaResourceKeys,
+    resourcePath: pizzaResourcePath,
+    topLevelSelfLink,
+    enableDataLinks: true,
+    transformFunction: transformRawPizza,
+  };
+
+  let options = serializerOptions(serializerArgs);
+  if (rawPizzas.length > 0) {
+    options = addRelationshipOptions(options, rawPizzas[0]);
+  }
+
+  return new JsonApiSerializer(pizzaResourceType, options)
+    .serialize(rawPizzas);
 };
 
 /**
@@ -103,15 +147,7 @@ const serializePizza = (rawPizza, query) => {
   };
 
   let options = serializerOptions(serializerArgs);
-
-  _.forEach({ dough: doughResourceKeys, ingredients: ingredientResourceKeys },
-    (resourceKeys, relationName) => {
-      if (relationName in rawPizza) {
-        options = addCompoundRelationship(options, relationName, resourceKeys);
-      } else {
-        options = addCompoundRelationship(options, relationName, resourceKeys, true);
-      }
-    });
+  options = addRelationshipOptions(options, rawPizza);
 
   // need to depluralize type of `ingredients` compound resources . . . somehow
   // returning `undefined` means it uses the default value
@@ -123,4 +159,4 @@ const serializePizza = (rawPizza, query) => {
   ).serialize(rawPizza);
 };
 
-export { serializePizza };
+export { serializePizza, serializePizzas };

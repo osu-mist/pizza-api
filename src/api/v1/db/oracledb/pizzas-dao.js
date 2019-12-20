@@ -3,8 +3,12 @@ import _ from 'lodash';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
-import { serializePizza } from 'api/v1/serializers/pizzas-serializer';
+import { serializePizza, serializePizzas } from 'api/v1/serializers/pizzas-serializer';
+import { openapi } from 'utils/load-openapi';
+import { GetFilterProcessor } from 'utils/process-get-filters';
 import { ingredientsColumnNames } from './ingredients-dao';
+
+const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
 
 const pizzaColumns = {
   id: 'ID',
@@ -64,13 +68,36 @@ const innerJoinIngredients = `LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_I
  * A query to fetch a pizza with, optionally, its ingredients and doughs
  *
  * @param {string[]} included
+ * @param {string} conditionals
  * @returns {string}
  */
-const getPizzaByIdQuery = (included) => dedent`SELECT ${getColumnAliases(included).join(',\n    ')}
+const getPizzaByIdQuery = (included, conditionals) => dedent`SELECT ${getColumnAliases(included).join(',\n    ')}
   FROM PIZZAS
   ${included.includes('dough') ? innerJoinDoughs : ''}
   ${included.includes('ingredients') ? innerJoinIngredients : ''}
-  WHERE PIZZAS.ID = :id`;
+  ${conditionals ? `WHERE ${conditionals}` : ''}`;
+
+/**
+ * get conditionals and bind params for a SELECT query
+ * to get multiple pizzas from the database
+ *
+ * @param {object} query the query parameters passed to the HTTP request
+ * @returns {object} `bindParams` (object) and `conditionals` (string)
+ */
+const getConditionalsAndBindParams = (query) => {
+  let conditionalStatements = [];
+  const bindParams = {};
+  _.forEach(query, (parameterValue, parameterName) => {
+    if (parameterName in pizzaGetParameters
+      && parameterName.match(/filter\[.*\]/)) {
+      const normalizedFilterName = GetFilterProcessor.normalizedFilterName(parameterName);
+      conditionalStatements += `PIZZAS.${pizzaColumns[normalizedFilterName]} = :${normalizedFilterName}`;
+      bindParams[normalizedFilterName] = parameterValue;
+    }
+  });
+  const conditionals = conditionalStatements.join(', ');
+  return { conditionals, bindParams };
+};
 
 /**
  * Extracts resource attributes from a row object with
@@ -137,6 +164,26 @@ const normalizePizzaRows = (rows) => {
 };
 
 /**
+ * get all pizzas from the database
+ *
+ * @param {object} query
+ * @returns {Promise<object>} the serialized pizza
+ */
+const getPizzas = async (query) => {
+  const included = _.get(query, 'include', []);
+  const { conditionals, bindParams } = getConditionalsAndBindParams(query);
+  const selectQuery = getPizzaByIdQuery(included, conditionals);
+  const connection = await getConnection();
+  try {
+    const { rows } = await connection.execute(selectQuery, bindParams);
+    const pizzas = normalizePizzaRows(rows);
+    return serializePizzas(pizzas);
+  } finally {
+    connection.close();
+  }
+};
+
+/**
  * Fetch the pizza with ID `pizzaId`
  *
  * @param {string} pizzaId
@@ -148,7 +195,7 @@ const getPizzaById = async (pizzaId, query) => {
   const bindParams = { id: pizzaId };
   const connection = await getConnection();
   try {
-    const { rows } = await connection.execute(getPizzaByIdQuery(included), bindParams);
+    const { rows } = await connection.execute(getPizzaByIdQuery(included, 'PIZZAS.ID = :id'), bindParams);
 
     const pizzas = normalizePizzaRows(rows);
 
@@ -160,4 +207,4 @@ const getPizzaById = async (pizzaId, query) => {
   }
 };
 
-export { getPizzaById };
+export { getPizzas, getPizzaById };
