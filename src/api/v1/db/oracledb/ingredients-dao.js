@@ -266,5 +266,9 @@ const updateIngredientById = async (body) => {
   }
 };
 export {
-  getIngredients, postIngredient, getIngredientById, updateIngredientById,
+  getIngredients,
+  postIngredient,
+  getIngredientById,
+  updateIngredientById,
+  ingredientsColumnNames,
 };

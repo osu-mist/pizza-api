@@ -84,14 +84,7 @@ paths:
           name: filter[doughId]
           description: Search for pizzas with the dough matching this dough ID
           type: string
-        - in: query
-          name: include
-          description: a comma separated list of relationship names to include in the response
-          type: array
-          items:
-            type: string
-          collectionFormat: csv
-          allowEmptyValue: false
+        - $ref: '#/parameters/include'
       responses:
         '200':
           description: A list of pizzas
@@ -134,6 +127,7 @@ paths:
         - pizza
       parameters:
         - $ref: '#/parameters/pizzaId'
+        - $ref: '#/parameters/include'
       responses:
         '200':
           description: A single pizza
@@ -1088,6 +1082,17 @@ parameters:
     type: string
     pattern: '^\d+$'
     description: ID of an ingredient to retrieve
+  include:
+    in: query
+    name: include
+    description: a comma separated list of relationship names to include in the response
+    type: array
+    items:
+      type: string
+      enum: [dough, ingredients]
+    collectionFormat: csv
+    default: []
+    allowEmptyValue: false
 responses:
   '400':
     description: Incorrect syntax in request, or required fields missing

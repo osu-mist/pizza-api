@@ -317,5 +317,9 @@ const updateDoughById = async (body) => {
 };
 
 export {
-  getDoughs, postDough, getDoughById, updateDoughById,
+  getDoughs,
+  postDough,
+  getDoughById,
+  updateDoughById,
+  doughColumnNames,
 };

@@ -17,7 +17,7 @@ const doughResourceUrl = resourcePathLink(apiBaseUrl, doughResourcePath);
  * @param {object} dough
  * @returns {object} the dough with `specialInstructions` updated
  */
-const transformSpecialInstructions = (dough) => {
+const transformDough = (dough) => {
   dough.specialInstructions = dough.specialInstructions || '';
 
   const intFields = [
@@ -52,7 +52,7 @@ const serializeDoughs = (rawDoughs, query) => {
     resourcePath: doughResourcePath,
     topLevelSelfLink,
     enableDataLinks: true,
-    transformFunction: transformSpecialInstructions,
+    transformFunction: transformDough,
   };
 
   return new JsonApiSerializer(
@@ -75,7 +75,7 @@ const serializeDough = (rawDough, query) => {
     resourcePath: doughResourcePath,
     topLevelSelfLink,
     enableDataLinks: true,
-    transformFunction: transformSpecialInstructions,
+    transformFunction: transformDough,
   };
 
   return new JsonApiSerializer(
@@ -84,4 +84,4 @@ const serializeDough = (rawDough, query) => {
   ).serialize(rawDough);
 };
 
-export { serializeDoughs, serializeDough };
+export { serializeDoughs, serializeDough, transformDough };

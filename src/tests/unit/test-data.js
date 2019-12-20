@@ -1,3 +1,5 @@
+import dedent from 'dedent';
+
 const getDoughsConditions = 'ID AS "id", NAME AS "name",'
   + ' GRAMS_FLOUR AS "gramsFlour", GRAMS_WATER AS "gramsWater",'
   + ' FLOUR_TYPE AS "flourType", WATER_TEMP AS "waterTemp",'
@@ -452,6 +454,412 @@ const ingredientSerializerData = {
   },
 };
 
+const serializePizzaData = {
+  baseInputPizza: {
+    id: '1',
+    name: 'sample pizza',
+    ovenTemp: '500',
+    bakeTime: '10',
+    specialInstructions: null,
+    ingredients: [
+      {
+        id: '1',
+        name: 'sausage',
+        ingredientType: 'meat',
+        notes: null,
+      },
+    ],
+    dough: {
+      name: 'weeknight pizza dough',
+      id: '201',
+      gramsFlour: '500',
+      flourType: 'All Purpose',
+      gramsWater: '400',
+      waterTemp: '90',
+      gramsYeast: '5',
+      gramsSalt: '15',
+      bulkFermentTime: '60',
+      proofTime: '15',
+      gramsSugar: '0',
+      gramsOliveOil: '0',
+      specialInstructions: null,
+    },
+  },
+  goalSerializedPizza: {
+    data: {
+      attributes: {
+        name: 'sample pizza',
+        ovenTemp: 500,
+        bakeTime: 10,
+        specialInstructions: '',
+      },
+      id: '1',
+      type: 'string',
+      relationships: {
+        ingredients: {
+          data: [
+            {
+              type: 'ingredient',
+              id: '1',
+            },
+          ],
+          links: {
+            related: '/v1/pizzas/1/ingredients',
+            self: '/v1/pizzas/1/relationships/ingredients',
+          },
+        },
+        dough: {
+          data: {
+            type: 'dough',
+            id: '201',
+          },
+          links: {
+            related: '/v1/pizzas/1/dough',
+            self: '/v1/pizzas/1/relationships/dough',
+          },
+        },
+      },
+    },
+    links: {
+      self: '/v1/pizzas/1',
+    },
+    included: [
+      {
+        type: 'dough',
+        id: '201',
+        attributes: {
+          name: 'weeknight pizza dough',
+          gramsFlour: 500,
+          flourType: 'All Purpose',
+          gramsWater: 400,
+          waterTemp: 90,
+          gramsYeast: 5,
+          gramsSalt: 15,
+          gramsSugar: 0,
+          gramsOliveOil: 0,
+          bulkFermentTime: 60,
+          proofTime: 15,
+          specialInstructions: '',
+        },
+        links: {
+          self: '/v1/dough/201',
+        },
+      },
+      {
+        type: 'ingredient',
+        id: '1',
+        attributes: {
+          name: 'sausage',
+          ingredientType: 'meat',
+          notes: '',
+        },
+        links: {
+          self: '/v1/ingredients/1',
+        },
+      },
+
+    ],
+  },
+};
+
+const getPizzaByIdData = {
+  getPizzaIngredientsAndDoughQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
+      DOUGHS.ID AS "DOUGH_id",
+      DOUGHS.NAME AS "DOUGH_name",
+      DOUGHS.GRAMS_FLOUR AS "DOUGH_gramsFlour",
+      DOUGHS.GRAMS_WATER AS "DOUGH_gramsWater",
+      DOUGHS.FLOUR_TYPE AS "DOUGH_flourType",
+      DOUGHS.WATER_TEMP AS "DOUGH_waterTemp",
+      DOUGHS.GRAMS_YEAST AS "DOUGH_gramsYeast",
+      DOUGHS.GRAMS_SALT AS "DOUGH_gramsSalt",
+      DOUGHS.GRAMS_SUGAR AS "DOUGH_gramsSugar",
+      DOUGHS.GRAMS_OLIVE_OIL AS "DOUGH_gramsOliveOil",
+      DOUGHS.BULK_FERMENT_TIME AS "DOUGH_bulkFermentTime",
+      DOUGHS.PROOF_TIME AS "DOUGH_proofTime",
+      DOUGHS.SPECIAL_INSTRUCTIONS AS "DOUGH_specialInstructions",
+      INGREDIENTS.ID AS "INGREDIENT_id",
+      INGREDIENTS.TYPE AS "INGREDIENT_ingredientType",
+      INGREDIENTS.NAME AS "INGREDIENT_name",
+      INGREDIENTS.NOTES AS "INGREDIENT_notes"
+    FROM PIZZAS
+    LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID
+    LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
+    LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID
+    WHERE PIZZAS.ID = :id`,
+  getPizzaIngredientsQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
+      INGREDIENTS.ID AS "INGREDIENT_id",
+      INGREDIENTS.TYPE AS "INGREDIENT_ingredientType",
+      INGREDIENTS.NAME AS "INGREDIENT_name",
+      INGREDIENTS.NOTES AS "INGREDIENT_notes"
+    FROM PIZZAS
+
+    LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
+    LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID
+    WHERE PIZZAS.ID = :id`,
+  getPizzaDoughQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions",
+      DOUGHS.ID AS "DOUGH_id",
+      DOUGHS.NAME AS "DOUGH_name",
+      DOUGHS.GRAMS_FLOUR AS "DOUGH_gramsFlour",
+      DOUGHS.GRAMS_WATER AS "DOUGH_gramsWater",
+      DOUGHS.FLOUR_TYPE AS "DOUGH_flourType",
+      DOUGHS.WATER_TEMP AS "DOUGH_waterTemp",
+      DOUGHS.GRAMS_YEAST AS "DOUGH_gramsYeast",
+      DOUGHS.GRAMS_SALT AS "DOUGH_gramsSalt",
+      DOUGHS.GRAMS_SUGAR AS "DOUGH_gramsSugar",
+      DOUGHS.GRAMS_OLIVE_OIL AS "DOUGH_gramsOliveOil",
+      DOUGHS.BULK_FERMENT_TIME AS "DOUGH_bulkFermentTime",
+      DOUGHS.PROOF_TIME AS "DOUGH_proofTime",
+      DOUGHS.SPECIAL_INSTRUCTIONS AS "DOUGH_specialInstructions"
+    FROM PIZZAS
+    LEFT JOIN DOUGHS ON PIZZAS.DOUGH_ID = DOUGHS.ID
+
+    WHERE PIZZAS.ID = :id`,
+  getPizzaQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
+    FROM PIZZAS
+
+
+    WHERE PIZZAS.ID = :id`,
+  fullRawPizza: {
+    id: '1',
+    bakeTime: '10',
+    doughId: '201',
+    name: 'sample pizza',
+    ovenTemp: '500',
+    specialInstructions: null,
+    dough: {
+      bulkFermentTime: '60',
+      flourType: 'All Purpose',
+      gramsFlour: '500',
+      gramsOliveOil: '0',
+      gramsSalt: '15',
+      gramsSugar: '0',
+      gramsWater: '400',
+      gramsYeast: '5',
+      id: '201',
+      name: 'weeknight pizza dough',
+      proofTime: '15',
+      specialInstructions: null,
+      waterTemp: '90',
+    },
+    ingredients: [{
+      id: '1', name: 'sausage', notes: null, ingredientType: 'meat',
+    }],
+  },
+  pizzaDbReturn: {
+    rows: [
+      {
+        id: '1',
+        name: 'sample pizza',
+        ovenTemp: '500',
+        bakeTime: '10',
+        specialInstructions: null,
+      },
+    ],
+  },
+  emptyDbReturn: {
+    rows: [],
+  },
+  pizzaIngredientsDbReturn: {
+    rows: [
+      {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      },
+    ],
+  },
+  multipleRowsReturn: {
+    rows: [
+      {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      }, {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      }, {
+        id: '1',
+        name: 'sausage',
+        type: 'meat',
+        notes: null,
+      },
+    ],
+  },
+  serializedDoughReturn: {
+    data: {
+      id: '1',
+      attributes: {
+        name: 'weeknight pizza dough',
+        id: '201',
+        gramsFlour: '500',
+        flourType: 'All Purpose',
+        gramsWater: '400',
+        waterTemp: '90',
+        gramsYeast: '5',
+        gramsSalt: '15',
+        bulkFermentTime: '60',
+        proofTime: '15',
+        gramsSugar: '0',
+        gramsOliveOil: '0',
+        specialInstructions: null,
+      },
+    },
+  },
+  baseSerializerReturn: { data: [] },
+  fullRawPizzaReturn: {
+    rows: [{
+      PIZZA_id: '1',
+      PIZZA_doughId: '201',
+      PIZZA_name: 'sample pizza',
+      PIZZA_bakeTime: '10',
+      PIZZA_ovenTemp: '500',
+      PIZZA_specialInstructions: null,
+      DOUGH_id: '201',
+      DOUGH_name: 'weeknight pizza dough',
+      DOUGH_gramsFlour: '500',
+      DOUGH_gramsWater: '400',
+      DOUGH_flourType: 'All Purpose',
+      DOUGH_waterTemp: '90',
+      DOUGH_gramsYeast: '5',
+      DOUGH_gramsSalt: '15',
+      DOUGH_gramsSugar: '0',
+      DOUGH_gramsOliveOil: '0',
+      DOUGH_bulkFermentTime: '60',
+      DOUGH_proofTime: '15',
+      DOUGH_specialInstructions: null,
+      INGREDIENT_id: '1',
+      INGREDIENT_ingredientType: 'meat',
+      INGREDIENT_name: 'sausage',
+      INGREDIENT_notes: null,
+    }],
+  },
+  rawPizzaReturnNullDough: {
+    rows: [{
+      PIZZA_id: '1',
+      PIZZA_doughId: '201',
+      PIZZA_name: 'sample pizza',
+      PIZZA_bakeTime: '10',
+      PIZZA_ovenTemp: '500',
+      PIZZA_specialInstructions: null,
+      DOUGH_id: null,
+      DOUGH_name: null,
+      DOUGH_gramsFlour: null,
+      DOUGH_gramsWater: null,
+      DOUGH_flourType: null,
+      DOUGH_waterTemp: null,
+      DOUGH_gramsYeast: null,
+      DOUGH_gramsSalt: null,
+      DOUGH_gramsSugar: null,
+      DOUGH_gramsOliveOil: null,
+      DOUGH_bulkFermentTime: null,
+      DOUGH_proofTime: null,
+      DOUGH_specialInstructions: null,
+      INGREDIENT_id: '1',
+      INGREDIENT_ingredientType: 'meat',
+      INGREDIENT_name: 'sausage',
+      INGREDIENT_notes: null,
+    }],
+  },
+  rawPizzaReturnNullIngredients: {
+    rows: [{
+      PIZZA_id: '1',
+      PIZZA_doughId: '201',
+      PIZZA_name: 'sample pizza',
+      PIZZA_bakeTime: '10',
+      PIZZA_ovenTemp: '500',
+      PIZZA_specialInstructions: null,
+      DOUGH_id: '201',
+      DOUGH_name: 'weeknight pizza dough',
+      DOUGH_gramsFlour: '500',
+      DOUGH_gramsWater: '400',
+      DOUGH_flourType: 'All Purpose',
+      DOUGH_waterTemp: '90',
+      DOUGH_gramsYeast: '5',
+      DOUGH_gramsSalt: '15',
+      DOUGH_gramsSugar: '0',
+      DOUGH_gramsOliveOil: '0',
+      DOUGH_bulkFermentTime: '60',
+      DOUGH_proofTime: '15',
+      DOUGH_specialInstructions: null,
+      INGREDIENT_id: null,
+      INGREDIENT_ingredientType: null,
+      INGREDIENT_name: null,
+      INGREDIENT_notes: null,
+    }],
+  },
+  rawPizzaReturnWithoutDough: {
+    rows: [{
+      PIZZA_id: '1',
+      PIZZA_doughId: '201',
+      PIZZA_name: 'sample pizza',
+      PIZZA_bakeTime: '10',
+      PIZZA_ovenTemp: '500',
+      PIZZA_specialInstructions: null,
+      INGREDIENT_id: '1',
+      INGREDIENT_ingredientType: 'meat',
+      INGREDIENT_name: 'sausage',
+      INGREDIENT_notes: null,
+    }],
+  },
+  rawPizzaReturnWithoutIngredientsOrDough: {
+    rows: [{
+      PIZZA_id: '1',
+      PIZZA_doughId: '201',
+      PIZZA_name: 'sample pizza',
+      PIZZA_bakeTime: '10',
+      PIZZA_ovenTemp: '500',
+      PIZZA_specialInstructions: null,
+    }],
+  },
+  rawPizzaReturnWithoutIngredients: {
+    rows: [{
+      PIZZA_id: '1',
+      PIZZA_doughId: '201',
+      PIZZA_name: 'sample pizza',
+      PIZZA_bakeTime: '10',
+      PIZZA_ovenTemp: '500',
+      PIZZA_specialInstructions: null,
+      DOUGH_id: '201',
+      DOUGH_name: 'weeknight pizza dough',
+      DOUGH_gramsFlour: '500',
+      DOUGH_gramsWater: '400',
+      DOUGH_flourType: 'All Purpose',
+      DOUGH_waterTemp: '90',
+      DOUGH_gramsYeast: '5',
+      DOUGH_gramsSalt: '15',
+      DOUGH_gramsSugar: '0',
+      DOUGH_gramsOliveOil: '0',
+      DOUGH_bulkFermentTime: '60',
+      DOUGH_proofTime: '15',
+      DOUGH_specialInstructions: null,
+    }],
+  },
+};
+
 export {
   getDoughsData,
   postDoughsData,
@@ -461,7 +869,9 @@ export {
   postIngredientData,
   getIngredientByIdData,
   updateIngredientByIdData,
+  getPizzaByIdData,
   processGetFiltersData,
   doughSerializerData,
   ingredientSerializerData,
+  serializePizzaData,
 };
