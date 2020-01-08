@@ -10,6 +10,8 @@ import { ingredientsColumnNames } from './ingredients-dao';
 
 const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
 
+const pizzaFilters = _.map(pizzaGetParameters, (parameter) => parameter.name);
+
 const pizzaColumns = {
   id: 'ID',
   doughId: 'DOUGH_ID',
@@ -85,13 +87,13 @@ const getPizzaByIdQuery = (included, conditionals) => dedent`SELECT ${getColumnA
  * @returns {object} `bindParams` (object) and `conditionals` (string)
  */
 const getConditionalsAndBindParams = (query) => {
-  let conditionalStatements = [];
+  const conditionalStatements = [];
   const bindParams = {};
   _.forEach(query, (parameterValue, parameterName) => {
-    if (parameterName in pizzaGetParameters
+    if (pizzaFilters.includes(parameterName)
       && parameterName.match(/filter\[.*\]/)) {
-      const normalizedFilterName = GetFilterProcessor.normalizedFilterName(parameterName);
-      conditionalStatements += `PIZZAS.${pizzaColumns[normalizedFilterName]} = :${normalizedFilterName}`;
+      const normalizedFilterName = GetFilterProcessor.normalizeFilterName(parameterName);
+      conditionalStatements.push(`PIZZAS.${pizzaColumns[normalizedFilterName]} = :${normalizedFilterName}`);
       bindParams[normalizedFilterName] = parameterValue;
     }
   });
@@ -170,8 +172,10 @@ const normalizePizzaRows = (rows) => {
  * @returns {Promise<object>} the serialized pizza
  */
 const getPizzas = async (query) => {
+  console.log(query);
   const included = _.get(query, 'include', []);
   const { conditionals, bindParams } = getConditionalsAndBindParams(query);
+  console.log(conditionals);
   const selectQuery = getPizzaByIdQuery(included, conditionals);
   const connection = await getConnection();
   try {

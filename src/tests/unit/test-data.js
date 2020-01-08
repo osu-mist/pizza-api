@@ -860,6 +860,25 @@ const getPizzaByIdData = {
   },
 };
 
+const getPizzasData = {
+  getPizzasQuery: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+    PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+    PIZZAS.NAME AS "PIZZA_name",
+    PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+    PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+    PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
+  FROM PIZZAS`,
+  getPizzasQueryNameFilter: dedent`SELECT PIZZAS.ID AS "PIZZA_id",
+    PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+    PIZZAS.NAME AS "PIZZA_name",
+    PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+    PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+    PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
+  FROM PIZZAS
+
+
+  WHERE PIZZAS.NAME = :name`,
+};
 export {
   getDoughsData,
   postDoughsData,
@@ -869,6 +888,7 @@ export {
   postIngredientData,
   getIngredientByIdData,
   updateIngredientByIdData,
+  getPizzasData,
   getPizzaByIdData,
   processGetFiltersData,
   doughSerializerData,

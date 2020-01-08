@@ -5,7 +5,7 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getPizzaByIdData } from './test-data';
+import { getPizzasData, getPizzaByIdData } from './test-data';
 
 const should = chai.should();
 chai.use(chaiAsPromised);
@@ -16,7 +16,12 @@ let getDoughByIdStub;
 let pizzasDao;
 let result;
 let serializePizzaStub;
+let serializePizzasStub;
 
+const {
+  getPizzasQuery,
+  getPizzasQueryNameFilter,
+} = getPizzasData;
 const {
   baseSerializerReturn,
   emptyDbReturn,
@@ -45,6 +50,7 @@ const proxyquirePizzasDao = () => {
     },
     '../../serializers/pizzas-serializer': {
       serializePizza: serializePizzaStub,
+      serializePizzas: serializePizzasStub,
     },
     './doughs-dao': {
       getDoughById: getDoughByIdStub,
@@ -187,6 +193,56 @@ describe('test pizzas DAO', () => {
         serializePizzaStub.getCall(0).args[0].should.not.have.property('ingredients');
         serializePizzaStub.getCall(0).args[0].should.not.have.property('dough');
       });
+    });
+  });
+  context('getPizzas', () => {
+    let inputQuery;
+    before(() => {
+      connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutIngredientsOrDough);
+      serializePizzasStub = sinon.stub().returns(baseSerializerReturn);
+    });
+    beforeEach(async () => {
+      pizzasDao = proxyquirePizzasDao();
+      result = await pizzasDao.getPizzas(inputQuery);
+    });
+    context('when it gets valid filters', () => {
+      before(() => {
+        inputQuery = { 'filter[name]': 'test pizza' };
+      });
+      it('generates query and bind params using that filter', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasQueryNameFilter,
+          { name: 'test pizza' },
+        );
+      });
+    });
+    context('when it gets invalid filters', () => {
+      before(() => {
+        inputQuery = { foo: 'bar' };
+      });
+      it('generates query and bind params without using that filter', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasQuery,
+          {},
+        );
+      });
+    });
+    context('when dough and ingredients are included', () => {
+      context('when the database returns multiple results', () => {
+
+      });
+      context('when the database returns no results', () => {
+
+      });
+    });
+    context('when only dough is included', () => {
+
+    });
+    context('when only ingredients is included', () => {
+
+    });
+    context('when nothing is included', () => {
+
     });
   });
 });
