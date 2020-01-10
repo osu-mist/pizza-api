@@ -3,13 +3,20 @@ import _ from 'lodash';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
-import { serializePizza, serializePizzas } from 'api/v1/serializers/pizzas-serializer';
 import { openapi } from 'utils/load-openapi';
+import { serializePizza, serializePizzas } from 'api/v1/serializers/pizzas-serializer';
 import { GetFilterProcessor } from 'utils/process-get-filters';
+
 import { ingredientsColumnNames } from './ingredients-dao';
 
 const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
 
+/**
+ * A list of the names of query filters used in GET /pizzas
+ *
+ * @const
+ * @type {string[]}
+ */
 const pizzaFilters = _.map(pizzaGetParameters, (parameter) => parameter.name);
 
 const pizzaColumns = {
@@ -172,16 +179,14 @@ const normalizePizzaRows = (rows) => {
  * @returns {Promise<object>} the serialized pizza
  */
 const getPizzas = async (query) => {
-  console.log(query);
   const included = _.get(query, 'include', []);
   const { conditionals, bindParams } = getConditionalsAndBindParams(query);
-  console.log(conditionals);
   const selectQuery = getPizzaByIdQuery(included, conditionals);
   const connection = await getConnection();
   try {
     const { rows } = await connection.execute(selectQuery, bindParams);
     const pizzas = normalizePizzaRows(rows);
-    return serializePizzas(pizzas);
+    return serializePizzas(pizzas, query);
   } finally {
     connection.close();
   }

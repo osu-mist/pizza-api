@@ -143,8 +143,9 @@ describe('test pizzas serializer', () => {
   context('serializePizzas', () => {
     let serializedPizzas;
     let inputPizzas;
+    let inputQuery = {};
     beforeEach(() => {
-      serializedPizzas = pizzasSerializer.serializePizzas(inputPizzas);
+      serializedPizzas = pizzasSerializer.serializePizzas(inputPizzas, inputQuery);
     });
     context('when it gets an array of inputs', () => {
       before(() => {
@@ -162,6 +163,17 @@ describe('test pizzas serializer', () => {
       it('serializes the members of `data` correctly', () => {
         testSerializedPizza(serializedPizzas.data[0], 'ingredients', 'dough');
         testSerializedPizza(serializedPizzas.data[1], 'ingredients', 'dough');
+      });
+      it('generates the top level self link correctly', () => {
+        serializedPizzas.links.self.should.equal('/v1/pizzas');
+      });
+      context('when it gets parameters', () => {
+        before(() => {
+          inputQuery = { 'filter[name]': 'abc' };
+        });
+        it('puts those queries in the top level self link', () => {
+          serializedPizzas.links.self.should.equal('/v1/pizzas?filter[name]=abc');
+        });
       });
     });
     context('when it gets an empty arrow of inputs', () => {

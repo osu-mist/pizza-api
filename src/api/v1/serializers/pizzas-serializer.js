@@ -105,11 +105,11 @@ const addRelationshipOptions = (options, rawPizza) => {
 /**
  *
  * @param {object} rawPizzas
- * @param {string} url
+ * @param {object} query
  * @returns {object} the serialized pizzas
  */
-const serializePizzas = (rawPizzas, url) => {
-  const topLevelSelfLink = paramsLink(pizzaResourceUrl, url);
+const serializePizzas = (rawPizzas, query) => {
+  const topLevelSelfLink = paramsLink(pizzaResourceUrl, query);
   const serializerArgs = {
     identifierField: 'id',
     resourceKeys: pizzaResourceKeys,
