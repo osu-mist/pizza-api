@@ -15,6 +15,55 @@ const {
   goalSerializedPizza,
 } = serializePizzaData;
 
+const testSerializedPizza = (serializedPizza, ...includedArgs) => {
+  const serializedPizzaData = 'data' in serializedPizza ? serializedPizza.data : serializedPizza;
+  serializedPizzaData.attributes.should.deep.equal(goalSerializedPizza.data.attributes, 'it sets attributes correctly');
+
+  serializedPizzaData.id.should.be.a('string', 'it sets type of id correctly');
+  serializedPizzaData.id.should.equal('1', 'it sets value of id correctly');
+  serializedPizzaData.type.should.equal('pizza', 'it sets value of type correctly');
+
+  serializedPizza.links.self.should.equal('/v1/pizzas/1', 'it sets top level link correctly');
+
+  if (includedArgs.includes('dough')) {
+    if ('included' in serializedPizza) {
+      serializedPizza.included
+        .should.deep.include(goalSerializedPizza.included[0], 'it adds dough to included');
+    }
+
+    serializedPizzaData.relationships.dough
+      .should.deep.equal(goalSerializedPizza.data.relationships.dough, 'it sets dough relationship values correctly');
+  } else {
+    should.equal(serializedPizzaData.relationships.dough.data, null, 'it puts null in serializedPizza.doughs');
+
+    if ('included' in serializedPizza && includedArgs.includes('ingredients')) {
+      serializedPizza.included.length.should.equal(1, 'it has only one element in `included`');
+
+      serializedPizza.included[0]
+        .should.deep.equal(goalSerializedPizza.included[1], 'it has an ingredient in `included`');
+    }
+  }
+
+  if (includedArgs.includes('ingredients')) {
+    if ('included' in serializedPizza) {
+      serializedPizza.included
+        .should.deep.include(goalSerializedPizza.included[1], 'it adds ingredients to included');
+    }
+
+    serializedPizzaData.relationships.ingredients
+      .should.deep.equal(goalSerializedPizza.data.relationships.ingredients, 'it sets ingredients relationship values correctly');
+  } else {
+    serializedPizzaData.relationships.ingredients.data.length.should.equal(0, 'it puts an empty array in serializedPizza.ingredients');
+
+    if ('included' in serializedPizza && includedArgs.includes('dough')) {
+      serializedPizza.included.length.should.equal(1, 'it has only one element in `included`');
+
+      serializedPizza.included[0]
+        .should.deep.equal(goalSerializedPizza.included[0], 'it has a dough in `included`');
+    }
+  }
+};
+
 describe('test pizzas serializer', () => {
   before(() => {
     sinon.replace(config, 'get', () => ({ oracledb: {} }));
@@ -35,40 +84,8 @@ describe('test pizzas serializer', () => {
         inputPizza = _.clone(baseInputPizza);
       });
 
-      it('serializes the pizza attributes correctly', () => {
-        serializedPizza.data.attributes.should.deep.equal(goalSerializedPizza.data.attributes);
-      });
-
-      it('sets id and type correctly', () => {
-        serializedPizza.data.id.should.be.a('string');
-        serializedPizza.data.id.should.equal('1');
-        serializedPizza.data.type.should.equal('pizza');
-      });
-
-      it('sets the correct top level link', () => {
-        serializedPizza.links.self.should.equal('/v1/pizzas/1');
-      });
-
-      it('serializes dough relationships correctly', () => {
-        serializedPizza.data.relationships.dough
-          .should.deep.equal(goalSerializedPizza.data.relationships.dough);
-      });
-
-      it('serializes ingredient relationships correctly', () => {
-        serializedPizza.data.relationships.ingredients
-          .should.deep.equal(goalSerializedPizza.data.relationships.ingredients);
-      });
-
-      it('adds the dough to included', () => {
-        // would prefer to use `serializedPizza.included.should.include` here,
-        // but this gives a *much* more useful diff when the test fails
-        serializedPizza.included[0]
-          .should.deep.equal(goalSerializedPizza.included[0]);
-      });
-
-      it('adds the ingredients to included', () => {
-        serializedPizza.included[1]
-          .should.deep.equal(goalSerializedPizza.included[1]);
+      it('serializes the pizza correctly', () => {
+        testSerializedPizza(serializedPizza, 'ingredients', 'dough');
       });
     });
     context('when it gets a raw pizza with only ingredients', () => {
@@ -77,14 +94,8 @@ describe('test pizzas serializer', () => {
         inputPizza.dough = {};
       });
 
-      it('puts an null for the dough relationship data', () => {
-        should.equal(serializedPizza.data.relationships.dough.data, null);
-      });
-
-      it('has only one element in `included`', () => {
-        serializedPizza.included.length.should.equal(1);
-        serializedPizza.included[0]
-          .should.deep.equal(goalSerializedPizza.included[1]);
+      it('serializes the pizza correctly', () => {
+        testSerializedPizza(serializedPizza, 'ingredients');
       });
     });
     context('when it gets a raw pizza with only dough', () => {
@@ -93,14 +104,8 @@ describe('test pizzas serializer', () => {
         inputPizza.ingredients = [];
       });
 
-      it('puts an empty array for the ingredient relationship data', () => {
-        serializedPizza.data.relationships.ingredients.data.should.deep.equal([]);
-      });
-
-      it('has only one element in `included`', () => {
-        serializedPizza.included.length.should.equal(1);
-        serializedPizza.included[0]
-          .should.deep.equal(goalSerializedPizza.included[0]);
+      it('serializes the pizza correctly', () => {
+        testSerializedPizza(serializedPizza, 'dough');
       });
     });
     context('when it gets a raw pizza with no dough or ingredients', () => {
@@ -110,18 +115,8 @@ describe('test pizzas serializer', () => {
         inputPizza.dough = {};
       });
 
-      it('puts an empty array for the ingredient relationship data', () => {
-        serializedPizza.data.relationships.ingredients.data.should.deep.equal([]);
-      });
-
-      it('puts an null for the dough relationship data', () => {
-        should.equal(serializedPizza.data.relationships.dough.data, null);
-      });
-
-      it('has nothing in `included`', () => {
-        // possibly a more desirable behavior would be to return an empty
-        // array, but I don't see a good way to do that with the serializer
-        should.equal(serializedPizza.included, undefined);
+      it('serializes the pizza correctly', () => {
+        testSerializedPizza(serializedPizza);
       });
     });
     context('when it gets a raw pizza with no ingredients member', () => {
@@ -142,6 +137,39 @@ describe('test pizzas serializer', () => {
       it('includes a dough relationship member with no data', () => {
         serializedPizza.data.relationships.dough.should.not.be.null;
         should.equal(serializedPizza.data.relationships.dough.data, undefined);
+      });
+    });
+  });
+  context('serializePizzas', () => {
+    let serializedPizzas;
+    let inputPizzas;
+    beforeEach(() => {
+      serializedPizzas = pizzasSerializer.serializePizzas(inputPizzas);
+    });
+    context('when it gets an array of inputs', () => {
+      before(() => {
+        inputPizzas = [
+          _.clone(baseInputPizza),
+          _.clone(baseInputPizza),
+        ];
+      });
+      it('returns a result with a `data` array', () => {
+        serializedPizzas.data.should.be.an('array');
+      });
+      it('does not include duplicate members in `included`', () => {
+        serializedPizzas.included.length.should.equal(2);
+      });
+      it('serializes the members of `data` correctly', () => {
+        testSerializedPizza(serializedPizzas.data[0], 'ingredients', 'dough');
+        testSerializedPizza(serializedPizzas.data[1], 'ingredients', 'dough');
+      });
+    });
+    context('when it gets an empty arrow of inputs', () => {
+      before(() => {
+        inputPizzas = [];
+      });
+      it('returns a result with an empty array `data` member', () => {
+        serializedPizzas.data.length.should.equal(0);
       });
     });
   });

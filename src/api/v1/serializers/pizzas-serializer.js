@@ -104,12 +104,12 @@ const addRelationshipOptions = (options, rawPizza) => {
 };
 /**
  *
- * @param {*} rawPizza
- * @param {*} query
+ * @param {object} rawPizzas
+ * @param {string} url
  * @returns {object} the serialized pizzas
  */
-const serializePizzas = (rawPizzas, query) => {
-  const topLevelSelfLink = paramsLink(pizzaResourceUrl, query);
+const serializePizzas = (rawPizzas, url) => {
+  const topLevelSelfLink = paramsLink(pizzaResourceUrl, url);
   const serializerArgs = {
     identifierField: 'id',
     resourceKeys: pizzaResourceKeys,
@@ -123,6 +123,10 @@ const serializePizzas = (rawPizzas, query) => {
   if (rawPizzas.length > 0) {
     options = addRelationshipOptions(options, rawPizzas[0]);
   }
+
+  // need to depluralize type of `ingredients` compound resources . . . somehow
+  // returning `undefined` means it uses the default value
+  options.typeForAttribute = (attribute, data) => ('ingredientType' in data ? 'ingredient' : undefined);
 
   return new JsonApiSerializer(pizzaResourceType, options)
     .serialize(rawPizzas);
