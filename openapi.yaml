@@ -783,7 +783,7 @@ definitions:
           id: *ingredientId
           attributes:
             type: object
-            properties: &ingredientProperties
+            properties:
               name:
                 type: string
                 description: the name of the ingredient
