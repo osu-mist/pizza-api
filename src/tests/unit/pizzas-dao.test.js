@@ -1,11 +1,12 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import config from 'config';
+import _ from 'lodash';
 import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getPizzaByIdData } from './test-data';
+import { getPizzasData, getPizzaByIdData } from './test-data';
 
 const should = chai.should();
 chai.use(chaiAsPromised);
@@ -16,7 +17,20 @@ let getDoughByIdStub;
 let pizzasDao;
 let result;
 let serializePizzaStub;
+let serializePizzasStub;
 
+const {
+  fullRawPizzasReturn,
+  getPizzasQuery,
+  getPizzasQueryNameFilter,
+  getPizzasWithDoughQuery,
+  getPizzasWithIngredientsQuery,
+  getPizzasWithIngredientsAndDoughsQuery,
+  rawPizzaNoDoughOrIngredients,
+  rawPizzaOnlyDoughReturn,
+  rawPizzaOnlyIngredientsReturn,
+  secondRawPizza,
+} = getPizzasData;
 const {
   baseSerializerReturn,
   emptyDbReturn,
@@ -45,6 +59,7 @@ const proxyquirePizzasDao = () => {
     },
     '../../serializers/pizzas-serializer': {
       serializePizza: serializePizzaStub,
+      serializePizzas: serializePizzasStub,
     },
     './doughs-dao': {
       getDoughById: getDoughByIdStub,
@@ -186,6 +201,134 @@ describe('test pizzas DAO', () => {
       it('does not generate dough or ingredients members', () => {
         serializePizzaStub.getCall(0).args[0].should.not.have.property('ingredients');
         serializePizzaStub.getCall(0).args[0].should.not.have.property('dough');
+      });
+    });
+  });
+  context('getPizzas', () => {
+    let inputQuery;
+
+    before(() => {
+      connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutIngredientsOrDough);
+      serializePizzasStub = sinon.stub().returns(baseSerializerReturn);
+    });
+
+    beforeEach(async () => {
+      pizzasDao = proxyquirePizzasDao();
+      result = await pizzasDao.getPizzas(inputQuery);
+    });
+
+    context('when it gets valid filters', () => {
+      before(() => {
+        inputQuery = { 'filter[name]': 'test pizza' };
+      });
+
+      it('generates query and bind params using that filter', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasQueryNameFilter,
+          { name: 'test pizza' },
+        );
+      });
+    });
+    context('when it gets invalid filters', () => {
+      before(() => {
+        inputQuery = { foo: 'bar' };
+      });
+
+      it('generates query and bind params without using that filter', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasQuery,
+          {},
+        );
+      });
+    });
+    context('when dough and ingredients are included', () => {
+      before(() => {
+        inputQuery = { include: ['dough', 'ingredients'] };
+      });
+
+      it('queries the database for doughs, ingredients', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasWithIngredientsAndDoughsQuery,
+          {},
+        );
+      });
+
+      context('when the database returns multiple results', () => {
+        before(() => {
+          connectionStub.returns(fullRawPizzasReturn);
+        });
+
+        it('sends two pizza records to the serializer', () => {
+          serializePizzasStub.should.have.been.calledWith(
+            [fullRawPizza, secondRawPizza],
+          );
+        });
+      });
+
+      context('when the database returns no results', () => {
+        before(() => {
+          connectionStub.returns(emptyDbReturn);
+        });
+
+        it('sends an empty array to the serializer', () => {
+          serializePizzasStub.should.have.been.calledWith([]);
+        });
+      });
+    });
+
+    context('when only dough is included', () => {
+      before(() => {
+        inputQuery = { include: ['dough'] };
+        connectionStub.returns(rawPizzaOnlyDoughReturn);
+      });
+
+      it('queries the database for doughs only', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasWithDoughQuery,
+          {},
+        );
+      });
+
+      it('sends records to the serializer with only dough attributes', () => {
+        serializePizzasStub.should.have.been.calledWith([
+          _.omit(fullRawPizza, 'ingredients'),
+          _.omit(secondRawPizza, 'ingredients'),
+        ]);
+      });
+    });
+
+    context('when only ingredients is included', () => {
+      before(() => {
+        inputQuery = { include: ['ingredients'] };
+        connectionStub.returns(rawPizzaOnlyIngredientsReturn);
+      });
+
+      it('queries the database for ingredients only', () => {
+        connectionStub.should.have.been.calledWith(
+          getPizzasWithIngredientsQuery,
+          {},
+        );
+      });
+
+      it('sends records to the serializer with only ingredients attributes', () => {
+        serializePizzasStub.should.have.been.calledWith([
+          _.omit(fullRawPizza, 'dough'),
+          _.omit(secondRawPizza, 'dough'),
+        ]);
+      });
+    });
+
+    context('when nothing is included', () => {
+      before(() => {
+        inputQuery = {};
+        connectionStub.returns(rawPizzaNoDoughOrIngredients);
+      });
+
+      it('sends records to the serializer with no dough or ingredients attributes', () => {
+        serializePizzasStub.should.have.been.calledWith([
+          _.omit(fullRawPizza, 'dough', 'ingredients'),
+          _.omit(secondRawPizza, 'dough', 'ingredients'),
+        ]);
       });
     });
   });
