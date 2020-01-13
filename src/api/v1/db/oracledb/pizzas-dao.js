@@ -5,11 +5,14 @@ import { getConnection } from 'api/v1/db/oracledb/connection';
 import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
 import { openapi } from 'utils/load-openapi';
 import { serializePizza, serializePizzas } from 'api/v1/serializers/pizzas-serializer';
+import OracleDB from 'oracledb';
 import { GetFilterProcessor } from 'utils/process-get-filters';
+import { convertOutBindsToRawResource, getBindParams } from 'utils/bind-params';
 
 import { ingredientsColumnNames } from './ingredients-dao';
 
 const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
+const pizzaProperties = openapi.definitions.PizzaAttributes.properties;
 
 /**
  * A list of the names of query filters used in GET /pizzas
@@ -20,6 +23,7 @@ const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
 const pizzaFilters = _.map(pizzaGetParameters, (parameter) => parameter.name)
   .filter((parameterName) => parameterName.match(/^filter\[.*\]$/));
 
+
 const pizzaColumns = {
   id: 'ID',
   doughId: 'DOUGH_ID',
@@ -28,6 +32,21 @@ const pizzaColumns = {
   ovenTemp: 'OVEN_TEMP',
   specialInstructions: 'SPECIAL_INSTRUCTIONS',
 };
+
+const pizzaOutBindParams = _.reduce(pizzaProperties,
+  (outBindParams, properties, name) => {
+    const bindParam = {};
+    bindParam.type = properties.type === 'string' ? OracleDB.STRING : OracleDB.NUMBER;
+    bindParam.dir = OracleDB.BIND_OUT;
+    outBindParams[`${name}Out`] = bindParam;
+    return outBindParams;
+  }, { idOut: { type: OracleDB.STRING, dir: OracleDB.BIND_OUT } });
+
+const pizzaPostQuery = dedent`INSERT INTO PIZZAS
+    (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
+  VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions)
+  RETURNING ID, NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS
+    INTO :idOut, :nameOut, :bakeTimeOut, :ovenTempOut, specialInstructionsOut`;
 
 /**
  * Transform a resource with name `resourceName` and
@@ -217,4 +236,24 @@ const getPizzaById = async (pizzaId, query) => {
   }
 };
 
-export { getPizzas, getPizzaById };
+/**
+ *
+ */
+const postPizza = async (body) => {
+  const bindParams = getBindParams(body, pizzaProperties, pizzaOutBindParams);
+  const connection = await getConnection();
+
+  try {
+    const result = await connection.execute(
+      pizzaPostQuery,
+      bindParams,
+      { autoCommit: true },
+    );
+    const rawPizza = convertOutBindsToRawResource(result);
+    return serializePizza(rawPizza, 'pizzas');
+  } finally {
+    connection.close();
+  }
+};
+
+export { getPizzas, getPizzaById, postPizza };
