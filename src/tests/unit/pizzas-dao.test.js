@@ -206,18 +206,22 @@ describe('test pizzas DAO', () => {
   });
   context('getPizzas', () => {
     let inputQuery;
+
     before(() => {
       connectionStub = sinon.stub().resolves(rawPizzaReturnWithoutIngredientsOrDough);
       serializePizzasStub = sinon.stub().returns(baseSerializerReturn);
     });
+
     beforeEach(async () => {
       pizzasDao = proxyquirePizzasDao();
       result = await pizzasDao.getPizzas(inputQuery);
     });
+
     context('when it gets valid filters', () => {
       before(() => {
         inputQuery = { 'filter[name]': 'test pizza' };
       });
+
       it('generates query and bind params using that filter', () => {
         connectionStub.should.have.been.calledWith(
           getPizzasQueryNameFilter,
@@ -229,6 +233,7 @@ describe('test pizzas DAO', () => {
       before(() => {
         inputQuery = { foo: 'bar' };
       });
+
       it('generates query and bind params without using that filter', () => {
         connectionStub.should.have.been.calledWith(
           getPizzasQuery,
@@ -240,42 +245,50 @@ describe('test pizzas DAO', () => {
       before(() => {
         inputQuery = { include: ['dough', 'ingredients'] };
       });
+
       it('queries the database for doughs, ingredients', () => {
         connectionStub.should.have.been.calledWith(
           getPizzasWithIngredientsAndDoughsQuery,
           {},
         );
       });
+
       context('when the database returns multiple results', () => {
         before(() => {
           connectionStub.returns(fullRawPizzasReturn);
         });
+
         it('sends two pizza records to the serializer', () => {
           serializePizzasStub.should.have.been.calledWith(
             [fullRawPizza, secondRawPizza],
           );
         });
       });
+
       context('when the database returns no results', () => {
         before(() => {
           connectionStub.returns(emptyDbReturn);
         });
+
         it('sends an empty array to the serializer', () => {
           serializePizzasStub.should.have.been.calledWith([]);
         });
       });
     });
+
     context('when only dough is included', () => {
       before(() => {
         inputQuery = { include: ['dough'] };
         connectionStub.returns(rawPizzaOnlyDoughReturn);
       });
+
       it('queries the database for doughs only', () => {
         connectionStub.should.have.been.calledWith(
           getPizzasWithDoughQuery,
           {},
         );
       });
+
       it('sends records to the serializer with only dough attributes', () => {
         serializePizzasStub.should.have.been.calledWith([
           _.omit(fullRawPizza, 'ingredients'),
@@ -283,17 +296,20 @@ describe('test pizzas DAO', () => {
         ]);
       });
     });
+
     context('when only ingredients is included', () => {
       before(() => {
         inputQuery = { include: ['ingredients'] };
         connectionStub.returns(rawPizzaOnlyIngredientsReturn);
       });
+
       it('queries the database for ingredients only', () => {
         connectionStub.should.have.been.calledWith(
           getPizzasWithIngredientsQuery,
           {},
         );
       });
+
       it('sends records to the serializer with only ingredients attributes', () => {
         serializePizzasStub.should.have.been.calledWith([
           _.omit(fullRawPizza, 'dough'),
@@ -301,11 +317,13 @@ describe('test pizzas DAO', () => {
         ]);
       });
     });
+
     context('when nothing is included', () => {
       before(() => {
         inputQuery = {};
         connectionStub.returns(rawPizzaNoDoughOrIngredients);
       });
+
       it('sends records to the serializer with no dough or ingredients attributes', () => {
         serializePizzasStub.should.have.been.calledWith([
           _.omit(fullRawPizza, 'dough', 'ingredients'),

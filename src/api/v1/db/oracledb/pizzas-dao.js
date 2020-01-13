@@ -17,7 +17,8 @@ const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
  * @const
  * @type {string[]}
  */
-const pizzaFilters = _.map(pizzaGetParameters, (parameter) => parameter.name);
+const pizzaFilters = _.map(pizzaGetParameters, (parameter) => parameter.name)
+  .filter((parameterName) => parameterName.match(/^filter\[.*\]$/));
 
 const pizzaColumns = {
   id: 'ID',
@@ -97,8 +98,7 @@ const getConditionalsAndBindParams = (query) => {
   const conditionalStatements = [];
   const bindParams = {};
   _.forEach(query, (parameterValue, parameterName) => {
-    if (pizzaFilters.includes(parameterName)
-      && parameterName.match(/filter\[.*\]/)) {
+    if (pizzaFilters.includes(parameterName)) {
       const normalizedFilterName = GetFilterProcessor.normalizeFilterName(parameterName);
       conditionalStatements.push(`PIZZAS.${pizzaColumns[normalizedFilterName]} = :${normalizedFilterName}`);
       bindParams[normalizedFilterName] = parameterValue;
@@ -183,6 +183,7 @@ const getPizzas = async (query) => {
   const { conditionals, bindParams } = getConditionalsAndBindParams(query);
   const selectQuery = getPizzaByIdQuery(included, conditionals);
   const connection = await getConnection();
+
   try {
     const { rows } = await connection.execute(selectQuery, bindParams);
     const pizzas = normalizePizzaRows(rows);
