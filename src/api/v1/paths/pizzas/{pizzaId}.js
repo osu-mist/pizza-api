@@ -1,4 +1,4 @@
-import { getPizzaById } from 'api/v1/db/oracledb/pizzas-dao';
+import { getPizzaById, updatePizzaById } from 'api/v1/db/oracledb/pizzas-dao';
 import { errorBuilder, errorHandler } from 'errors/errors';
 
 /**
@@ -19,10 +19,21 @@ const get = async (req, res) => {
 };
 
 /**
- * stub
- * @returns null
+ * Update a pizza by ID
+ *
+ * @type {RequestHandler}
  */
-const patch = () => null;
+const patch = async (req, res) => {
+  try {
+    const result = await updatePizzaById(req.body);
+    if (result == null) {
+      return errorBuilder(res, '404', `No pizza with ID ${req.params.pizzaId} found`);
+    }
+    return res.send(result);
+  } catch (err) {
+    return errorHandler(res, err);
+  }
+};
 /**
  * stub
  * @returns null
