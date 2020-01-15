@@ -19,6 +19,7 @@ const get = async (req, res) => {
 };
 
 /**
+ * Create a new pizza
  *
  * @type {RequestHandler}
  * */

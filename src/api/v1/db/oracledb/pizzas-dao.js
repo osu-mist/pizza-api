@@ -1,11 +1,12 @@
 import dedent from 'dedent';
 import _ from 'lodash';
 
+import OracleDB from 'oracledb';
+
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
-import { openapi } from 'utils/load-openapi';
 import { serializePizza, serializePizzas } from 'api/v1/serializers/pizzas-serializer';
-import OracleDB from 'oracledb';
+import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 import { convertOutBindsToRawResource, getBindParams } from 'utils/bind-params';
 
@@ -33,6 +34,13 @@ const pizzaColumns = {
   specialInstructions: 'SPECIAL_INSTRUCTIONS',
 };
 
+/**
+ * oracleDB out bind params for getting the results of an INSERT
+ * or UPDATE query
+ *
+ * @const
+ * @type {object[]}
+ */
 const pizzaOutBindParams = _.reduce(pizzaProperties,
   (outBindParams, properties, name) => {
     const bindParam = {};
@@ -42,6 +50,11 @@ const pizzaOutBindParams = _.reduce(pizzaProperties,
     return outBindParams;
   }, { idOut: { type: OracleDB.NUMBER, dir: OracleDB.BIND_OUT } });
 
+/**
+ * Query for updating a pizza record
+ *
+ * @const
+ */
 const pizzaPostQuery = dedent`INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
     VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions)
   RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
@@ -236,7 +249,10 @@ const getPizzaById = async (pizzaId, query) => {
 };
 
 /**
+ * Create a pizza record in the database
  *
+ * @param {object} body
+ * @returns {Promise<object>} the serialized, newly created pizza
  */
 const postPizza = async (body) => {
   const bindParams = getBindParams(body, pizzaProperties, pizzaOutBindParams);

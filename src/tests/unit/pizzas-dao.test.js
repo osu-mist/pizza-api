@@ -340,6 +340,7 @@ describe('test pizzas DAO', () => {
       });
     });
   });
+
   context('postPizza', () => {
     let inputBody;
 
@@ -352,11 +353,9 @@ describe('test pizzas DAO', () => {
       try {
         result = await pizzasDao.postPizza(inputBody);
       } catch (e) {
-        console.log('caught one');
         resultError = e;
       }
     });
-
 
     context('when it gets a body with valid attributes', () => {
       before(() => {

@@ -3,7 +3,7 @@ import oracledb from 'oracledb';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { serializeDough, serializeDoughs } from 'api/v1/serializers/doughs-serializer';
-import { getBindParams } from 'utils/bind-params';
+import { convertOutBindsToRawResource, getBindParams, outBindParamToPropertyName } from 'utils/bind-params';
 import { openapi } from 'utils/load-openapi';
 
 const doughsGetParameters = openapi.paths['/doughs'].get.parameters;
@@ -30,14 +30,6 @@ const doughColumnNames = {
   proofTime: 'PROOF_TIME',
   specialInstructions: 'SPECIAL_INSTRUCTIONS',
 };
-
-/**
- * convert an output bind param name like `nameOut` to a
- * property name like `name` by removing 'Out' at the end of the string
- * @param {string} outBindParamName
- * @returns {string} the property name
- */
-const outBindParamToPropertyName = (outBindParamName) => outBindParamName.slice(0, -3);
 
 /**
  * A list of SQL aliases mapping DOUGH table column names to DoughRecipe properties,
@@ -212,20 +204,6 @@ const getDoughs = async (filters) => {
 };
 
 /**
- * Converts the return value of a SQL query that uses
- * `RETURNS ... INTO ...` into the format of the return
- * from a `SELECT` query to it can be passed directly to
- * `serializeDough`.
- * @param {object} outBinds
- * @returns {object}
- */
-const convertOutBindsToRawDough = (outBinds) => _.reduce(outBinds,
-  (rawDough, bindValueArray, bindName) => {
-    [rawDough[outBindParamToPropertyName(bindName)]] = bindValueArray;
-    return rawDough;
-  }, {});
-
-/**
  * Use the data in `body` to create a new dough object.
  * @param {object} body
  * @returns {Promise<object>} a stub dough object
@@ -239,7 +217,7 @@ const postDough = async (body) => {
       bindParams,
       { autoCommit: true },
     );
-    const rawDough = convertOutBindsToRawDough(result.outBinds);
+    const rawDough = convertOutBindsToRawResource(result.outBinds);
     return serializeDough(rawDough, 'doughs/');
   } finally {
     connection.close();
@@ -308,7 +286,7 @@ const updateDoughById = async (body) => {
 
     if (result.rowsAffected === 0) return null;
 
-    const rawDough = convertOutBindsToRawDough(result.outBinds);
+    const rawDough = convertOutBindsToRawResource(result.outBinds);
     if (rawDough.id !== body.data.id) throw new Error('ID returned from database does not match input ID');
     return serializeDough(rawDough, `doughs/${body.data.id}`);
   } finally {
