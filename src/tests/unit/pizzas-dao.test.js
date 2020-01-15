@@ -6,7 +6,7 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getPizzasData, getPizzaByIdData } from './test-data';
+import { getPizzasData, getPizzaByIdData, postPizzaData } from './test-data';
 
 const should = chai.should();
 chai.use(chaiAsPromised);
@@ -16,6 +16,7 @@ let connectionStub;
 let getDoughByIdStub;
 let pizzasDao;
 let result;
+let resultError;
 let serializePizzaStub;
 let serializePizzasStub;
 
@@ -70,6 +71,13 @@ const proxyquirePizzasDao = () => {
 describe('test pizzas DAO', () => {
   before(() => sinon.replace(config, 'get', () => ({ oracledb: {} })));
   after(() => sinon.restore());
+
+  afterEach(() => {
+    connectionStub.resetHistory();
+    if (serializePizzaStub) serializePizzaStub.resetHistory();
+    if (serializePizzasStub) serializePizzasStub.resetHistory();
+  });
+
   context('getPizzaById', () => {
     let inputId;
     let inputQuery;
@@ -329,6 +337,60 @@ describe('test pizzas DAO', () => {
           _.omit(fullRawPizza, 'dough', 'ingredients'),
           _.omit(secondRawPizza, 'dough', 'ingredients'),
         ]);
+      });
+    });
+  });
+  context('postPizza', () => {
+    let inputBody;
+
+    before(() => {
+      connectionStub.returns(postPizzaData.validQueryReturn);
+    });
+
+    beforeEach(async () => {
+      pizzasDao = proxyquirePizzasDao();
+      try {
+        result = await pizzasDao.postPizza(inputBody);
+      } catch (e) {
+        console.log('caught one');
+        resultError = e;
+      }
+    });
+
+
+    context('when it gets a body with valid attributes', () => {
+      before(() => {
+        inputBody = postPizzaData.validBody;
+      });
+
+      it('calls the database with the right query and bind params', () => {
+        connectionStub.should.have.been.calledWith(
+          postPizzaData.postPizzaQuery,
+          postPizzaData.postPizzaBindParams,
+          { autoCommit: true },
+        );
+      });
+
+      it('correctly normalizes the result and passes it to the database', () => {
+        serializePizzaStub.should.have.been.calledWith(postPizzaData.normalizedDbReturn, 'pizzas');
+      });
+
+      it('returns the result from the serializer', () => {
+        result.should.deep.equal(baseSerializerReturn);
+      });
+    });
+
+    context('when it gets a body with invalid attributes', () => {
+      before(() => {
+        inputBody = postPizzaData.invalidBody;
+      });
+
+      it('throws an error', () => {
+        resultError.message.should.equal('Invalid attribute foo found');
+      });
+
+      it('does not call the database', () => {
+        connectionStub.should.not.have.been.called;
       });
     });
   });

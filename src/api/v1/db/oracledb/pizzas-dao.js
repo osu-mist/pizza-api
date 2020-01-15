@@ -40,13 +40,12 @@ const pizzaOutBindParams = _.reduce(pizzaProperties,
     bindParam.dir = OracleDB.BIND_OUT;
     outBindParams[`${name}Out`] = bindParam;
     return outBindParams;
-  }, { idOut: { type: OracleDB.STRING, dir: OracleDB.BIND_OUT } });
+  }, { idOut: { type: OracleDB.NUMBER, dir: OracleDB.BIND_OUT } });
 
-const pizzaPostQuery = dedent`INSERT INTO PIZZAS
-    (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
-  VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions)
-  RETURNING ID, NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS
-    INTO :idOut, :nameOut, :bakeTimeOut, :ovenTempOut, specialInstructionsOut`;
+const pizzaPostQuery = dedent`INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
+    VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions)
+  RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
+  INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut`;
 
 /**
  * Transform a resource with name `resourceName` and
@@ -249,7 +248,7 @@ const postPizza = async (body) => {
       bindParams,
       { autoCommit: true },
     );
-    const rawPizza = convertOutBindsToRawResource(result);
+    const rawPizza = convertOutBindsToRawResource(result.outBinds);
     return serializePizza(rawPizza, 'pizzas');
   } finally {
     connection.close();
