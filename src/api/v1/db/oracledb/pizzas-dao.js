@@ -1,6 +1,5 @@
 import dedent from 'dedent';
 import _ from 'lodash';
-
 import OracleDB from 'oracledb';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
@@ -23,7 +22,6 @@ const pizzaProperties = openapi.definitions.PizzaAttributes.properties;
  */
 const pizzaFilters = _.map(pizzaGetParameters, (parameter) => parameter.name)
   .filter((parameterName) => parameterName.match(/^filter\[.*\]$/));
-
 
 const pizzaColumns = {
   id: 'ID',
@@ -55,10 +53,12 @@ const pizzaOutBindParams = _.reduce(pizzaProperties,
  *
  * @const
  */
-const pizzaPostQuery = dedent`INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
+const pizzaPostQuery = dedent`
+  INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
     VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions)
   RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
-  INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut`;
+  INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
+`;
 
 /**
  * Transform a resource with name `resourceName` and

@@ -694,6 +694,7 @@ definitions:
         type: string
         description: the name of the pizza
         example: My Favorite Margherita
+        minLength: 1
       ovenTemp: &ovenTemp
         type: integer
         description: the temperature to bake the pizza at, in Fahrenheit
