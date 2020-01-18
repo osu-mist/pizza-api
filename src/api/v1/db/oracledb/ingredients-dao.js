@@ -237,7 +237,33 @@ const updateIngredientById = async (body) => {
     connection.close();
   }
 };
+
+/**
+ * check if a list of ingredient IDs exists in the database
+ *
+ * @param {string[]} ingredientIds a list of ingredient IDs to check in the database
+ * @returns {boolean} returns true if ingredient IDs are valid
+ */
+const checkIngredientsExist = async (ingredientIds) => {
+  const connection = await getConnection();
+  const bindParams = _.reduce(ingredientIds,
+    (binds, curId) => {
+      binds[`id${curId}`] = curId;
+      return binds;
+    }, {});
+  const query = `SELECT Count(*) AS "count" FROM INGREDIENTS WHERE ID IN (${_.keys(bindParams).map((key) => `:${key}`)})`;
+  try {
+    const result = await connection.execute(query, bindParams);
+    if (parseInt(result.rows[0].count, 10) === ingredientIds.length) {
+      return true;
+    }
+    return false;
+  } finally {
+    connection.close();
+  }
+};
 export {
+  checkIngredientsExist,
   getIngredients,
   postIngredient,
   getIngredientById,

@@ -1,4 +1,4 @@
-import { errorHandler } from 'errors/errors';
+import { errorBuilder, errorHandler } from 'errors/errors';
 import { apiBaseUrl, resourcePathLink } from 'utils/uri-builder';
 
 import { getPizzas, postPizza } from 'api/v1/db/oracledb/pizzas-dao';
@@ -26,6 +26,9 @@ const get = async (req, res) => {
 const post = async (req, res) => {
   try {
     const result = await postPizza(req.body);
+    if (result === null) {
+      return errorBuilder(res, '404', 'Invalid ID requested for a relationship');
+    }
     res.setHeader('Location', `${pizzaResourceUrl}/${result.data.id}`);
     return res.send(result);
   } catch (err) {

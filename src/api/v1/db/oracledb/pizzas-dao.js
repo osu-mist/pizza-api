@@ -9,7 +9,7 @@ import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 import { convertOutBindsToRawResource, getBindParams } from 'utils/bind-params';
 
-import { ingredientsColumnNames } from './ingredients-dao';
+import { checkIngredientsExist, ingredientsColumnNames } from './ingredients-dao';
 
 const pizzaGetParameters = openapi.paths['/pizzas'].get.parameters;
 const pizzaProperties = openapi.definitions.PizzaAttributes.properties;
@@ -54,8 +54,8 @@ const pizzaOutBindParams = _.reduce(pizzaProperties,
  * @const
  */
 const pizzaPostQuery = dedent`
-  INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS)
-    VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions)
+  INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS, DOUGH_ID)
+    VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions, :doughId)
   RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
   INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
 `;
@@ -256,7 +256,30 @@ const getPizzaById = async (pizzaId, query) => {
  */
 const postPizza = async (body) => {
   const bindParams = getBindParams(body, pizzaProperties, pizzaOutBindParams);
-  const connection = await getConnection();
+  let connection = await getConnection();
+  let ingredientIds;
+  const queries = [];
+  const ingredientBindParams = {};
+
+  const hasIngredients = 'relationships' in body.data && 'ingredients' in body.data.relationships;
+
+  if (hasIngredients) {
+    ingredientIds = body.data.relationships.ingredients.data
+      .map((ingredient) => ingredient.id);
+    if (!await checkIngredientsExist(ingredientIds)) {
+      return null;
+    }
+    const ingredientsQueries = ingredientIds.map((id) => {
+      ingredientBindParams[`ingredientId${id}`] = parseInt(id, 10);
+      return dedent`
+      INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
+        VALUES (:ingredientId${id}, :pizzaId)
+      `;
+    });
+    queries.push(...ingredientsQueries);
+  }
+
+  bindParams.doughId = _.get(body.data, 'relationships.dough.data.id', null);
 
   try {
     const result = await connection.execute(
@@ -265,7 +288,27 @@ const postPizza = async (body) => {
       { autoCommit: true },
     );
     const rawPizza = convertOutBindsToRawResource(result.outBinds);
+    if (hasIngredients) {
+      const insertIngredientsQuery = dedent`
+        INSERT ALL
+          ${queries.join('\n    ')}
+        SELECT * FROM dual
+      `;
+      ingredientBindParams.pizzaId = rawPizza.id;
+      connection = await getConnection();
+      await connection.execute(
+        insertIngredientsQuery,
+        ingredientBindParams,
+        { autoCommit: true },
+      );
+    }
     return serializePizza(rawPizza, 'pizzas');
+  } catch (e) {
+    if ('errorNum' in e && e.errorNum === 2291) {
+      // oracleDB integrity constraint -- tried to insert invalid primary key for dough
+      return null;
+    }
+    throw new Error(`unhandled exception: ${e.message}`);
   } finally {
     connection.close();
   }

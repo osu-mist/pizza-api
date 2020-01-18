@@ -12,6 +12,7 @@ const should = chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
+let checkIngredientsExistsStub;
 let connectionStub;
 let getDoughByIdStub;
 let pizzasDao;
@@ -65,6 +66,9 @@ const proxyquirePizzasDao = () => {
     './doughs-dao': {
       getDoughById: getDoughByIdStub,
     },
+    './ingredients-dao': {
+      checkIngredientsExist: checkIngredientsExistsStub,
+    },
   });
 };
 
@@ -74,6 +78,7 @@ describe('test pizzas DAO', () => {
 
   afterEach(() => {
     connectionStub.resetHistory();
+    if (checkIngredientsExistsStub) checkIngredientsExistsStub.resetHistory();
     if (serializePizzaStub) serializePizzaStub.resetHistory();
     if (serializePizzasStub) serializePizzasStub.resetHistory();
   });
@@ -330,6 +335,7 @@ describe('test pizzas DAO', () => {
       before(() => {
         inputQuery = {};
         connectionStub.returns(rawPizzaNoDoughOrIngredients);
+        checkIngredientsExistsStub = sinon.stub().returns(true);
       });
 
       it('sends records to the serializer with no dough or ingredients attributes', () => {
