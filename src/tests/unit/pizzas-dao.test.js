@@ -363,7 +363,7 @@ describe('test pizzas DAO', () => {
       }
     });
 
-    context('when it gets a body with valid attributes', () => {
+    context('when it gets a body with valid attributes and no relationships', () => {
       before(() => {
         inputBody = postPizzaData.validBody;
       });
@@ -382,6 +382,72 @@ describe('test pizzas DAO', () => {
 
       it('returns the result from the serializer', () => {
         result.should.deep.equal(baseSerializerReturn);
+      });
+
+      it('does not call checkIngredientsExist', () => {
+        checkIngredientsExistsStub.should.not.have.been.called;
+      });
+
+      it('only queries the database once', () => {
+        connectionStub.should.have.been.calledOnce;
+      });
+    });
+
+    context('when it gets a body with an ingredients property', () => {
+      before(() => {
+        inputBody = postPizzaData.validBody;
+        inputBody.data.relationships = { ingredients: postPizzaData.testIngredientsData };
+      });
+
+      it('checks if the ingredients exist with checkIngredientsExist', () => {
+        checkIngredientsExistsStub.should.have.been.calledWith(['1']);
+      });
+
+      it('calls the database again to insert ingredient data', () => {
+        connectionStub.should.have.been.calledTwice;
+        connectionStub.getCall(1).should.have.been.calledWith(
+          postPizzaData.insertSingleIngredientQuery,
+          { pizzaId: 82, ingredientId1: 1 },
+          { autoCommit: true },
+        );
+      });
+
+      context('when the ingredient id is invalid', () => {
+        before(() => {
+          checkIngredientsExistsStub.returns(false);
+        });
+
+        it('returns null', () => {
+          should.equal(result, null);
+        });
+
+        it('does not call the database', () => {
+          connectionStub.should.not.have.been.called;
+        });
+      });
+    });
+
+    context('when it gets a body with a dough relationship', () => {
+      before(() => {
+        inputBody = postPizzaData.validBody;
+        inputBody.data.relationships = { dough: postPizzaData.testDoughData };
+      });
+
+      it('populates doughId with the dough id', () => {
+        connectionStub.should.have.been.calledWith(
+          postPizzaData.postPizzaQuery,
+          postPizzaData.postPizzaBindParamsWithDough,
+          { autoCommit: true },
+        );
+      });
+
+      context('when the dough id is invalid and the database throws an error', () => {
+        before(() => {
+          connectionStub.throws(postPizzaData.oracleDbDoughError);
+        });
+        it('returns null', () => {
+          should.equal(result, null);
+        });
       });
     });
 
