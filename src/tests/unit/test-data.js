@@ -1201,9 +1201,9 @@ const postPizzaData = {
 
   insertSingleIngredientQuery: dedent`
   INSERT ALL
-          INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
+    INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
   VALUES (:ingredientId1, :pizzaId)
-        SELECT * FROM dual
+  SELECT * FROM dual
   `,
 };
 

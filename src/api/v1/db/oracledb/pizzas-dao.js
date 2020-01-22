@@ -249,65 +249,99 @@ const getPizzaById = async (pizzaId, query) => {
 };
 
 /**
+ * Generate queries and bind params for an ingredients relationship resource collection
+ *
+ * @param {object[]} ingredientRelationshipData the `data` key of
+ * `body.data.relationships.ingredients`
+ * @returns {object[]} an object with `queries` and `bindParams` members
+ */
+const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => {
+  const bindParams = {};
+  const ingredientIds = ingredientRelationshipData
+    .map((ingredient) => ingredient.id);
+  if (!await checkIngredientsExist(ingredientIds)) {
+    throw new Error('ingredient IDs are invalid');
+  }
+  const queries = ingredientIds.map((id) => {
+    bindParams[`ingredientId${id}`] = parseInt(id, 10);
+    return dedent`
+    INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
+      VALUES (:ingredientId${id}, :pizzaId)
+    `;
+  });
+  return { queries, bindParams };
+};
+
+/**
+ * insert ingredients relationships resources into the
+ * PIZZA_INGREDIENTS table
+ *
+ * @param {string[]} ingredientQueries
+ * @param {object} ingredientBindParams
+ * @param {OracleDB.Connection} connection
+ */
+const insertIngredients = async (ingredientQueries, ingredientBindParams, connection) => {
+  const insertIngredientsQuery = dedent`
+  INSERT ALL
+    ${ingredientQueries.join('\n  ')}
+  SELECT * FROM dual
+  `;
+  await connection.execute(
+    insertIngredientsQuery,
+    ingredientBindParams,
+    { autoCommit: true },
+  );
+};
+/**
  * Create a pizza record in the database
  *
  * @param {object} body
  * @returns {Promise<object>} the serialized, newly created pizza
  */
 const postPizza = async (body) => {
-  const bindParams = getBindParams(body, pizzaProperties, pizzaOutBindParams);
-  let connection = await getConnection();
-  let ingredientIds;
-  const queries = [];
-  const ingredientBindParams = {};
+  const pizzaBindParams = getBindParams(body, pizzaProperties, pizzaOutBindParams);
+  const connection = await getConnection();
+  let ingredientQueries = [];
+  let ingredientBindParams = {};
 
   const hasIngredients = 'relationships' in body.data && 'ingredients' in body.data.relationships;
 
   if (hasIngredients) {
-    ingredientIds = body.data.relationships.ingredients.data
-      .map((ingredient) => ingredient.id);
-    if (!await checkIngredientsExist(ingredientIds)) {
-      return null;
+    try {
+      const { queries, bindParams } = await getIngredientQueriesAndBindParams(
+        body.data.relationships.ingredients.data,
+      );
+      ingredientQueries = queries;
+      ingredientBindParams = bindParams;
+    } catch (e) {
+      if (e.message === 'ingredient IDs are invalid') return null;
+      throw e;
     }
-    const ingredientsQueries = ingredientIds.map((id) => {
-      ingredientBindParams[`ingredientId${id}`] = parseInt(id, 10);
-      return dedent`
-      INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
-        VALUES (:ingredientId${id}, :pizzaId)
-      `;
-    });
-    queries.push(...ingredientsQueries);
   }
 
-  bindParams.doughId = _.get(body.data, 'relationships.dough.data.id', null);
+  pizzaBindParams.doughId = _.get(body.data, 'relationships.dough.data.id', null);
 
   try {
     const result = await connection.execute(
       pizzaPostQuery,
-      bindParams,
+      pizzaBindParams,
       { autoCommit: true },
     );
+
     const rawPizza = convertOutBindsToRawResource(result.outBinds);
+
     if (hasIngredients) {
-      const insertIngredientsQuery = dedent`
-        INSERT ALL
-          ${queries.join('\n    ')}
-        SELECT * FROM dual
-      `;
       ingredientBindParams.pizzaId = rawPizza.id;
-      connection = await getConnection();
-      await connection.execute(
-        insertIngredientsQuery,
-        ingredientBindParams,
-        { autoCommit: true },
-      );
+      await insertIngredients(ingredientQueries, ingredientBindParams, connection);
     }
+
     return serializePizza(rawPizza, 'pizzas');
   } catch (e) {
     if ('errorNum' in e && e.errorNum === 2291) {
       // oracleDB integrity constraint -- tried to insert invalid primary key for dough
       return null;
     }
+
     throw new Error(`unhandled exception: ${e.message}`);
   } finally {
     connection.close();

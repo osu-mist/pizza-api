@@ -351,7 +351,8 @@ describe('test pizzas DAO', () => {
     let inputBody;
 
     before(() => {
-      connectionStub.returns(postPizzaData.validQueryReturn);
+      connectionStub = sinon.stub().returns(postPizzaData.validQueryReturn);
+      checkIngredientsExistsStub = sinon.stub().returns(true);
     });
 
     beforeEach(async () => {
