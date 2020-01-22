@@ -1053,6 +1053,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/IngredientRelationshipResource'
+        uniqueItems: true
       links:
         properties:
           self:

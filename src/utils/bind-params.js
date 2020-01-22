@@ -48,10 +48,10 @@ const outBindParamToPropertyName = (outBindParamName) => {
  * @param {object} outBinds
  * @returns {object}
  */
-const convertOutBindsToRawResource = (outBinds) => _.reduce(outBinds,
+const convertOutBindsToRawResource = (outBinds) => _.transform(outBinds,
   (rawResource, bindValueArray, bindName) => {
-    [rawResource[outBindParamToPropertyName(bindName)]] = bindValueArray;
-    return rawResource;
+    const [bindValue] = bindValueArray;
+    rawResource[outBindParamToPropertyName(bindName)] = bindValue;
   }, {});
 
 export { convertOutBindsToRawResource, getBindParams, outBindParamToPropertyName };
