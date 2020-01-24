@@ -254,6 +254,8 @@ const getPizzaById = async (pizzaId, query) => {
  * @param {object[]} ingredientRelationshipData the `data` key of
  * `body.data.relationships.ingredients`
  * @returns {object[]} an object with `queries` and `bindParams` members
+ * @throws {Error} an error with message 'ingredient IDs are invalid' when
+ *  `ingredientRelationshipData` contains IDs that do not exist in the database
  */
 const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => {
   const bindParams = {};
@@ -304,7 +306,7 @@ const postPizza = async (body) => {
   let ingredientQueries = [];
   let ingredientBindParams = {};
 
-  const hasIngredients = 'relationships' in body.data && 'ingredients' in body.data.relationships;
+  const hasIngredients = _.has(body, 'data.relationships.ingredients');
 
   if (hasIngredients) {
     try {
