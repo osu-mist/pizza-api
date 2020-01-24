@@ -610,6 +610,7 @@ definitions:
         type: string
         description: a unique ID of a pizza
         example: abc123
+        pattern: '^\d+$'
       links:
         $ref: '#/definitions/SelfLink'
       attributes:
@@ -1015,6 +1016,7 @@ definitions:
       type: *doughType
       id:
         type: string
+        pattern: '^\d+$'
         description: the unique ID of the resource
         example: abc123
   IngredientRelationshipResource:
@@ -1026,6 +1028,7 @@ definitions:
         type: string
         description: the unique ID of the resource
         example: abc123
+        pattern: '^\d+$'
       meta:
         properties:
           description:
