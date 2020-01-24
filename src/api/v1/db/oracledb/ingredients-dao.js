@@ -246,18 +246,11 @@ const updateIngredientById = async (body) => {
  */
 const checkIngredientsExist = async (ingredientIds) => {
   const connection = await getConnection();
-  const bindParams = _.reduce(ingredientIds,
-    (binds, curId) => {
-      binds[`id${curId}`] = curId;
-      return binds;
-    }, {});
+  const bindParams = _.keyBy(ingredientIds, (id) => `id${id}`);
   const query = `SELECT Count(*) AS "count" FROM INGREDIENTS WHERE ID IN (${_.keys(bindParams).map((key) => `:${key}`)})`;
   try {
     const result = await connection.execute(query, bindParams);
-    if (parseInt(result.rows[0].count, 10) === ingredientIds.length) {
-      return true;
-    }
-    return false;
+    return (parseInt(result.rows[0].count, 10) === ingredientIds.length);
   } finally {
     connection.close();
   }

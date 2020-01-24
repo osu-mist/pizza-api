@@ -411,4 +411,48 @@ describe('test ingredients dao', () => {
       });
     });
   });
+  context('checkIngredientsExist', () => {
+    let inputIds;
+    let numRowsReturned = 3;
+    let result;
+    before(() => {
+    });
+    beforeEach(async () => {
+      connectionStub = sinon.stub().resolves({ rows: [{ count: numRowsReturned }] });
+      ingredientsDao = proxyquireIngredientsDao(
+        connectionStub, serializeIngredientStub, serializeIngredientsStub,
+      );
+      result = await ingredientsDao.checkIngredientsExist(inputIds);
+    });
+    afterEach(() => {
+      connectionStub.resetHistory();
+    });
+    context('when it gets an array of IDs', () => {
+      before(() => {
+        inputIds = ['1', '8', '56'];
+      });
+      it('generates the right query and bind params', () => {
+        connectionStub.should.have.been.calledWith(
+          'SELECT Count(*) AS "count" FROM INGREDIENTS WHERE ID IN (:id1,:id8,:id56)',
+          { id1: '1', id8: '8', id56: '56' },
+        );
+      });
+      context('when the number of ingredients returned is less than the number in inputIds', () => {
+        before(() => {
+          numRowsReturned = 2;
+        });
+        it('returns false', () => {
+          result.should.be.false;
+        });
+      });
+      context('when the number of ingredients returned is equal to the number in inputIds', () => {
+        before(() => {
+          numRowsReturned = 3;
+        });
+        it('returns true', () => {
+          result.should.be.true;
+        });
+      });
+    });
+  });
 });
