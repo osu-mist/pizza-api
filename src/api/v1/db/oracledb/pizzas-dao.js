@@ -258,8 +258,7 @@ const getPizzaById = async (pizzaId, query) => {
  */
 const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => {
   const bindParams = {};
-  const ingredientIds = ingredientRelationshipData
-    .map((ingredient) => ingredient.id);
+  const ingredientIds = _.map(ingredientRelationshipData, 'id');
   if (!await checkIngredientsExist(ingredientIds)) {
     throw new Error('ingredient IDs are invalid');
   }
