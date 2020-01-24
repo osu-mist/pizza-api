@@ -19,7 +19,7 @@ const compareRelationships = (baseRelation, compareRelation) => (
  * @type {RequestHandler}
  */
 const checkRelationshipArrayUniqueness = (req, res, next) => {
-  const { relationships } = req.body.data;
+  const relationships = _.get(req, 'body.data.relationships', null);
   if (relationships) {
     _.forEach(relationships, (relationship, relationName) => {
       if (_.isArray(relationship.data)) {
@@ -34,6 +34,8 @@ const checkRelationshipArrayUniqueness = (req, res, next) => {
         }
       }
     });
+  } else {
+    next();
   }
 };
 
