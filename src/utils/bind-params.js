@@ -26,4 +26,32 @@ const getBindParams = (body, allowedProperties, baseValue = {}) => {
   return bindParams;
 };
 
-export { getBindParams };
+/**
+ * convert an output bind param name like `nameOut` to a
+ * property name like `name` by removing 'Out' at the end of the string
+ *
+ * @param {string} outBindParamName
+ * @returns {string} the property name
+ */
+const outBindParamToPropertyName = (outBindParamName) => {
+  const outBindEndRegex = /(.*)Out$/;
+  const regexResults = outBindEndRegex.exec(outBindParamName);
+  return regexResults ? regexResults[1] : outBindParamName;
+};
+
+/**
+ * Converts the return value of a SQL query that uses
+ * `RETURNS ... INTO ...` into the format of the return
+ * from a `SELECT` query to it can be passed directly to
+ * `serializeIngredient`.
+ *
+ * @param {object} outBinds
+ * @returns {object}
+ */
+const convertOutBindsToRawResource = (outBinds) => _.transform(outBinds,
+  (rawResource, bindValueArray, bindName) => {
+    const [bindValue] = bindValueArray;
+    rawResource[outBindParamToPropertyName(bindName)] = bindValue;
+  }, {});
+
+export { convertOutBindsToRawResource, getBindParams, outBindParamToPropertyName };

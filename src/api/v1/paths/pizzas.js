@@ -1,5 +1,9 @@
-import { getPizzas } from 'api/v1/db/oracledb/pizzas-dao';
-import { errorHandler } from 'errors/errors';
+import { errorBuilder, errorHandler } from 'errors/errors';
+import { apiBaseUrl, resourcePathLink } from 'utils/uri-builder';
+
+import { getPizzas, postPizza } from 'api/v1/db/oracledb/pizzas-dao';
+
+const pizzaResourceUrl = resourcePathLink(apiBaseUrl, 'pizzas');
 
 /**
  *
@@ -15,9 +19,21 @@ const get = async (req, res) => {
 };
 
 /**
- * stub
- * @returns {object}
+ * Create a new pizza
+ *
+ * @type {RequestHandler}
  * */
-const post = () => ({});
+const post = async (req, res) => {
+  try {
+    const result = await postPizza(req.body);
+    if (result === null) {
+      return errorBuilder(res, '404', 'Invalid ID requested for a relationship');
+    }
+    res.setHeader('Location', `${pizzaResourceUrl}/${result.data.id}`);
+    return res.send(result);
+  } catch (err) {
+    return errorHandler(res, err);
+  }
+};
 
 export { get, post };

@@ -610,6 +610,7 @@ definitions:
         type: string
         description: a unique ID of a pizza
         example: abc123
+        pattern: '^\d+$'
       links:
         $ref: '#/definitions/SelfLink'
       attributes:
@@ -694,6 +695,7 @@ definitions:
         type: string
         description: the name of the pizza
         example: My Favorite Margherita
+        minLength: 1
       ovenTemp: &ovenTemp
         type: integer
         description: the temperature to bake the pizza at, in Fahrenheit
@@ -1014,6 +1016,7 @@ definitions:
       type: *doughType
       id:
         type: string
+        pattern: '^\d+$'
         description: the unique ID of the resource
         example: abc123
   IngredientRelationshipResource:
@@ -1025,6 +1028,7 @@ definitions:
         type: string
         description: the unique ID of the resource
         example: abc123
+        pattern: '^\d+$'
       meta:
         properties:
           description:
@@ -1052,6 +1056,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/IngredientRelationshipResource'
+        uniqueItems: true
       links:
         properties:
           self:

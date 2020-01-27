@@ -13,6 +13,7 @@ import 'source-map-support/register';
 import { errorBuilder, errorHandler } from 'errors/errors';
 import { authentication } from 'middlewares/authentication';
 import { bodyParserError } from 'middlewares/body-parser-error';
+import { checkRelationshipArrayUniqueness } from 'middlewares/check-relationships';
 import { loggerMiddleware } from 'middlewares/logger';
 import { runtimeErrors } from 'middlewares/runtime-errors';
 import { openapi } from 'utils/load-openapi';
@@ -102,7 +103,7 @@ initialize({
   apiDoc: openapi,
   paths: `dist/api${openapi.basePath}/paths`,
   consumesMiddleware: {
-    'application/json': compose([bodyParser.json(), bodyParserError]),
+    'application/json': compose([bodyParser.json(), bodyParserError, checkRelationshipArrayUniqueness]),
   },
   errorMiddleware: runtimeErrors,
   errorTransformer,

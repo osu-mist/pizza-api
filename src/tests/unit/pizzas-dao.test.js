@@ -6,16 +6,18 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { getPizzasData, getPizzaByIdData } from './test-data';
+import { getPizzasData, getPizzaByIdData, postPizzaData } from './test-data';
 
 const should = chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
+let checkIngredientsExistsStub;
 let connectionStub;
 let getDoughByIdStub;
 let pizzasDao;
 let result;
+let resultError;
 let serializePizzaStub;
 let serializePizzasStub;
 
@@ -64,12 +66,23 @@ const proxyquirePizzasDao = () => {
     './doughs-dao': {
       getDoughById: getDoughByIdStub,
     },
+    './ingredients-dao': {
+      checkIngredientsExist: checkIngredientsExistsStub,
+    },
   });
 };
 
 describe('test pizzas DAO', () => {
   before(() => sinon.replace(config, 'get', () => ({ oracledb: {} })));
   after(() => sinon.restore());
+
+  afterEach(() => {
+    connectionStub.resetHistory();
+    if (checkIngredientsExistsStub) checkIngredientsExistsStub.resetHistory();
+    if (serializePizzaStub) serializePizzaStub.resetHistory();
+    if (serializePizzasStub) serializePizzasStub.resetHistory();
+  });
+
   context('getPizzaById', () => {
     let inputId;
     let inputQuery;
@@ -322,6 +335,7 @@ describe('test pizzas DAO', () => {
       before(() => {
         inputQuery = {};
         connectionStub.returns(rawPizzaNoDoughOrIngredients);
+        checkIngredientsExistsStub = sinon.stub().returns(true);
       });
 
       it('sends records to the serializer with no dough or ingredients attributes', () => {
@@ -329,6 +343,126 @@ describe('test pizzas DAO', () => {
           _.omit(fullRawPizza, 'dough', 'ingredients'),
           _.omit(secondRawPizza, 'dough', 'ingredients'),
         ]);
+      });
+    });
+  });
+
+  context('postPizza', () => {
+    let inputBody;
+
+    before(() => {
+      connectionStub = sinon.stub().returns(postPizzaData.validQueryReturn);
+      checkIngredientsExistsStub = sinon.stub().returns(true);
+    });
+
+    beforeEach(async () => {
+      pizzasDao = proxyquirePizzasDao();
+      try {
+        result = await pizzasDao.postPizza(inputBody);
+      } catch (e) {
+        resultError = e;
+      }
+    });
+
+    context('when it gets a body with valid attributes and no relationships', () => {
+      before(() => {
+        inputBody = postPizzaData.validBody;
+      });
+
+      it('calls the database with the right query and bind params', () => {
+        connectionStub.should.have.been.calledWith(
+          postPizzaData.postPizzaQuery,
+          postPizzaData.postPizzaBindParams,
+          { autoCommit: true },
+        );
+      });
+
+      it('correctly normalizes the result and passes it to the database', () => {
+        serializePizzaStub.should.have.been.calledWith(postPizzaData.normalizedDbReturn, 'pizzas');
+      });
+
+      it('returns the result from the serializer', () => {
+        result.should.deep.equal(baseSerializerReturn);
+      });
+
+      it('does not call checkIngredientsExist', () => {
+        checkIngredientsExistsStub.should.not.have.been.called;
+      });
+
+      it('only queries the database once', () => {
+        connectionStub.should.have.been.calledOnce;
+      });
+    });
+
+    context('when it gets a body with an ingredients property', () => {
+      before(() => {
+        inputBody = postPizzaData.validBody;
+        inputBody.data.relationships = { ingredients: postPizzaData.testIngredientsData };
+      });
+
+      it('checks if the ingredients exist with checkIngredientsExist', () => {
+        checkIngredientsExistsStub.should.have.been.calledWith(['1']);
+      });
+
+      it('calls the database again to insert ingredient data', () => {
+        connectionStub.should.have.been.calledTwice;
+        connectionStub.getCall(1).should.have.been.calledWith(
+          postPizzaData.insertSingleIngredientQuery,
+          { pizzaId: 82, ingredientId1: 1 },
+          { autoCommit: true },
+        );
+      });
+
+      context('when the ingredient id is invalid', () => {
+        before(() => {
+          checkIngredientsExistsStub.returns(false);
+        });
+
+        it('returns null', () => {
+          should.equal(result, null);
+        });
+
+        it('does not call the database', () => {
+          connectionStub.should.not.have.been.called;
+        });
+      });
+    });
+
+    context('when it gets a body with a dough relationship', () => {
+      before(() => {
+        inputBody = postPizzaData.validBody;
+        inputBody.data.relationships = { dough: postPizzaData.testDoughData };
+      });
+
+      it('populates doughId with the dough id', () => {
+        connectionStub.should.have.been.calledWith(
+          postPizzaData.postPizzaQuery,
+          postPizzaData.postPizzaBindParamsWithDough,
+          { autoCommit: true },
+        );
+      });
+
+      context('when the dough id is invalid and the database throws an error', () => {
+        before(() => {
+          connectionStub.throws(postPizzaData.oracleDbDoughError);
+        });
+        it('returns null', () => {
+          should.equal(result, null);
+        });
+      });
+    });
+
+    context('when it gets a body with invalid attributes', () => {
+      before(() => {
+        inputBody = postPizzaData.invalidBody;
+      });
+
+      it('throws an error', () => {
+        resultError.message.should.equal('Invalid attribute foo found');
+      });
+
+      it('does not call the database', () => {
+        connectionStub.should.not.have.been.called;
       });
     });
   });

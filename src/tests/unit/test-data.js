@@ -1107,6 +1107,106 @@ const getPizzasData = {
     LEFT JOIN PIZZA_INGREDIENTS ON PIZZAS.ID = PIZZA_INGREDIENTS.PIZZA_ID
     LEFT JOIN INGREDIENTS ON INGREDIENTS.ID = PIZZA_INGREDIENTS.INGREDIENT_ID`,
 };
+
+const postPizzaData = {
+  validBody: {
+    data: {
+      type: 'pizza',
+      attributes: {
+        name: 'valid pizza',
+        ovenTemp: 500,
+        bakeTime: 50,
+        specialInstructions: '',
+      },
+    },
+  },
+  invalidBody: {
+    data: {
+      type: 'pizza',
+      attributes: {
+        foo: 'bar',
+      },
+    },
+  },
+
+  postPizzaQuery: dedent`INSERT INTO PIZZAS (NAME, BAKE_TIME, OVEN_TEMP, SPECIAL_INSTRUCTIONS, DOUGH_ID)
+    VALUES (:name, :bakeTime, :ovenTemp, :specialInstructions, :doughId)
+  RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
+  INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut`,
+
+  postPizzaBindParams: {
+    idOut: { type: 2002, dir: 3003 },
+    nameOut: { type: 2001, dir: 3003 },
+    ovenTempOut: { type: 2002, dir: 3003 },
+    bakeTimeOut: { type: 2002, dir: 3003 },
+    specialInstructionsOut: { type: 2001, dir: 3003 },
+    name: 'valid pizza',
+    ovenTemp: 500,
+    bakeTime: 50,
+    specialInstructions: '',
+    doughId: null,
+  },
+
+  validQueryReturn: {
+    outBinds:
+    {
+      idOut: [82],
+      nameOut: ['test POST pizza'],
+      ovenTempOut: [500],
+      bakeTimeOut: [10],
+      specialInstructionsOut: ['test'],
+    },
+  },
+
+  normalizedDbReturn: {
+    id: 82,
+    name: 'test POST pizza',
+    bakeTime: 10,
+    ovenTemp: 500,
+    specialInstructions: 'test',
+  },
+
+  testIngredientsData: {
+    data: [
+      {
+        id: '1',
+        type: 'ingredient',
+      },
+    ],
+  },
+  testDoughData: {
+    data: {
+      id: '1',
+      type: 'dough',
+    },
+  },
+  postPizzaBindParamsWithDough: {
+    idOut: { type: 2002, dir: 3003 },
+    nameOut: { type: 2001, dir: 3003 },
+    ovenTempOut: { type: 2002, dir: 3003 },
+    bakeTimeOut: { type: 2002, dir: 3003 },
+    specialInstructionsOut: { type: 2001, dir: 3003 },
+    name: 'valid pizza',
+    ovenTemp: 500,
+    bakeTime: 50,
+    specialInstructions: '',
+    doughId: '1',
+  },
+
+  oracleDbDoughError: {
+    errorNum: 2291,
+    message: 'oracleDB error',
+    offset: 0,
+  },
+
+  insertSingleIngredientQuery: dedent`
+  INSERT ALL
+    INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
+  VALUES (:ingredientId1, :pizzaId)
+  SELECT * FROM dual
+  `,
+};
+
 export {
   getDoughsData,
   postDoughsData,
@@ -1122,4 +1222,5 @@ export {
   doughSerializerData,
   ingredientSerializerData,
   serializePizzaData,
+  postPizzaData,
 };

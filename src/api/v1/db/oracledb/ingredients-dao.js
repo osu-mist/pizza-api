@@ -3,7 +3,7 @@ import oracledb from 'oracledb';
 
 import { getConnection } from 'api/v1/db/oracledb/connection';
 import { serializeIngredients, serializeIngredient } from 'api/v1/serializers/ingredients-serializer';
-import { getBindParams } from 'utils/bind-params';
+import { convertOutBindsToRawResource, getBindParams, outBindParamToPropertyName } from 'utils/bind-params';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 
@@ -15,19 +15,6 @@ const ingredientsColumnNames = {
   ingredientType: 'TYPE',
   name: 'NAME',
   notes: 'NOTES',
-};
-
-/**
- * convert an output bind param name like `nameOut` to a
- * property name like `name` by removing 'Out' at the end of the string
- *
- * @param {string} outBindParamName
- * @returns {string} the property name
- */
-const outBindParamToPropertyName = (outBindParamName) => {
-  const outBindEndRegex = /(.*)Out$/;
-  const regexResults = outBindEndRegex.exec(outBindParamName);
-  return regexResults ? regexResults[1] : outBindParamName;
 };
 
 /**
@@ -160,21 +147,6 @@ const getIngredients = async (filters) => {
 };
 
 /**
- * Converts the return value of a SQL query that uses
- * `RETURNS ... INTO ...` into the format of the return
- * from a `SELECT` query to it can be passed directly to
- * `serializeIngredient`.
- *
- * @param {object} outBinds
- * @returns {object}
- */
-const convertOutBindsToRawIngredient = (outBinds) => _.reduce(outBinds,
-  (rawIngredient, bindValueArray, bindName) => {
-    [rawIngredient[outBindParamToPropertyName(bindName)]] = bindValueArray;
-    return rawIngredient;
-  }, {});
-
-/**
  * Use the data in `body` to create a new ingredient object.
  *
  * @param {object} body
@@ -189,7 +161,7 @@ const postIngredient = async (body) => {
       bindParams,
       { autoCommit: true },
     );
-    const rawIngredient = convertOutBindsToRawIngredient(result.outBinds);
+    const rawIngredient = convertOutBindsToRawResource(result.outBinds);
     return serializeIngredient(rawIngredient, 'ingredients');
   } finally {
     connection.close();
@@ -258,14 +230,33 @@ const updateIngredientById = async (body) => {
 
     if (result.rowsAffected === 0) return null;
 
-    const rawIngredient = convertOutBindsToRawIngredient(result.outBinds);
+    const rawIngredient = convertOutBindsToRawResource(result.outBinds);
     if (rawIngredient.id !== body.data.id) throw new Error('ID returned from database does not match input ID');
     return serializeIngredient(rawIngredient, `ingredients/${body.data.id}`);
   } finally {
     connection.close();
   }
 };
+
+/**
+ * check if a list of ingredient IDs exists in the database
+ *
+ * @param {string[]} ingredientIds a list of ingredient IDs to check in the database
+ * @returns {boolean} returns true if ingredient IDs are valid
+ */
+const checkIngredientsExist = async (ingredientIds) => {
+  const connection = await getConnection();
+  const bindParams = _.keyBy(ingredientIds, (id) => `id${id}`);
+  const query = `SELECT Count(*) AS "count" FROM INGREDIENTS WHERE ID IN (${_.keys(bindParams).map((key) => `:${key}`)})`;
+  try {
+    const result = await connection.execute(query, bindParams);
+    return (parseInt(result.rows[0].count, 10) === ingredientIds.length);
+  } finally {
+    connection.close();
+  }
+};
 export {
+  checkIngredientsExist,
   getIngredients,
   postIngredient,
   getIngredientById,
