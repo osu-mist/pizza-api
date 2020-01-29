@@ -210,7 +210,6 @@ const normalizePizzaRows = (rows) => {
  * @returns {Promise<object>} the serialized pizza
  */
 const getPizzas = async (query) => {
-  console.log('getting pizzas');
   const included = _.get(query, 'include', []);
   const { conditionals, bindParams } = getConditionalsAndBindParams(query);
   const selectQuery = getPizzaByIdQuery(included, conditionals);
@@ -260,10 +259,7 @@ const getPizzaById = async (pizzaId, query) => {
 const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => {
   const bindParams = {};
   const ingredientIds = _.map(ingredientRelationshipData, 'id');
-  console.log(ingredientRelationshipData);
-  console.log(ingredientIds);
   if (!await checkIngredientsExist(ingredientIds)) {
-    console.log('bad ingredient IDs');
     throw new Error('ingredient IDs are invalid');
   }
   const queries = ingredientIds.map((id) => {
@@ -278,6 +274,15 @@ const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => 
 
 /**
  * generate a bulk insert query to add PIZZA_INGREDIENT rows
+ *
+ * A member of `ingredientQueries` should look like:
+ *
+ * ```sql
+ *  INTO PIZZA_INGREDIENTS  (INGREDIENT_ID, PIZZA_ID)
+ *    VALUES (:ingredientIdX, :pizzaId)
+ * ```
+ *
+ *  Where `X` is the ID of the target ingredient resource
  *
  * @param {string[]} ingredientQueries
  * @returns {string}
@@ -360,27 +365,35 @@ const postPizza = async (body) => {
 };
 
 /**
+ * Perform a full replace of the ingredients relations of a pizza
+ * with `pizzaId` using `ingredientsQueries`
  *
- * @param {*} pizzaId
- * @param {*} ingredientsQueries
- * @param {*} ingredientsBindParams
- * @param {*} connection
+ * A member of `ingredientsQueries` should look like:
+ *
+ * ```sql
+ *  INTO PIZZA_INGREDIENTS  (INGREDIENT_ID, PIZZA_ID)
+ *    VALUES (:ingredientIdX, :pizzaId)
+ * ```
+ *
+ *  Where `X` is the ID of the target ingredient resource and `ingredientIdX` also
+ *  appears in `ingredientsBindParams`
+ *
+ * @param {string} pizzaId
+ * @param {string[]} ingredientsQueries
+ * @param {object} ingredientsBindParams
+ * @param {OracleDB.connection} connection
  */
 const replaceIngredients = async (
   pizzaId, ingredientsQueries, ingredientsBindParams, connection,
 ) => {
-  console.log('replacing ingredients');
+  ingredientsBindParams.pizzaId = pizzaId;
   const deletePizzaIngredientsQuery = dedent`
     DELETE FROM PIZZA_INGREDIENTS WHERE PIZZA_ID = :pizzaId
   `;
-  const query = `
-    ${deletePizzaIngredientsQuery};
-    ${insertIngredientsQuery(ingredientsQueries)};
-  `;
-  const bindParams = [ingredientsBindParams, { pizzaId }];
-  console.log(query);
-  console.log(bindParams);
-  await connection.executeMany(query, bindParams, { autoCommit: true });
+  await connection.execute(deletePizzaIngredientsQuery, { pizzaId }, { autoCommit: true });
+  await connection.execute(
+    insertIngredientsQuery(ingredientsQueries), ingredientsBindParams, { autoCommit: true },
+  );
 };
 
 /**
@@ -388,7 +401,7 @@ const replaceIngredients = async (
  * @param {*} bindParams
  * @returns {string}
  */
-const pizzaPatchQuery = (bindParams) => `
+const pizzaPatchQuery = (bindParams) => dedent`
   UPDATE PIZZAS
     SET ${_.keys(bindParams).map((bindParamName) => `${pizzaColumns[bindParamName]} = :${bindParamName}`).join(', ')}
     WHERE ID = :id
@@ -398,7 +411,7 @@ const pizzaPatchQuery = (bindParams) => `
 
 /**
  *
- * @param {*} body
+ * @param {object} body
  * @returns {object}
  */
 const createPatchQueryAndBindParams = (body) => {
@@ -426,21 +439,20 @@ const createPatchQueryAndBindParams = (body) => {
  * @returns {Promise<object>} the update pizza
  */
 const updatePizzaById = async (body) => {
-  console.log('updating pizza');
-  if (_.isEmpty(body.data.attributes)
-  && _.isEmpty(body.data.relationships)) return getPizzaById(body.data.id);
-  let result;
+  let rawPizza;
   let ingredientsQueries = [];
   let ingredientsBindParams = [];
 
   const hasIngredients = _.has(body, 'data.relationships.ingredients');
-  console.log(hasIngredients);
+  const hasDough = _.has(body, 'data.relationships.dough');
+  const hasAttributes = _.has(body, 'data.attributes') && !_.isEmpty(body.data.attributes);
 
   if (hasIngredients) {
     try {
       const { queries, bindParams } = await getIngredientQueriesAndBindParams(
         body.data.relationships.ingredients.data,
       );
+
       ingredientsQueries = queries;
       ingredientsBindParams = bindParams;
     } catch (e) {
@@ -449,42 +461,56 @@ const updatePizzaById = async (body) => {
     }
   }
 
-  const { query, bindParams } = createPatchQueryAndBindParams(body);
 
-  return withConnection(async (connection) => {
-    console.log('entering withConnection');
-    try {
-      console.log(query);
-      console.log(bindParams);
-      result = await connection.execute(
-        query,
-        bindParams,
-        { autoCommit: true },
-      );
-      console.log(result);
-    } catch (e) {
-      if ('errorNum' in e && e.errorNum === 2291) {
-        // oracleDB integrity constraint -- tried to insert invalid primary key for dough
-        console.log('dough not found');
+  if (hasDough || hasAttributes) {
+    let result;
+    const { query, bindParams } = createPatchQueryAndBindParams(body);
+    rawPizza = await withConnection(async (connection) => {
+      try {
+        result = await connection.execute(
+          query,
+          bindParams,
+          { autoCommit: true },
+        );
+      } catch (e) {
+        if ('errorNum' in e && e.errorNum === 2291) {
+          // oracleDB integrity constraint -- tried to insert invalid primary key for dough
+          return null;
+        }
+        throw e;
+      }
+
+      if (result && result.rowsAffected === 0) {
+        console.log('prob');
         return null;
       }
 
-      throw new Error(`unhandled exception: ${e.message}`);
-    }
+      return convertOutBindsToRawResource(result.outBinds);
+    });
+  } else {
+    rawPizza = await withConnection(async (connection) => {
+      const query = getPizzaByIdQuery([], 'ID = :pizzaId');
 
-    if (result.rowsAffected === 0) {
-      console.log('pizza not found');
-      return null;
-    }
+      const { rows } = await connection.execute(
+        query, { pizzaId: body.data.id },
+      );
 
-    const rawPizza = convertOutBindsToRawResource(result.outBinds);
+      if (rows.length === 0) return null;
 
-    if (hasIngredients) {
-      await replaceIngredients(rawPizza.id, ingredientsQueries, ingredientsBindParams, connection);
-    }
+      [rawPizza] = rows;
+      return extractRawResource('PIZZA', pizzaColumns, rawPizza);
+    });
+  }
 
-    return serializePizza(rawPizza, `pizzas/${body.data.id}`);
-  });
+  if (!rawPizza) return null;
+
+  if (hasIngredients) {
+    await withConnection((connection) => replaceIngredients(
+      rawPizza.id, ingredientsQueries, ingredientsBindParams, connection,
+    ));
+  }
+  console.log('calling serializer');
+  return serializePizza(rawPizza, `pizzas/${body.data.id}`);
 };
 
 export {

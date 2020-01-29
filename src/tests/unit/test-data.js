@@ -1148,6 +1148,7 @@ const postPizzaData = {
   },
 
   validQueryReturn: {
+    rowsAffected: 1,
     outBinds:
     {
       idOut: [82],

@@ -1,7 +1,4 @@
-import OracleDB from 'oracledb';
-
 import { getConnection } from 'api/v1/db/oracledb/connection';
-
 
 /**
  *
@@ -16,19 +13,9 @@ const withConnection = async (closure) => {
 /**
  *
  * @callback withConnectionClosure
- * @param {OracleDB.connection} connection
+ * @param {object} connection an oracleDB connection
  * @returns {Promise<object>}
  */
 
-/**
- * given a `sinon` stub, return a replacement for
- * `withConnection` that calls your stub instead of a database connection
- *
- * @param {object} connectionStub
- * @returns {function}
- */
-const withConnectionStubGenerator = (connectionStub) => (closure) => {
-  closure(connectionStub);
-};
 
-export { withConnection, withConnectionStubGenerator };
+export { withConnection };
