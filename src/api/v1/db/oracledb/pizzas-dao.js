@@ -398,13 +398,14 @@ const replaceIngredients = async (
 };
 
 /**
+ * Generate a PATCH query for a pizza row based on `bindParams`
  *
- * @param {*} bindParams
+ * @param {object} bindParams
  * @returns {string}
  */
 const pizzaPatchQuery = (bindParams) => dedent`
   UPDATE PIZZAS
-    SET ${_.keys(bindParams).map((bindParamName) => `${pizzaColumns[bindParamName]} = :${bindParamName}`).join(', ')}
+    SET ${_.map(bindParams, (value, bindParamName) => `${pizzaColumns[bindParamName]} = :${bindParamName}`).join(', ')}
     WHERE ID = :id
     RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
     INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
