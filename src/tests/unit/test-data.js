@@ -677,6 +677,7 @@ const getPizzaByIdData = {
     ],
   },
   emptyDbReturn: {
+    rowsAffected: 0,
     rows: [],
   },
   pizzaIngredientsDbReturn: {

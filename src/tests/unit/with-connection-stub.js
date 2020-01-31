@@ -5,8 +5,6 @@
  * @param {object} connectionStub
  * @returns {function}
  */
-const withConnectionStubGenerator = (connectionStub) => (closure) => {
-  closure(connectionStub);
-};
+const withConnectionStubGenerator = (connectionStub) => (closure) => closure(connectionStub);
 
 export { withConnectionStubGenerator };

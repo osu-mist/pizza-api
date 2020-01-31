@@ -6,6 +6,7 @@ import { getConnection } from 'api/v1/db/oracledb/connection';
 import { doughColumnNames } from 'api/v1/db/oracledb/doughs-dao';
 import { checkIngredientsExist, ingredientsColumnNames } from 'api/v1/db/oracledb/ingredients-dao';
 import { serializePizza, serializePizzas } from 'api/v1/serializers/pizzas-serializer';
+import { ResourceNotFoundError, ResourceRelationNotFoundError } from 'utils/dao-errors';
 import { openapi } from 'utils/load-openapi';
 import { GetFilterProcessor } from 'utils/process-get-filters';
 import { convertOutBindsToRawResource, getBindParams } from 'utils/bind-params';
@@ -260,7 +261,8 @@ const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => 
   const bindParams = {};
   const ingredientIds = _.map(ingredientRelationshipData, 'id');
   if (!await checkIngredientsExist(ingredientIds)) {
-    throw new Error('ingredient IDs are invalid');
+    console.log('bad ingredients');
+    throw new ResourceRelationNotFoundError('ingredients');
   }
   const queries = ingredientIds.map((id) => {
     bindParams[`ingredientId${id}`] = parseInt(id, 10);
@@ -437,6 +439,8 @@ const createPatchQueryAndBindParams = (body) => {
  *
  * @param {object} body
  * @returns {Promise<object>} the update pizza
+ * @throws {ResourceNotFoundError} when body.data.id is not valid
+ * @throws {ResourceRelationNotFoundError} when either dough or ingredient IDs are invalid
  */
 const updatePizzaById = async (body) => {
   let rawPizza;
@@ -448,17 +452,12 @@ const updatePizzaById = async (body) => {
   const hasAttributes = _.has(body, 'data.attributes') && !_.isEmpty(body.data.attributes);
 
   if (hasIngredients) {
-    try {
-      const { queries, bindParams } = await getIngredientQueriesAndBindParams(
-        body.data.relationships.ingredients.data,
-      );
+    const { queries, bindParams } = await getIngredientQueriesAndBindParams(
+      body.data.relationships.ingredients.data,
+    );
 
-      ingredientsQueries = queries;
-      ingredientsBindParams = bindParams;
-    } catch (e) {
-      if (e.message === 'ingredient IDs are invalid') return null;
-      throw e;
-    }
+    ingredientsQueries = queries;
+    ingredientsBindParams = bindParams;
   }
 
 
@@ -475,17 +474,17 @@ const updatePizzaById = async (body) => {
       } catch (e) {
         if ('errorNum' in e && e.errorNum === 2291) {
           // oracleDB integrity constraint -- tried to insert invalid primary key for dough
-          return null;
+          throw new ResourceRelationNotFoundError('dough', bindParams.doughId);
         }
         throw e;
       }
 
       if (result && result.rowsAffected === 0) {
-        console.log('prob');
         return null;
       }
 
-      return convertOutBindsToRawResource(result.outBinds);
+      const pizza = convertOutBindsToRawResource(result.outBinds);
+      return pizza;
     });
   } else {
     rawPizza = await withConnection(async (connection) => {
@@ -497,19 +496,18 @@ const updatePizzaById = async (body) => {
 
       if (rows.length === 0) return null;
 
-      [rawPizza] = rows;
-      return extractRawResource('PIZZA', pizzaColumns, rawPizza);
+      const [pizza] = rows;
+      return extractRawResource('PIZZA', pizzaColumns, pizza);
     });
   }
 
-  if (!rawPizza) return null;
+  if (!rawPizza) throw new ResourceNotFoundError('pizza', body.data.id);
 
   if (hasIngredients) {
     await withConnection((connection) => replaceIngredients(
       rawPizza.id, ingredientsQueries, ingredientsBindParams, connection,
     ));
   }
-  console.log('calling serializer');
   return serializePizza(rawPizza, `pizzas/${body.data.id}`);
 };
 

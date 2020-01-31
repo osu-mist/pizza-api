@@ -425,8 +425,8 @@ describe('test pizzas DAO', () => {
           checkIngredientsExistsStub.returns(false);
         });
 
-        it('returns null', () => {
-          should.equal(result, null);
+        it('throws an error', () => {
+          resultError.should.be.a('ResourceRelationNotFoundError');
         });
 
         it('does not call the database', () => {
@@ -477,16 +477,21 @@ describe('test pizzas DAO', () => {
     let inputBody;
 
     before(() => {
+      serializePizzaStub = sinon.stub().returns(baseSerializerReturn);
       executeStub = sinon.stub().returns(postPizzaData.validQueryReturn);
       checkIngredientsExistsStub = sinon.stub().returns(true);
     });
 
     beforeEach(async () => {
       pizzasDao = proxyquirePizzasDao();
-      result = await pizzasDao.updatePizzaById(inputBody);
+      try {
+        result = await pizzasDao.updatePizzaById(inputBody);
+      } catch (e) {
+        resultError = e;
+      }
     });
 
-    context.only('when it get a body with valid data', () => {
+    context('when it get a body with valid data', () => {
       context('when it gets attributes to update for the pizza', () => {
         before(() => {
           inputBody = {
@@ -530,15 +535,185 @@ describe('test pizzas DAO', () => {
         it('returns the result of the serializer', () => {
           result.should.deep.equal(baseSerializerReturn);
         });
+        context('when the pizza ID is invalid', () => {
+          before(() => {
+            executeStub.returns(emptyDbReturn);
+          });
+          it('throws an error', () => {
+            resultError.should.be.a('ResourceNotFoundError');
+          });
+        });
       });
       context('when it gets a dough relationship to update', () => {
-
+        before(() => {
+          inputBody = {
+            data: {
+              type: 'pizza',
+              id: '1',
+              relationships: {
+                dough: {
+                  data: {
+                    id: '1',
+                    type: 'dough',
+                  },
+                },
+              },
+            },
+          };
+        });
+        it('queries the database once', () => {
+          executeStub.should.have.been.calledOnce;
+        });
+        it('generates the right query and bind params', () => {
+          executeStub.getCall(0).should.have.been.calledWith(
+            dedent`
+            UPDATE PIZZAS
+              SET DOUGH_ID = :doughId
+              WHERE ID = :id
+              RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
+              INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
+            `,
+            {
+              bakeTimeOut: { dir: 3003, type: 2002 },
+              id: '1',
+              idOut: { dir: 3003, type: 2002 },
+              doughId: '1',
+              nameOut: { dir: 3003, type: 2001 },
+              ovenTempOut: { dir: 3003, type: 2002 },
+              specialInstructionsOut: { dir: 3003, type: 2001 },
+            },
+            { autoCommit: true },
+          );
+        });
+        context('when the dough ID is invalid', () => {
+          before(() => {
+            executeStub = sinon.stub().rejects({ errorNum: 2291 });
+          });
+          it('throws an error', () => {
+            resultError.should.be.a('ResourceRelationNotFoundError');
+            resultError.relation.should.equal('dough');
+            resultError.ids.should.deep.equal(['1']);
+          });
+        });
       });
       context('when it gets ingredients relationships to update', () => {
+        before(() => {
+          executeStub = sinon.stub().returns(postPizzaData.validQueryReturn);
+          inputBody = {
+            data: {
+              type: 'pizza',
+              id: '1',
+              attributes: {
+                name: 'test pizza',
+              },
+              relationships: {
+                ingredients: {
+                  data: [
+                    { id: '1', type: 'ingredient' },
+                  ],
+                },
+              },
+            },
+          };
+          checkIngredientsExistsStub = sinon.stub().returns(true);
+        });
 
+        it('checks if the ingredient IDs are valid', () => {
+          checkIngredientsExistsStub.should.have.been.calledWith(['1']);
+        });
+
+        context('when the ingredient IDs are valid', () => {
+          before(() => {
+            checkIngredientsExistsStub = sinon.stub().returns(true);
+          });
+
+          it('calls the database three times', () => {
+            executeStub.should.have.been.calledThrice;
+          });
+
+          it('deletes pizza ingredients in the second query', () => {
+            executeStub.getCall(1).should.have.been.calledWith(
+              dedent`
+                DELETE FROM PIZZA_INGREDIENTS WHERE PIZZA_ID = :pizzaId
+              `,
+              { pizzaId: 82 },
+              { autoCommit: true },
+            );
+          });
+          it('inserts new pizza ingredients records in the third query', () => {
+            executeStub.getCall(2).should.have.been.calledWith(
+              dedent`
+                INSERT ALL
+                  INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
+                VALUES (:ingredientId1, :pizzaId)
+                SELECT * FROM dual
+              `,
+              { ingredientId1: 1, pizzaId: 82 },
+              { autoCommit: true },
+            );
+          });
+        });
+
+        context('when the ingredient IDs are invalid', () => {
+          before(() => {
+            checkIngredientsExistsStub = sinon.stub().returns(false);
+          });
+          it('throws an error', () => {
+            resultError.should.be.a('ResourceRelationNotFoundError');
+            resultError.relation.should.equal('ingredients');
+          });
+        });
       });
-      context('when it gets only an empty attributes key', () => {
 
+      context('when it gets only an empty attributes key', () => {
+        before(() => {
+          inputBody = {
+            data: {
+              type: 'pizza',
+              id: '1',
+              attributes: {},
+            },
+          };
+        });
+        it('calls the database with a select instead of insert', () => {
+          executeStub.should.have.been.calledWith(
+            dedent`
+              SELECT PIZZAS.ID AS "PIZZA_id",
+                PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+                PIZZAS.NAME AS "PIZZA_name",
+                PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+                PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+                PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
+              FROM PIZZAS
+
+
+              WHERE ID = :pizzaId
+            `,
+            { pizzaId: '1' },
+          );
+        });
+        context('when the pizza exists', () => {
+          before(() => {
+            executeStub.returns(rawPizzaReturnWithoutIngredientsOrDough);
+          });
+          it('normalizes the pizza return and passes it to the serializer', () => {
+            serializePizzaStub.should.have.been.calledWith(
+              _.omit(fullRawPizza, 'dough', 'ingredients'),
+              'pizzas/1',
+            );
+          });
+          it('returns the result of the serialize', () => {
+            result.should.equal(baseSerializerReturn);
+          });
+        });
+        context('when the pizza does not exist', () => {
+          before(() => {
+            executeStub.returns(emptyDbReturn);
+          });
+          it('throws an error', () => {
+            resultError.should.be.a('ResourceNotFoundError');
+          });
+        });
       });
     });
   });
