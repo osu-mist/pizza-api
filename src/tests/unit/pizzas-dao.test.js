@@ -1,14 +1,15 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import config from 'config';
-import dedent from 'dedent';
 import _ from 'lodash';
 import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { withConnectionStubGenerator } from './with-connection-stub';
-import { getPizzasData, getPizzaByIdData, postPizzaData } from './test-data';
+import {
+  getPizzasData, getPizzaByIdData, postPizzaData, updatePizzaByIdData,
+} from './test-data';
 
 const should = chai.should();
 chai.use(chaiAsPromised);
@@ -494,15 +495,7 @@ describe('test pizzas DAO', () => {
     context('when it get a body with valid data', () => {
       context('when it gets attributes to update for the pizza', () => {
         before(() => {
-          inputBody = {
-            data: {
-              type: 'pizza',
-              id: '1',
-              attributes: {
-                name: 'test pizza',
-              },
-            },
-          };
+          inputBody = updatePizzaByIdData.pizzaBodyWithAttributes;
         });
 
         it('queries the database once', () => {
@@ -510,22 +503,8 @@ describe('test pizzas DAO', () => {
         });
         it('generates the right query and bind params', () => {
           executeStub.getCall(0).should.have.been.calledWith(
-            dedent`
-            UPDATE PIZZAS
-              SET NAME = :name
-              WHERE ID = :id
-              RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
-              INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
-            `,
-            {
-              bakeTimeOut: { dir: 3003, type: 2002 },
-              id: '1',
-              idOut: { dir: 3003, type: 2002 },
-              name: 'test pizza',
-              nameOut: { dir: 3003, type: 2001 },
-              ovenTempOut: { dir: 3003, type: 2002 },
-              specialInstructionsOut: { dir: 3003, type: 2001 },
-            },
+            updatePizzaByIdData.updateNameQuery,
+            updatePizzaByIdData.updateNameBindParams,
             { autoCommit: true },
           );
         });
@@ -546,48 +525,21 @@ describe('test pizzas DAO', () => {
       });
       context('when it gets a dough relationship to update', () => {
         before(() => {
-          inputBody = {
-            data: {
-              type: 'pizza',
-              id: '1',
-              relationships: {
-                dough: {
-                  data: {
-                    id: '1',
-                    type: 'dough',
-                  },
-                },
-              },
-            },
-          };
+          inputBody = updatePizzaByIdData.updateDoughBody;
         });
         it('queries the database once', () => {
           executeStub.should.have.been.calledOnce;
         });
         it('generates the right query and bind params', () => {
           executeStub.getCall(0).should.have.been.calledWith(
-            dedent`
-            UPDATE PIZZAS
-              SET DOUGH_ID = :doughId
-              WHERE ID = :id
-              RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
-              INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
-            `,
-            {
-              bakeTimeOut: { dir: 3003, type: 2002 },
-              id: '1',
-              idOut: { dir: 3003, type: 2002 },
-              doughId: '1',
-              nameOut: { dir: 3003, type: 2001 },
-              ovenTempOut: { dir: 3003, type: 2002 },
-              specialInstructionsOut: { dir: 3003, type: 2001 },
-            },
+            updatePizzaByIdData.updateDoughQuery,
+            updatePizzaByIdData.updateDoughBindParams,
             { autoCommit: true },
           );
         });
         context('when the dough ID is invalid', () => {
           before(() => {
-            executeStub = sinon.stub().rejects({ errorNum: 2291 });
+            executeStub = sinon.stub().rejects(postPizzaData.oracleDbDoughError);
           });
           it('throws an error', () => {
             resultError.should.be.a('ResourceRelationNotFoundError');
@@ -599,22 +551,7 @@ describe('test pizzas DAO', () => {
       context('when it gets ingredients relationships to update', () => {
         before(() => {
           executeStub = sinon.stub().returns(postPizzaData.validQueryReturn);
-          inputBody = {
-            data: {
-              type: 'pizza',
-              id: '1',
-              attributes: {
-                name: 'test pizza',
-              },
-              relationships: {
-                ingredients: {
-                  data: [
-                    { id: '1', type: 'ingredient' },
-                  ],
-                },
-              },
-            },
-          };
+          inputBody = updatePizzaByIdData.updateIngredientsBody;
           checkIngredientsExistsStub = sinon.stub().returns(true);
         });
 
@@ -633,21 +570,14 @@ describe('test pizzas DAO', () => {
 
           it('deletes pizza ingredients in the second query', () => {
             executeStub.getCall(1).should.have.been.calledWith(
-              dedent`
-                DELETE FROM PIZZA_INGREDIENTS WHERE PIZZA_ID = :pizzaId
-              `,
+              updatePizzaByIdData.deleteIngredientsQuery,
               { pizzaId: 82 },
               { autoCommit: true },
             );
           });
           it('inserts new pizza ingredients records in the third query', () => {
             executeStub.getCall(2).should.have.been.calledWith(
-              dedent`
-                INSERT ALL
-                  INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
-                VALUES (:ingredientId1, :pizzaId)
-                SELECT * FROM dual
-              `,
+              updatePizzaByIdData.bulkInsertIngredientsQuery,
               { ingredientId1: 1, pizzaId: 82 },
               { autoCommit: true },
             );
@@ -667,28 +597,11 @@ describe('test pizzas DAO', () => {
 
       context('when it gets only an empty attributes key', () => {
         before(() => {
-          inputBody = {
-            data: {
-              type: 'pizza',
-              id: '1',
-              attributes: {},
-            },
-          };
+          inputBody = updatePizzaByIdData.emptyBody;
         });
         it('calls the database with a select instead of insert', () => {
           executeStub.should.have.been.calledWith(
-            dedent`
-              SELECT PIZZAS.ID AS "PIZZA_id",
-                PIZZAS.DOUGH_ID AS "PIZZA_doughId",
-                PIZZAS.NAME AS "PIZZA_name",
-                PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
-                PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
-                PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
-              FROM PIZZAS
-
-
-              WHERE ID = :pizzaId
-            `,
+            updatePizzaByIdData.getPizzaQuery,
             { pizzaId: '1' },
           );
         });

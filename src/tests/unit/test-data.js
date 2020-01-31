@@ -1209,6 +1209,108 @@ const postPizzaData = {
   `,
 };
 
+const updatePizzaByIdData = {
+  pizzaBodyWithAttributes: {
+    data: {
+      type: 'pizza',
+      id: '1',
+      attributes: {
+        name: 'test pizza',
+      },
+    },
+  },
+  updateNameQuery: dedent`
+    UPDATE PIZZAS
+      SET NAME = :name
+      WHERE ID = :id
+      RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
+      INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
+  `,
+  updateNameBindParams: {
+    bakeTimeOut: { dir: 3003, type: 2002 },
+    id: '1',
+    idOut: { dir: 3003, type: 2002 },
+    name: 'test pizza',
+    nameOut: { dir: 3003, type: 2001 },
+    ovenTempOut: { dir: 3003, type: 2002 },
+    specialInstructionsOut: { dir: 3003, type: 2001 },
+  },
+  updateDoughBody: {
+    data: {
+      type: 'pizza',
+      id: '1',
+      relationships: {
+        dough: {
+          data: {
+            id: '1',
+            type: 'dough',
+          },
+        },
+      },
+    },
+  },
+  updateDoughQuery: dedent`
+    UPDATE PIZZAS
+      SET DOUGH_ID = :doughId
+      WHERE ID = :id
+      RETURNING ID, NAME, OVEN_TEMP, BAKE_TIME, SPECIAL_INSTRUCTIONS
+      INTO :idOut, :nameOut, :ovenTempOut, :bakeTimeOut, :specialInstructionsOut
+    `,
+  updateDoughBindParams: {
+    bakeTimeOut: { dir: 3003, type: 2002 },
+    id: '1',
+    idOut: { dir: 3003, type: 2002 },
+    doughId: '1',
+    nameOut: { dir: 3003, type: 2001 },
+    ovenTempOut: { dir: 3003, type: 2002 },
+    specialInstructionsOut: { dir: 3003, type: 2001 },
+  },
+  updateIngredientsBody: {
+    data: {
+      type: 'pizza',
+      id: '1',
+      attributes: {
+        name: 'test pizza',
+      },
+      relationships: {
+        ingredients: {
+          data: [
+            { id: '1', type: 'ingredient' },
+          ],
+        },
+      },
+    },
+  },
+  deleteIngredientsQuery: dedent`
+    DELETE FROM PIZZA_INGREDIENTS WHERE PIZZA_ID = :pizzaId
+  `,
+  bulkInsertIngredientsQuery: dedent`
+    INSERT ALL
+      INTO PIZZA_INGREDIENTS (INGREDIENT_ID, PIZZA_ID)
+    VALUES (:ingredientId1, :pizzaId)
+    SELECT * FROM dual
+  `,
+  emptyBody: {
+    data: {
+      type: 'pizza',
+      id: '1',
+      attributes: {},
+    },
+  },
+  getPizzaQuery: dedent`
+    SELECT PIZZAS.ID AS "PIZZA_id",
+      PIZZAS.DOUGH_ID AS "PIZZA_doughId",
+      PIZZAS.NAME AS "PIZZA_name",
+      PIZZAS.BAKE_TIME AS "PIZZA_bakeTime",
+      PIZZAS.OVEN_TEMP AS "PIZZA_ovenTemp",
+      PIZZAS.SPECIAL_INSTRUCTIONS AS "PIZZA_specialInstructions"
+    FROM PIZZAS
+
+
+    WHERE ID = :pizzaId
+  `,
+};
+
 export {
   getDoughsData,
   postDoughsData,
@@ -1225,4 +1327,5 @@ export {
   ingredientSerializerData,
   serializePizzaData,
   postPizzaData,
+  updatePizzaByIdData,
 };

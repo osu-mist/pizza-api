@@ -261,7 +261,6 @@ const getIngredientQueriesAndBindParams = async (ingredientRelationshipData) => 
   const bindParams = {};
   const ingredientIds = _.map(ingredientRelationshipData, 'id');
   if (!await checkIngredientsExist(ingredientIds)) {
-    console.log('bad ingredients');
     throw new ResourceRelationNotFoundError('ingredients');
   }
   const queries = ingredientIds.map((id) => {
