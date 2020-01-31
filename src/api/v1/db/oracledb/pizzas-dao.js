@@ -460,7 +460,6 @@ const updatePizzaById = async (body) => {
     ingredientsBindParams = bindParams;
   }
 
-
   if (hasDough || hasAttributes) {
     let result;
     const { query, bindParams } = createPatchQueryAndBindParams(body);
