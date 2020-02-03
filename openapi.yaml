@@ -681,10 +681,12 @@ definitions:
     properties:
       data:
         required: [id, type]
+        additionalProperties: false
         properties:
           type: *pizzaType
           id: *pizzaId
           attributes:
+            additionalProperties: false
             type: object
             properties:
               name:
