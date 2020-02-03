@@ -26,7 +26,7 @@ const get = async (req, res) => {
  */
 const patch = async (req, res) => {
   try {
-    if (req.query.pizzaId !== req.body.data.id) {
+    if (req.params.pizzaId !== req.body.data.id) {
       return errorBuilder(
         res,
         '409',
