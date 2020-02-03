@@ -391,7 +391,7 @@ const replaceIngredients = async (
   const deletePizzaIngredientsQuery = dedent`
     DELETE FROM PIZZA_INGREDIENTS WHERE PIZZA_ID = :pizzaId
   `;
-  await connection.execute(deletePizzaIngredientsQuery, { pizzaId }, { autoCommit: true });
+  await connection.execute(deletePizzaIngredientsQuery, { pizzaId });
   await connection.execute(
     insertIngredientsQuery(ingredientsQueries), ingredientsBindParams, { autoCommit: true },
   );

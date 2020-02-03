@@ -573,7 +573,6 @@ describe('test pizzas DAO', () => {
             executeStub.getCall(1).should.have.been.calledWith(
               updatePizzaByIdData.deleteIngredientsQuery,
               { pizzaId: 82 },
-              { autoCommit: true },
             );
           });
           it('inserts new pizza ingredients records in the third query', () => {
