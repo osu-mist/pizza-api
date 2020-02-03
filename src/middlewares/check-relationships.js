@@ -29,11 +29,10 @@ const checkRelationshipArrayUniqueness = (req, res, next) => {
           err.customStatus = 400;
           err.customMessage = `Relationship ${relationName} contains non-unique elements`;
           next(err);
-        } else {
-          next();
         }
       }
     });
+    next();
   } else {
     next();
   }

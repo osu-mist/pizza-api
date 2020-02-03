@@ -681,11 +681,31 @@ definitions:
     properties:
       data:
         required: [id, type]
+        additionalProperties: false
         properties:
           type: *pizzaType
           id: *pizzaId
           attributes:
-            $ref: '#/definitions/PizzaAttributes'
+            additionalProperties: false
+            type: object
+            properties:
+              name:
+                type: string
+                description: the name of the pizza
+                example: My Favorite Margherita
+                minLength: 1
+              ovenTemp:
+                type: integer
+                description: the temperature to bake the pizza at, in Fahrenheit
+                example: 500
+              bakeTime:
+                type: integer
+                description: the time in minutes to bake the pizza for
+                example: 10
+              specialInstructions:
+                type: string
+                description: any special instructions for baking the pizza
+                example: place the basil on after baking
           relationships: *pizzaUpdateRelationships
   PizzaPostAttributes:
     type: object
