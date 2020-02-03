@@ -10,10 +10,6 @@ class ResourceNotFoundError {
     this.id = id;
     this.resource = resource;
   }
-
-  get [Symbol.toStringTag]() {
-    return 'ResourceNotFoundError';
-  }
 }
 
 /**
@@ -28,10 +24,6 @@ class ResourceRelationNotFoundError {
   constructor(relation, ...ids) {
     this.ids = ids;
     this.relation = relation;
-  }
-
-  get [Symbol.toStringTag]() {
-    return 'ResourceRelationNotFoundError';
   }
 }
 

@@ -6,6 +6,7 @@ import proxyquire from 'proxyquire';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
+import { ResourceNotFoundError, ResourceRelationNotFoundError } from 'utils/dao-errors';
 import { withConnectionStubGenerator } from './with-connection-stub';
 import {
   getPizzasData, getPizzaByIdData, postPizzaData, updatePizzaByIdData,
@@ -427,7 +428,7 @@ describe('test pizzas DAO', () => {
         });
 
         it('throws an error', () => {
-          resultError.should.be.a('ResourceRelationNotFoundError');
+          resultError.should.be.an.instanceOf(ResourceRelationNotFoundError);
         });
 
         it('does not call the database', () => {
@@ -519,7 +520,7 @@ describe('test pizzas DAO', () => {
             executeStub.returns(emptyDbReturn);
           });
           it('throws an error', () => {
-            resultError.should.be.a('ResourceNotFoundError');
+            resultError.should.be.an.instanceOf(ResourceNotFoundError);
           });
         });
       });
@@ -542,7 +543,7 @@ describe('test pizzas DAO', () => {
             executeStub = sinon.stub().rejects(postPizzaData.oracleDbDoughError);
           });
           it('throws an error', () => {
-            resultError.should.be.a('ResourceRelationNotFoundError');
+            resultError.should.be.an.instanceOf(ResourceRelationNotFoundError);
             resultError.relation.should.equal('dough');
             resultError.ids.should.deep.equal(['1']);
           });
@@ -589,7 +590,7 @@ describe('test pizzas DAO', () => {
             checkIngredientsExistsStub = sinon.stub().returns(false);
           });
           it('throws an error', () => {
-            resultError.should.be.a('ResourceRelationNotFoundError');
+            resultError.should.be.an.instanceOf(ResourceRelationNotFoundError);
             resultError.relation.should.equal('ingredients');
           });
         });
@@ -624,7 +625,7 @@ describe('test pizzas DAO', () => {
             executeStub.returns(emptyDbReturn);
           });
           it('throws an error', () => {
-            resultError.should.be.a('ResourceNotFoundError');
+            resultError.should.be.an.instanceOf(ResourceNotFoundError);
           });
         });
       });
