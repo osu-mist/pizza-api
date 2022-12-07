@@ -46,7 +46,7 @@
     "moment": "^2.24.0",
     "oracledb": "^3.1.2",
     "query-string": "^6.8.2",
-    "simple-git": "^1.124.0",
+    "simple-git": "^3.15.0",
     "source-map-support": "^0.5.13",
     "swagger-parser": "^8.0.0",
     "uuid": "^3.3.3",
